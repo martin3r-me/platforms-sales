@@ -18,7 +18,7 @@
         <div class="d-flex justify-between items-center mb-2">
             @if($deal->deal_value)
                 <span class="text-sm font-semibold text-green-600">
-                    {{ number_format($deal->deal_value, 0, ',', '.') }} €
+                    {{ number_format((float) $deal->deal_value, 0, ',', '.') }} €
                 </span>
             @endif
             @if($deal->probability_percent)

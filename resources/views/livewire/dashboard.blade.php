@@ -103,7 +103,7 @@
         <!-- Gesamt Deal-Wert -->
         <x-ui-dashboard-tile
             title="Gesamt Deal-Wert"
-            :count="number_format($totalDealValue, 0, ',', '.') . ' €'"
+            :count="number_format((float) $totalDealValue, 0, ',', '.') . ' €'"
             icon="currency-euro"
             variant="primary"
         />
@@ -111,7 +111,7 @@
         <!-- Erwarteter Wert -->
         <x-ui-dashboard-tile
             title="Erwarteter Wert"
-            :count="number_format($expectedValue, 0, ',', '.') . ' €'"
+            :count="number_format((float) $expectedValue, 0, ',', '.') . ' €'"
             icon="chart-bar"
             variant="info"
         />
@@ -119,7 +119,7 @@
         <!-- Gewonnener Wert -->
         <x-ui-dashboard-tile
             title="Gewonnener Wert"
-            :count="number_format($wonDealValue, 0, ',', '.') . ' €'"
+            :count="number_format((float) $wonDealValue, 0, ',', '.') . ' €'"
             icon="check-circle"
             variant="success"
         />
@@ -196,7 +196,7 @@
                             <span class="font-medium">{{ $board['high_value'] }}</span> high value
                         </div>
                         <div class="text-gray-600">
-                            <span class="font-medium">{{ number_format($board['total_value'], 0, ',', '.') }} €</span>
+                            <span class="font-medium">{{ number_format((float) $board['total_value'], 0, ',', '.') }} €</span>
                         </div>
                     </div>
                 </div>

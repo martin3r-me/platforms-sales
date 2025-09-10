@@ -57,10 +57,10 @@
                 <div class="bg-gray-50 rounded-lg p-3 mb-4">
                     <div class="text-sm text-gray-600 mb-1">Monatliche Performance</div>
                     <div class="text-lg font-semibold text-gray-900">
-                        {{ number_format($monthlyPerformanceScore * 100, 1) }}%
+                        {{ number_format((float) ($monthlyPerformanceScore * 100), 1) }}%
                     </div>
                     <div class="text-xs text-gray-500">
-                        {{ number_format($wonValue, 0, ',', '.') }} € gewonnen / {{ number_format($createdValue, 0, ',', '.') }} € erstellt
+                        {{ number_format((float) $wonValue, 0, ',', '.') }} € gewonnen / {{ number_format((float) $createdValue, 0, ',', '.') }} € erstellt
                     </div>
                 </div>
             @endif
@@ -98,7 +98,7 @@
                                 <h4 class="font-medium text-gray-900 text-sm">{{ $deal->title }}</h4>
                                 @if($deal->deal_value)
                                     <span class="text-xs font-medium text-green-600">
-                                        {{ number_format($deal->deal_value, 0, ',', '.') }} €
+                                        {{ number_format((float) $deal->deal_value, 0, ',', '.') }} €
                                     </span>
                                 @endif
                             </div>
