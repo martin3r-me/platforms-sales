@@ -18,56 +18,56 @@
             <div class="grid grid-cols-2 gap-2 mb-4">
                 <x-ui-dashboard-tile
                     title="Deal-Wert (offen)"
-                    :count="$groups->filter(fn($g) => !($g->isWonGroup ?? false))->flatMap(fn($g) => $g->tasks)->sum(fn($t) => $t->deal_value ?? 0)"
+                    :count="$groups ? $groups->filter(fn($g) => !($g->isWonGroup ?? false))->flatMap(fn($g) => $g->tasks)->sum(fn($t) => $t->deal_value ?? 0) : 0"
                     icon="currency-euro"
                     variant="warning"
                     size="sm"
                 />
                 <x-ui-dashboard-tile
                     title="Deal-Wert (gewonnen)"
-                    :count="$groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->tasks)->sum(fn($t) => $t->deal_value ?? 0)"
+                    :count="$groups ? $groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->tasks)->sum(fn($t) => $t->deal_value ?? 0) : 0"
                     icon="check-circle"
                     variant="success"
                     size="sm"
                 />
                 <x-ui-dashboard-tile
                     title="Offen"
-                    :count="$groups->filter(fn($g) => !($g->isWonGroup ?? false))->sum(fn($g) => $g->tasks->count())"
+                    :count="$groups ? $groups->filter(fn($g) => !($g->isWonGroup ?? false))->sum(fn($g) => $g->tasks->count()) : 0"
                     icon="clock"
                     variant="warning"
                     size="sm"
                 />
                 <x-ui-dashboard-tile
                     title="Gesamt"
-                    :count="$groups->flatMap(fn($g) => $g->tasks)->count()"
+                    :count="$groups ? $groups->flatMap(fn($g) => $g->tasks)->count() : 0"
                     icon="document-text"
                     variant="secondary"
                     size="sm"
                 />
                 <x-ui-dashboard-tile
                     title="Gewonnen"
-                    :count="$groups->filter(fn($g) => $g->isWonGroup ?? false)->sum(fn($g) => $g->tasks->count())"
+                    :count="$groups ? $groups->filter(fn($g) => $g->isWonGroup ?? false)->sum(fn($g) => $g->tasks->count()) : 0"
                     icon="check-circle"
                     variant="success"
                     size="sm"
                 />
                 <x-ui-dashboard-tile
                     title="Ohne Fälligkeit"
-                    :count="$groups->flatMap(fn($g) => $g->tasks)->filter(fn($t) => !$t->due_date)->count()"
+                    :count="$groups ? $groups->flatMap(fn($g) => $g->tasks)->filter(fn($t) => !$t->due_date)->count() : 0"
                     icon="calendar"
                     variant="neutral"
                     size="sm"
                 />
                 <x-ui-dashboard-tile
                     title="High Value"
-                    :count="$groups->flatMap(fn($g) => $g->tasks)->filter(fn($t) => $t->deal_value && $t->deal_value > 10000)->count()"
+                    :count="$groups ? $groups->flatMap(fn($g) => $g->tasks)->filter(fn($t) => $t->deal_value && $t->deal_value > 10000)->count() : 0"
                     icon="star"
                     variant="warning"
                     size="sm"
                 />
                 <x-ui-dashboard-tile
                     title="Überfällig"
-                    :count="$groups->flatMap(fn($g) => $g->tasks)->filter(fn($t) => $t->due_date && $t->due_date->isPast() && !$t->is_done)->count()"
+                    :count="$groups ? $groups->flatMap(fn($g) => $g->tasks)->filter(fn($t) => $t->due_date && $t->due_date->isPast() && !$t->is_done)->count() : 0"
                     icon="exclamation-circle"
                     variant="danger"
                     size="sm"
@@ -89,7 +89,7 @@
 
         <!-- Gewonnene Deals -->
         @php $wonDeals = $groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->tasks); @endphp
-        @if($wonDeals->count() > 0)
+        @if($wonDeals && $wonDeals->count() > 0)
             <div>
                 <h4 class="font-medium mb-3">Gewonnene Deals ({{ $wonDeals->count() }})</h4>
                 <div class="space-y-1 max-h-60 overflow-y-auto">
@@ -120,7 +120,7 @@
         <x-ui-kanban-board wire:sortable="updateDealGroupOrder" wire:sortable-group="updateDealOrder">
 
             {{-- Mittlere Spalten --}}
-            @foreach($groups->filter(fn ($g) => !($g->isWonGroup ?? false)) as $column)
+            @foreach(($groups ? $groups->filter(fn ($g) => !($g->isWonGroup ?? false)) : collect()) as $column)
                 <x-ui-kanban-column
                     :title="$column->label"
                     :sortable-id="$column->id">
@@ -147,7 +147,7 @@
             @endforeach
 
             {{-- GEWONNEN Spalte --}}
-            @php $wonGroup = $groups->filter(fn($g) => $g->isWonGroup ?? false)->first(); @endphp
+            @php $wonGroup = $groups ? $groups->filter(fn($g) => $g->isWonGroup ?? false)->first() : null; @endphp
             @if($wonGroup)
                 <x-ui-kanban-column
                     title="GEWONNEN"

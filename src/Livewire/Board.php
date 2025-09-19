@@ -17,6 +17,7 @@ class Board extends Component
     public function mount(SalesBoard $salesBoard)
     {
         $this->salesBoard = $salesBoard;
+        $this->groups = collect(); // Initialisiere als leere Collection
         $this->loadGroups();
     }
 
@@ -139,6 +140,11 @@ class Board extends Component
 
     public function render()
     {
+        // Stelle sicher, dass groups geladen ist
+        if (!$this->groups || $this->groups->isEmpty()) {
+            $this->loadGroups();
+        }
+        
         return view('sales::livewire.board')->layout('platform::layouts.app');
     }
 }
