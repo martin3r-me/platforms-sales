@@ -169,15 +169,31 @@
                             {{-- Deal Wert & Wahrscheinlichkeit --}}
                             <div class="grid grid-cols-2 gap-4">
                                 @can('update', $deal)
-                                    <x-ui-input-number
-                                        name="deal.deal_value"
-                                        :label="$deal->billing_interval === 'one_time' || !$deal->billing_interval ? 'Deal Wert (€)' : 'Gesamtwert über Laufzeit (€)'"
-                                        wire:model.live.debounce.500ms="deal.deal_value"
-                                        placeholder="0.00"
-                                        step="0.01"
-                                        min="0"
-                                        :errorKey="'deal.deal_value'"
-                                    />
+                                    <div>
+                                        <x-ui-input-number
+                                            name="deal.deal_value"
+                                            :label="$deal->billing_interval === 'one_time' || !$deal->billing_interval ? 'Deal Wert (€)' : 'Gesamtwert über Laufzeit (€)'"
+                                            wire:model.live.debounce.500ms="deal.deal_value"
+                                            placeholder="0.00"
+                                            step="0.01"
+                                            min="0"
+                                            :errorKey="'deal.deal_value'"
+                                        />
+                                        @if($deal->billing_interval && $deal->billing_interval !== 'one_time' && $deal->monthly_recurring_value && $deal->billing_duration_months)
+                                            <div class="d-flex items-center justify-between mt-1">
+                                                <div class="text-xs text-blue-600">
+                                                    💡 Automatisch berechnet aus MRR × Laufzeit
+                                                </div>
+                                                <x-ui-button 
+                                                    variant="primary-outline" 
+                                                    size="xs" 
+                                                    wire:click="recalculateDealValue"
+                                                    class="text-xs">
+                                                    Neu berechnen
+                                                </x-ui-button>
+                                            </div>
+                                        @endif
+                                    </div>
                                 @else
                                     <div>
                                         <label class="font-semibold">
@@ -185,6 +201,11 @@
                                         </label>
                                         <div class="p-2 bg-muted-5 rounded-lg">
                                             {{ $deal->deal_value ? number_format((float) $deal->deal_value, 2, ',', '.') . ' €' : '–' }}
+                                            @if($deal->billing_interval && $deal->billing_interval !== 'one_time' && $deal->monthly_recurring_value && $deal->billing_duration_months)
+                                                <div class="text-xs text-blue-600 mt-1">
+                                                    (berechnet aus {{ number_format((float) $deal->monthly_recurring_value, 2, ',', '.') }} € × {{ $deal->billing_duration_months }} Monate)
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 @endcan
@@ -325,21 +346,6 @@
                                         </div>
                                     @endcan
                                     
-                                    {{-- Automatische Gesamtwert-Berechnung --}}
-                                    @if($deal->monthly_recurring_value && $deal->billing_duration_months)
-                                        <div class="p-3 bg-blue-50 border border-blue-200 rounded">
-                                            <div class="text-sm text-blue-600">Berechneter Gesamtwert:</div>
-                                            <div class="text-lg font-bold text-blue-800">
-                                                @php
-                                                    $calculatedTotal = (float) $deal->monthly_recurring_value * (int) $deal->billing_duration_months;
-                                                @endphp
-                                                {{ number_format($calculatedTotal, 2, ',', '.') }} €
-                                                <span class="text-sm font-normal">
-                                                    ({{ $deal->monthly_recurring_value }} € × {{ $deal->billing_duration_months }} Monate)
-                                                </span>
-                                            </div>
-                                        </div>
-                                    @endif
                                 </div>
                             @endif
 
