@@ -166,46 +166,48 @@
 
                     {{-- Rechte Spalte: Metadaten --}}
                     <div class="space-y-4">
-                        {{-- Deal Wert & Wahrscheinlichkeit --}}
-                        <div class="grid grid-cols-2 gap-4">
-                            @can('update', $deal)
-                                <x-ui-input-number
-                                    name="deal.deal_value"
-                                    label="Deal Wert (€)"
-                                    wire:model.live.debounce.500ms="deal.deal_value"
-                                    placeholder="0.00"
-                                    step="0.01"
-                                    min="0"
-                                    :errorKey="'deal.deal_value'"
-                                />
-                            @else
-                                <div>
-                                    <label class="font-semibold">Deal Wert:</label>
-                                    <div class="p-2 bg-muted-5 rounded-lg">
-                                        {{ $deal->deal_value ? number_format((float) $deal->deal_value, 2, ',', '.') . ' €' : '–' }}
+                            {{-- Deal Wert & Wahrscheinlichkeit --}}
+                            <div class="grid grid-cols-2 gap-4">
+                                @can('update', $deal)
+                                    <x-ui-input-number
+                                        name="deal.deal_value"
+                                        :label="$deal->billing_interval === 'one_time' || !$deal->billing_interval ? 'Deal Wert (€)' : 'Gesamtwert über Laufzeit (€)'"
+                                        wire:model.live.debounce.500ms="deal.deal_value"
+                                        placeholder="0.00"
+                                        step="0.01"
+                                        min="0"
+                                        :errorKey="'deal.deal_value'"
+                                    />
+                                @else
+                                    <div>
+                                        <label class="font-semibold">
+                                            {{ $deal->billing_interval === 'one_time' || !$deal->billing_interval ? 'Deal Wert:' : 'Gesamtwert über Laufzeit:' }}
+                                        </label>
+                                        <div class="p-2 bg-muted-5 rounded-lg">
+                                            {{ $deal->deal_value ? number_format((float) $deal->deal_value, 2, ',', '.') . ' €' : '–' }}
+                                        </div>
                                     </div>
-                                </div>
-                            @endcan
+                                @endcan
 
-                            @can('update', $deal)
-                                <x-ui-input-number
-                                    name="deal.probability_percent"
-                                    label="Wahrscheinlichkeit (%)"
-                                    wire:model.live.debounce.500ms="deal.probability_percent"
-                                    placeholder="0"
-                                    min="0"
-                                    max="100"
-                                    :errorKey="'deal.probability_percent'"
-                                />
-                            @else
-                                <div>
-                                    <label class="font-semibold">Wahrscheinlichkeit:</label>
-                                    <div class="p-2 bg-muted-5 rounded-lg">
-                                        {{ $deal->probability_percent ? $deal->probability_percent . '%' : '–' }}
+                                @can('update', $deal)
+                                    <x-ui-input-number
+                                        name="deal.probability_percent"
+                                        label="Wahrscheinlichkeit (%)"
+                                        wire:model.live.debounce.500ms="deal.probability_percent"
+                                        placeholder="0"
+                                        min="0"
+                                        max="100"
+                                        :errorKey="'deal.probability_percent'"
+                                    />
+                                @else
+                                    <div>
+                                        <label class="font-semibold">Wahrscheinlichkeit:</label>
+                                        <div class="p-2 bg-muted-5 rounded-lg">
+                                            {{ $deal->probability_percent ? $deal->probability_percent . '%' : '–' }}
+                                        </div>
                                     </div>
-                                </div>
-                            @endcan
-                        </div>
+                                @endcan
+                            </div>
 
                             {{-- Deal Source & Type --}}
                             <div class="grid grid-cols-2 gap-4">
@@ -322,6 +324,22 @@
                                             </div>
                                         </div>
                                     @endcan
+                                    
+                                    {{-- Automatische Gesamtwert-Berechnung --}}
+                                    @if($deal->monthly_recurring_value && $deal->billing_duration_months)
+                                        <div class="p-3 bg-blue-50 border border-blue-200 rounded">
+                                            <div class="text-sm text-blue-600">Berechneter Gesamtwert:</div>
+                                            <div class="text-lg font-bold text-blue-800">
+                                                @php
+                                                    $calculatedTotal = (float) $deal->monthly_recurring_value * (int) $deal->billing_duration_months;
+                                                @endphp
+                                                {{ number_format($calculatedTotal, 2, ',', '.') }} €
+                                                <span class="text-sm font-normal">
+                                                    ({{ $deal->monthly_recurring_value }} € × {{ $deal->billing_duration_months }} Monate)
+                                                </span>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
                             @endif
 

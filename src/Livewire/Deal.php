@@ -68,6 +68,17 @@ class Deal extends Component
     public function updatedDeal($property, $value)
     {
         $this->validateOnly("deal.$property");
+        
+        // Automatische Berechnung des Gesamtwerts bei wiederkehrenden Deals
+        if (in_array($property, ['monthly_recurring_value', 'billing_duration_months']) && 
+            $this->deal->billing_interval && 
+            $this->deal->billing_interval !== 'one_time' &&
+            $this->deal->monthly_recurring_value && 
+            $this->deal->billing_duration_months) {
+            
+            $this->deal->deal_value = (float) $this->deal->monthly_recurring_value * (int) $this->deal->billing_duration_months;
+        }
+        
         $this->deal->save();
     }
 
