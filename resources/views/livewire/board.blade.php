@@ -84,38 +84,10 @@
                     </x-slot>
 
                     @foreach($column->deals as $deal)
-                        <x-ui-kanban-card 
-                            :key="$deal->id"
-                            :title="$deal->title"
-                            :href="route('sales.deals.show', $deal)"
-                            wire:navigate
-                        >
-                            <div class="space-y-2">
-                                @if($deal->deal_value)
-                                    <div class="font-semibold text-primary">
-                                        {{ number_format((float) $deal->deal_value, 0, ',', '.') }} €
-                                    </div>
-                                @endif
-                                
-                                @if($deal->probability_percent)
-                                    <div class="text-sm text-gray-600">
-                                        {{ $deal->probability_percent }}% Wahrscheinlichkeit
-                                    </div>
-                                @endif
-                                
-                                @if($deal->due_date)
-                                    <div class="text-sm {{ $deal->due_date->isPast() ? 'text-red-600' : 'text-gray-600' }}">
-                                        Fällig: {{ $deal->due_date->format('d.m.Y') }}
-                                    </div>
-                                @endif
-                                
-                                @if($deal->userInCharge)
-                                    <div class="text-sm text-gray-600">
-                                        {{ $deal->userInCharge->name }}
-                                    </div>
-                                @endif
-                            </div>
-                        </x-ui-kanban-card>
+                        <livewire:sales.deal-preview-card 
+                            :deal="$deal"
+                            wire:key="deal-preview-{{ $deal->id }}"
+                        />
                     @endforeach
 
                 </x-ui-kanban-column>
