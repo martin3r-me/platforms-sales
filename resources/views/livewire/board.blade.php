@@ -62,14 +62,15 @@
 
     <!-- Kanban-Board (scrollbar) -->
     <div class="flex-grow overflow-x-auto">
-        <x-ui-kanban-board>
+        <x-ui-kanban-board wire:sortable="updateDealGroupOrder" wire:sortable-group="updateDealOrder">
 
             {{-- Mittlere Spalten --}}
             @foreach($groups->filter(fn ($g) => !($g->isWonGroup ?? false)) as $column)
                 <x-ui-kanban-column
                     :title="$column->label"
                     :color="$column->color ?? 'blue'"
-                    :count="$column->deals->count()">
+                    :count="$column->deals->count()"
+                    :sortable-id="$column->id">
 
                     <x-slot name="extra">
                         <div class="d-flex gap-1">
