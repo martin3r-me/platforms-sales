@@ -7,11 +7,12 @@ use Platform\Sales\Models\SalesBoard;
 use Platform\Sales\Models\SalesDeal;
 use Platform\Sales\Models\SalesBoardSlot;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Collection;
 
 class Board extends Component
 {
     public SalesBoard $salesBoard;
-    public $groups;
+    public Collection $groups;
 
     public function mount(SalesBoard $salesBoard)
     {
@@ -25,7 +26,7 @@ class Board extends Component
         $slots = $this->salesBoard->slots()->orderBy('order')->get();
         
         // Erstelle Gruppen für jedes Slot
-        $this->groups = $slots->map(function ($slot) {
+        $groups = $slots->map(function ($slot) {
             $slot->label = $slot->name;
             $slot->tasks = $slot->deals()
                 ->orderBy('slot_order')
@@ -45,7 +46,7 @@ class Board extends Component
             ->orderBy('done_at', 'desc')
             ->get();
         
-        $this->groups->push($wonGroup);
+        $this->groups = $groups->push($wonGroup);
     }
 
     public function createDeal($slotId = null)
