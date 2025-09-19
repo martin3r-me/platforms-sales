@@ -15,6 +15,25 @@
                 <div class="text-xl font-bold text-green-800">{{ $groups->filter(fn($g) => $g->isWonGroup ?? false)->sum(fn($g) => $g->deals->count()) }}</div>
             </div>
         </div>
+
+        <!-- Aktionen -->
+        @can('update', $salesBoard)
+            <div class="d-flex flex-col gap-2 mb-4">
+                <x-ui-button variant="primary" size="sm" wire:click="createDeal">
+                    <div class="d-flex items-center gap-2">
+                        @svg('heroicon-o-plus', 'w-4 h-4')
+                        Neuer Deal
+                    </div>
+                </x-ui-button>
+                
+                <x-ui-button variant="secondary" size="sm" @click="$dispatch('open-modal-board-settings', { boardId: {{ $salesBoard->id }} })">
+                    <div class="d-flex items-center gap-2">
+                        @svg('heroicon-o-cog-6-tooth', 'w-4 h-4')
+                        Board-Einstellungen
+                    </div>
+                </x-ui-button>
+            </div>
+        @endcan
     </div>
 
     <!-- Kanban-Board -->
