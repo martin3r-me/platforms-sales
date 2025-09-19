@@ -31,16 +31,16 @@
                 <x-ui-input-select
                     name="slot.color"
                     label="Farbe"
-                    :options="[
-                        ['value' => 'blue', 'label' => 'Blau'],
-                        ['value' => 'green', 'label' => 'Grün'],
-                        ['value' => 'yellow', 'label' => 'Gelb'],
-                        ['value' => 'red', 'label' => 'Rot'],
-                        ['value' => 'purple', 'label' => 'Lila'],
-                        ['value' => 'orange', 'label' => 'Orange'],
-                        ['value' => 'pink', 'label' => 'Rosa'],
-                        ['value' => 'indigo', 'label' => 'Indigo']
-                    ]"
+                    :options="collect([
+                        (object)['value' => 'blue', 'label' => 'Blau'],
+                        (object)['value' => 'green', 'label' => 'Grün'],
+                        (object)['value' => 'yellow', 'label' => 'Gelb'],
+                        (object)['value' => 'red', 'label' => 'Rot'],
+                        (object)['value' => 'purple', 'label' => 'Lila'],
+                        (object)['value' => 'orange', 'label' => 'Orange'],
+                        (object)['value' => 'pink', 'label' => 'Rosa'],
+                        (object)['value' => 'indigo', 'label' => 'Indigo']
+                    ])"
                     optionValue="value"
                     optionLabel="label"
                     wire:model="slot.color"
