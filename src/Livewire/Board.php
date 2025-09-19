@@ -27,10 +27,10 @@ class Board extends Component
         // Erstelle Gruppen für jedes Slot
         $groups = $slots->map(function ($slot) {
             $slot->label = $slot->name;
-            $slot->tasks = $slot->deals()
+            $slot->deals = collect($slot->deals()
                 ->orderBy('slot_order')
                 ->orderBy('order')
-                ->get();
+                ->get());
             return $slot;
         });
 
@@ -40,10 +40,10 @@ class Board extends Component
         $wonGroup->name = 'GEWONNEN';
         $wonGroup->label = 'GEWONNEN';
         $wonGroup->isWonGroup = true;
-        $wonGroup->tasks = $this->salesBoard->deals()
+        $wonGroup->deals = collect($this->salesBoard->deals()
             ->where('is_done', true)
             ->orderBy('done_at', 'desc')
-            ->get();
+            ->get());
         
         // Stelle sicher, dass $this->groups eine Collection ist
         $this->groups = $groups->push($wonGroup);

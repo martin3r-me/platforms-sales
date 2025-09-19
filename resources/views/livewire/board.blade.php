@@ -18,11 +18,11 @@
             <div class="grid grid-cols-2 gap-2 mb-4">
                 <div class="p-3 bg-blue-50 border border-blue-200 rounded">
                     <div class="text-sm text-blue-600">Offene Deals</div>
-                    <div class="text-xl font-bold text-blue-800">{{ $groups->filter(fn($g) => !($g->isWonGroup ?? false))->sum(fn($g) => $g->tasks->count()) }}</div>
+                    <div class="text-xl font-bold text-blue-800">{{ $groups->filter(fn($g) => !($g->isWonGroup ?? false))->sum(fn($g) => $g->deals->count()) }}</div>
                 </div>
                 <div class="p-3 bg-green-50 border border-green-200 rounded">
                     <div class="text-sm text-green-600">Gewonnene Deals</div>
-                    <div class="text-xl font-bold text-green-800">{{ $groups->filter(fn($g) => $g->isWonGroup ?? false)->sum(fn($g) => $g->tasks->count()) }}</div>
+                    <div class="text-xl font-bold text-green-800">{{ $groups->filter(fn($g) => $g->isWonGroup ?? false)->sum(fn($g) => $g->deals->count()) }}</div>
                 </div>
             </div>
 
@@ -46,7 +46,7 @@
             @endcan
 
             <!-- Gewonnene Deals -->
-            @php $wonDeals = $groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->tasks); @endphp
+            @php $wonDeals = $groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->deals); @endphp
             @if($wonDeals->count() > 0)
                 <div>
                     <h4 class="font-medium mb-3">Gewonnene Deals ({{ $wonDeals->count() }})</h4>
@@ -79,9 +79,9 @@
                     :key="$group->id"
                     :title="$group->label"
                     :color="$group->color ?? 'blue'"
-                    :count="$group->tasks->count()"
+                    :count="$group->deals->count()"
                 >
-                    @foreach($group->tasks as $deal)
+                    @foreach($group->deals as $deal)
                         <x-ui-kanban-card 
                             :key="$deal->id"
                             :title="$deal->title"
