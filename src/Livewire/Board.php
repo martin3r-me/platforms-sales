@@ -139,36 +139,6 @@ class Board extends Component
         $this->loadGroups();
     }
 
-    public function updateDealOrder($groups)
-    {
-        foreach ($groups as $group) {
-            foreach ($group['items'] as $index => $dealId) {
-                $deal = SalesDeal::find($dealId);
-                if ($deal) {
-                    $deal->update([
-                        'slot_order' => $index + 1,
-                        'sales_board_slot_id' => $group['value']
-                    ]);
-                }
-            }
-        }
-        
-        $this->loadGroups();
-    }
-
-    public function updateDealGroupOrder($groups)
-    {
-        foreach ($groups as $index => $groupId) {
-            if ($groupId !== 'won') {
-                $slot = SalesBoardSlot::find($groupId);
-                if ($slot) {
-                    $slot->update(['order' => $index + 1]);
-                }
-            }
-        }
-        
-        $this->loadGroups();
-    }
 
     public function render()
     {
