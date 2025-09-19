@@ -27,10 +27,11 @@ class Board extends Component
         // Erstelle Gruppen für jedes Slot
         $groups = $slots->map(function ($slot) {
             $slot->label = $slot->name;
-            $slot->deals = collect($slot->deals()
+            $deals = $slot->deals()
                 ->orderBy('slot_order')
                 ->orderBy('order')
-                ->get());
+                ->get();
+            $slot->deals = $deals; // Direkt die Eloquent Collection verwenden
             return $slot;
         });
 
@@ -40,10 +41,11 @@ class Board extends Component
         $wonGroup->name = 'GEWONNEN';
         $wonGroup->label = 'GEWONNEN';
         $wonGroup->isWonGroup = true;
-        $wonGroup->deals = collect($this->salesBoard->deals()
+        $wonDeals = $this->salesBoard->deals()
             ->where('is_done', true)
             ->orderBy('done_at', 'desc')
-            ->get());
+            ->get();
+        $wonGroup->deals = $wonDeals; // Direkt die Eloquent Collection verwenden
         
         // Stelle sicher, dass $this->groups eine Collection ist
         $this->groups = $groups->push($wonGroup);

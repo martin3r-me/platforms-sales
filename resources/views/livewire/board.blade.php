@@ -6,14 +6,14 @@
         
         <!-- Einfache Statistiken -->
         <div class="grid grid-cols-2 gap-2 mb-4">
-            <div class="p-3 bg-blue-50 border border-blue-200 rounded">
-                <div class="text-sm text-blue-600">Offene Deals</div>
-                <div class="text-xl font-bold text-blue-800">{{ $groups->filter(fn($g) => !($g->isWonGroup ?? false))->sum(fn($g) => $g->deals->count()) }}</div>
-            </div>
-            <div class="p-3 bg-green-50 border border-green-200 rounded">
-                <div class="text-sm text-green-600">Gewonnene Deals</div>
-                <div class="text-xl font-bold text-green-800">{{ $groups->filter(fn($g) => $g->isWonGroup ?? false)->sum(fn($g) => $g->deals->count()) }}</div>
-            </div>
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded">
+                    <div class="text-sm text-blue-600">Offene Deals</div>
+                    <div class="text-xl font-bold text-blue-800">{{ $groups->filter(fn($g) => !($g->isWonGroup ?? false))->sum(fn($g) => $g->deals->count()) }}</div>
+                </div>
+                <div class="p-3 bg-green-50 border border-green-200 rounded">
+                    <div class="text-sm text-green-600">Gewonnene Deals</div>
+                    <div class="text-xl font-bold text-green-800">{{ $groups->filter(fn($g) => $g->isWonGroup ?? false)->sum(fn($g) => $g->deals->count()) }}</div>
+                </div>
         </div>
 
         <!-- Aktionen -->
