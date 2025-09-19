@@ -176,6 +176,17 @@ class SalesDeal extends Model
         return ($this->deal_value * $this->probability_percent) / 100;
     }
 
+    public function getExpectedValueAttribute($value): float
+    {
+        // Wenn expected_value in der DB gesetzt ist, verwende das
+        if ($value !== null) {
+            return (float) $value;
+        }
+        
+        // Sonst berechne es aus deal_value und probability_percent
+        return $this->getCalculatedExpectedValueAttribute();
+    }
+
     public function isHighValue(): bool
     {
         return $this->deal_value && $this->deal_value > 10000; // > 10k EUR

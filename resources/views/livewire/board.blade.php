@@ -29,7 +29,7 @@
                 <div class="grid grid-cols-2 gap-2">
                     <x-ui-dashboard-tile
                         title="Deal Wert"
-                        :count="number_format($groups->flatMap(fn($g) => $g->deals)->sum(fn($d) => $d->deal_value ?? 0), 0, ',', '.') . ' €'"
+                        :count="number_format((float) $groups->flatMap(fn($g) => $g->deals)->sum(fn($d) => (float) ($d->deal_value ?? 0)), 0, ',', '.') . ' €'"
                         icon="currency-euro"
                         variant="purple"
                         size="sm"
@@ -37,7 +37,7 @@
                     
                     <x-ui-dashboard-tile
                         title="Erwarteter Wert"
-                        :count="number_format($groups->flatMap(fn($g) => $g->deals)->sum(fn($d) => $d->expected_value ?? 0), 0, ',', '.') . ' €'"
+                        :count="number_format((float) $groups->flatMap(fn($g) => $g->deals)->sum(fn($d) => (float) ($d->expected_value ?? 0)), 0, ',', '.') . ' €'"
                         icon="chart-pie"
                         variant="orange"
                         size="sm"
