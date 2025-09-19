@@ -2,7 +2,8 @@
   "name": "martin3r/platform-sales",
   "autoload": {
     "psr-4": {
-      "Platform\\Sales\\": "src/"
+      "Platform\\Sales\\": "src/",
+      "Platform\\Sales\\Database\\Seeders\\": "database/seeders/"
     }
   },
   "extra": {
