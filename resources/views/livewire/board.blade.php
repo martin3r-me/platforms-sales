@@ -34,19 +34,55 @@
                 </x-ui-button>
             </div>
         @endcan
+
+        <!-- Gewonnene Deals -->
+        @php $wonDeals = $groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->deals); @endphp
+        @if($wonDeals->count() > 0)
+            <div>
+                <h4 class="font-medium mb-3">Gewonnene Deals ({{ $wonDeals->count() }})</h4>
+                <div class="space-y-1 max-h-60 overflow-y-auto">
+                    @foreach($wonDeals->take(10) as $deal)
+                        <a href="{{ route('sales.deals.show', $deal) }}" 
+                           class="block p-2 bg-green-50 border border-green-200 rounded text-sm hover:bg-green-100 transition">
+                            <div class="font-medium">{{ $deal->title }}</div>
+                            @if($deal->deal_value)
+                                <div class="text-green-600 font-semibold">{{ number_format((float) $deal->deal_value, 0, ',', '.') }} €</div>
+                            @endif
+                        </a>
+                    @endforeach
+                    @if($wonDeals->count() > 10)
+                        <div class="text-center text-sm text-gray-500 p-2">
+                            +{{ $wonDeals->count() - 10 }} weitere
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
     </div>
 
-    <!-- Kanban-Board -->
-    <div class="flex-grow-1 overflow-hidden">
+    <!-- Kanban-Board (scrollbar) -->
+    <div class="flex-grow overflow-x-auto">
         <x-ui-kanban-board>
-            @foreach($groups as $group)
-                <x-ui-kanban-column 
-                    :key="$group->id"
-                    :title="$group->label"
-                    :color="$group->color ?? 'blue'"
-                    :count="$group->deals->count()"
-                >
-                    @foreach($group->deals as $deal)
+
+            {{-- Mittlere Spalten --}}
+            @foreach($groups->filter(fn ($g) => !($g->isWonGroup ?? false)) as $column)
+                <x-ui-kanban-column
+                    :title="$column->label"
+                    :color="$column->color ?? 'blue'"
+                    :count="$column->deals->count()">
+
+                    <x-slot name="extra">
+                        <div class="d-flex gap-1">
+                            @can('update', $salesBoard)
+                                <x-ui-button variant="success-outline" size="sm" class="w-full" wire:click="createDeal('{{ $column->id }}')">
+                                    + Neuer Deal
+                                </x-ui-button>
+                                <x-ui-button variant="primary-outline" size="sm" class="w-full" @click="$dispatch('open-modal-board-slot-settings', { boardSlotId: {{ $column->id }} })">Settings</x-ui-button>
+                            @endcan
+                        </div>
+                    </x-slot>
+
+                    @foreach($column->deals as $deal)
                         <x-ui-kanban-card 
                             :key="$deal->id"
                             :title="$deal->title"
@@ -80,8 +116,14 @@
                             </div>
                         </x-ui-kanban-card>
                     @endforeach
+
                 </x-ui-kanban-column>
             @endforeach
+
         </x-ui-kanban-board>
     </div>
+
+    <!-- Modals -->
+    <livewire:sales.board-settings-modal />
+    <livewire:sales.board-slot-settings-modal />
 </div>
