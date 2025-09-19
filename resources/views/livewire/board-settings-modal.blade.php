@@ -27,7 +27,7 @@
             </div>
 
             <!-- Template-Auswahl -->
-            @if($availableTemplates->count() > 0)
+            @if($availableTemplates && $availableTemplates->count() > 0)
                 <div>
                     <x-ui-input-select
                         name="board.sales_board_template_id"

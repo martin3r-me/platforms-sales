@@ -13,7 +13,7 @@ class BoardSettingsModal extends Component
     public $modalShow = false;
     public $board;
     public $teamUsers = [];
-    public $availableTemplates = [];
+    public $availableTemplates;
 
     public function rules(): array
     {
