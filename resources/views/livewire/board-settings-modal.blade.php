@@ -5,37 +5,40 @@
         <div class="space-y-4">
             <!-- Board-Name -->
             <div>
-                <x-ui-label for="board.name">Name</x-ui-label>
-                <x-ui-input 
-                    id="board.name"
+                <x-ui-input-text 
+                    name="board.name"
+                    label="Name"
                     wire:model="board.name" 
                     placeholder="Board-Name eingeben"
+                    :errorKey="'board.name'"
                 />
-                @error('board.name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <!-- Board-Beschreibung -->
             <div>
-                <x-ui-label for="board.description">Beschreibung</x-ui-label>
-                <x-ui-textarea 
-                    id="board.description"
+                <x-ui-input-textarea 
+                    name="board.description"
+                    label="Beschreibung"
                     wire:model="board.description" 
                     placeholder="Board-Beschreibung eingeben"
                     rows="3"
+                    :errorKey="'board.description'"
                 />
-                @error('board.description') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <!-- Template-Auswahl -->
             @if($availableTemplates->count() > 0)
                 <div>
-                    <x-ui-label for="board.template">Template</x-ui-label>
-                    <x-ui-select wire:model="board.sales_board_template_id">
-                        <option value="">Kein Template</option>
-                        @foreach($availableTemplates as $template)
-                            <option value="{{ $template->id }}">{{ $template->name }}</option>
-                        @endforeach
-                    </x-ui-select>
+                    <x-ui-input-select
+                        name="board.sales_board_template_id"
+                        label="Template"
+                        :options="$availableTemplates"
+                        optionValue="id"
+                        optionLabel="name"
+                        :nullable="true"
+                        nullLabel="Kein Template"
+                        wire:model="board.sales_board_template_id"
+                    />
                 </div>
             @endif
         </div>

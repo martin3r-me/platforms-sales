@@ -5,41 +5,47 @@
         <div class="space-y-4">
             <!-- Slot-Name -->
             <div>
-                <x-ui-label for="slot.name">Name</x-ui-label>
-                <x-ui-input 
-                    id="slot.name"
+                <x-ui-input-text 
+                    name="slot.name"
+                    label="Name"
                     wire:model="slot.name" 
                     placeholder="Spalten-Name eingeben"
+                    :errorKey="'slot.name'"
                 />
-                @error('slot.name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <!-- Slot-Beschreibung -->
             <div>
-                <x-ui-label for="slot.description">Beschreibung</x-ui-label>
-                <x-ui-textarea 
-                    id="slot.description"
+                <x-ui-input-textarea 
+                    name="slot.description"
+                    label="Beschreibung"
                     wire:model="slot.description" 
                     placeholder="Spalten-Beschreibung eingeben"
                     rows="2"
+                    :errorKey="'slot.description'"
                 />
-                @error('slot.description') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <!-- Slot-Farbe -->
             <div>
-                <x-ui-label for="slot.color">Farbe</x-ui-label>
-                <x-ui-select wire:model="slot.color">
-                    <option value="blue">Blau</option>
-                    <option value="green">Grün</option>
-                    <option value="yellow">Gelb</option>
-                    <option value="red">Rot</option>
-                    <option value="purple">Lila</option>
-                    <option value="orange">Orange</option>
-                    <option value="pink">Rosa</option>
-                    <option value="indigo">Indigo</option>
-                </x-ui-select>
-                @error('slot.color') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                <x-ui-input-select
+                    name="slot.color"
+                    label="Farbe"
+                    :options="[
+                        ['value' => 'blue', 'label' => 'Blau'],
+                        ['value' => 'green', 'label' => 'Grün'],
+                        ['value' => 'yellow', 'label' => 'Gelb'],
+                        ['value' => 'red', 'label' => 'Rot'],
+                        ['value' => 'purple', 'label' => 'Lila'],
+                        ['value' => 'orange', 'label' => 'Orange'],
+                        ['value' => 'pink', 'label' => 'Rosa'],
+                        ['value' => 'indigo', 'label' => 'Indigo']
+                    ]"
+                    optionValue="value"
+                    optionLabel="label"
+                    wire:model="slot.color"
+                    :errorKey="'slot.color'"
+                />
             </div>
         </div>
     </x-slot>
