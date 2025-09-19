@@ -25,7 +25,7 @@ class Board extends Component
         $slots = $this->salesBoard->slots()->orderBy('order')->get();
         
         // Erstelle Gruppen für jedes Slot
-        $this->groups = $slots->map(function ($slot) {
+        $groups = $slots->map(function ($slot) {
             $slot->label = $slot->name;
             $slot->tasks = $slot->deals()
                 ->orderBy('slot_order')
@@ -45,7 +45,8 @@ class Board extends Component
             ->orderBy('done_at', 'desc')
             ->get();
         
-        $this->groups->push($wonGroup);
+        // Stelle sicher, dass $this->groups eine Collection ist
+        $this->groups = $groups->push($wonGroup);
     }
 
     public function createDeal($slotId = null)

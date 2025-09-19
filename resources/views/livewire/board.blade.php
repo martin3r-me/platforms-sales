@@ -5,6 +5,7 @@
         <p><strong>SalesBoard ID:</strong> {{ $salesBoard->id ?? 'NULL' }}</p>
         <p><strong>SalesBoard Name:</strong> {{ $salesBoard->name ?? 'NULL' }}</p>
         <p><strong>Groups Type:</strong> {{ gettype($groups) }}</p>
+        <p><strong>Groups Class:</strong> {{ $groups ? get_class($groups) : 'NULL' }}</p>
         <p><strong>Groups Count:</strong> {{ $groups ? $groups->count() : 'NULL' }}</p>
         <p><strong>Groups Empty:</strong> {{ $groups ? ($groups->isEmpty() ? 'YES' : 'NO') : 'NULL' }}</p>
         @if($groups && $groups->count() > 0)
