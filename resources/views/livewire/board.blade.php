@@ -1,21 +1,11 @@
 <div class="h-full d-flex">
-    <!-- Debug Info -->
-    <div class="p-4 bg-yellow-100 border border-yellow-300 rounded mb-4">
-        <h4 class="font-bold text-yellow-800">Debug Info:</h4>
-        <p><strong>SalesBoard ID:</strong> {{ $salesBoard->id ?? 'NULL' }}</p>
-        <p><strong>SalesBoard Name:</strong> {{ $salesBoard->name ?? 'NULL' }}</p>
-        <p><strong>Groups Type:</strong> {{ gettype($groups) }}</p>
-        <p><strong>Groups Count:</strong> {{ $groups ? $groups->count() : 'NULL' }}</p>
-        <p><strong>Groups Empty:</strong> {{ $groups ? ($groups->isEmpty() ? 'YES' : 'NO') : 'NULL' }}</p>
-    </div>
-
     <!-- Info-Bereich (fixe Breite) -->
     <div class="w-80 border-r border-muted p-4 flex-shrink-0">
         <!-- Board-Info -->
         <div class="mb-6">
             <div class="d-flex justify-between items-start mb-2">
-                <h3 class="text-lg font-semibold">{{ $salesBoard->name ?? 'Unbekanntes Board' }}</h3>
-                <x-ui-button variant="info" size="sm" @click="$dispatch('open-modal-board-settings', { boardId: {{ $salesBoard->id ?? 0 }} })">
+                <h3 class="text-lg font-semibold">{{ $salesBoard->name }}</h3>
+                <x-ui-button variant="info" size="sm" @click="$dispatch('open-modal-board-settings', { boardId: {{ $salesBoard->id }} })">
                     <div class="d-flex items-center gap-2">
                         @svg('heroicon-o-information-circle', 'w-4 h-4')
                         Info
@@ -28,56 +18,56 @@
             <div class="grid grid-cols-2 gap-2 mb-4">
                 <x-ui-dashboard-tile
                     title="Deal-Wert (offen)"
-                    :count="$groups ? $groups->filter(fn($g) => !($g->isWonGroup ?? false))->flatMap(fn($g) => $g->tasks)->sum(fn($t) => $t->deal_value ?? 0) : 0"
+                    :count="$groups->filter(fn($g) => !($g->isWonGroup ?? false))->flatMap(fn($g) => $g->tasks)->sum(fn($t) => $t->deal_value ?? 0)"
                     icon="currency-euro"
                     variant="warning"
                     size="sm"
                 />
                 <x-ui-dashboard-tile
                     title="Deal-Wert (gewonnen)"
-                    :count="$groups ? $groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->tasks)->sum(fn($t) => $t->deal_value ?? 0) : 0"
+                    :count="$groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->tasks)->sum(fn($t) => $t->deal_value ?? 0)"
                     icon="check-circle"
                     variant="success"
                     size="sm"
                 />
                 <x-ui-dashboard-tile
                     title="Offen"
-                    :count="$groups ? $groups->filter(fn($g) => !($g->isWonGroup ?? false))->sum(fn($g) => is_array($g->tasks) ? count($g->tasks) : $g->tasks->count()) : 0"
+                    :count="$groups->filter(fn($g) => !($g->isWonGroup ?? false))->sum(fn($g) => $g->tasks->count())"
                     icon="clock"
                     variant="warning"
                     size="sm"
                 />
                 <x-ui-dashboard-tile
                     title="Gesamt"
-                    :count="$groups ? collect($groups->flatMap(fn($g) => $g->tasks))->count() : 0"
+                    :count="$groups->flatMap(fn($g) => $g->tasks)->count()"
                     icon="document-text"
                     variant="secondary"
                     size="sm"
                 />
                 <x-ui-dashboard-tile
                     title="Gewonnen"
-                    :count="$groups ? $groups->filter(fn($g) => $g->isWonGroup ?? false)->sum(fn($g) => is_array($g->tasks) ? count($g->tasks) : $g->tasks->count()) : 0"
+                    :count="$groups->filter(fn($g) => $g->isWonGroup ?? false)->sum(fn($g) => $g->tasks->count())"
                     icon="check-circle"
                     variant="success"
                     size="sm"
                 />
                 <x-ui-dashboard-tile
                     title="Ohne Fälligkeit"
-                    :count="$groups ? collect($groups->flatMap(fn($g) => $g->tasks))->filter(fn($t) => !$t->due_date)->count() : 0"
+                    :count="$groups->flatMap(fn($g) => $g->tasks)->filter(fn($t) => !$t->due_date)->count()"
                     icon="calendar"
                     variant="neutral"
                     size="sm"
                 />
                 <x-ui-dashboard-tile
                     title="High Value"
-                    :count="$groups ? collect($groups->flatMap(fn($g) => $g->tasks))->filter(fn($t) => $t->deal_value && $t->deal_value > 10000)->count() : 0"
+                    :count="$groups->flatMap(fn($g) => $g->tasks)->filter(fn($t) => $t->deal_value && $t->deal_value > 10000)->count()"
                     icon="star"
                     variant="warning"
                     size="sm"
                 />
                 <x-ui-dashboard-tile
                     title="Überfällig"
-                    :count="$groups ? collect($groups->flatMap(fn($g) => $g->tasks))->filter(fn($t) => $t->due_date && $t->due_date->isPast() && !$t->is_done)->count() : 0"
+                    :count="$groups->flatMap(fn($g) => $g->tasks)->filter(fn($t) => $t->due_date && $t->due_date->isPast() && !$t->is_done)->count()"
                     icon="exclamation-circle"
                     variant="danger"
                     size="sm"
@@ -98,8 +88,8 @@
         </div>
 
         <!-- Gewonnene Deals -->
-        @php $wonDeals = $groups ? $groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->tasks) : collect(); @endphp
-        @if($wonDeals && $wonDeals->count() > 0)
+        @php $wonDeals = $groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->tasks); @endphp
+        @if($wonDeals->count() > 0)
             <div>
                 <h4 class="font-medium mb-3">Gewonnene Deals ({{ $wonDeals->count() }})</h4>
                 <div class="space-y-1 max-h-60 overflow-y-auto">

@@ -7,40 +7,25 @@ use Platform\Sales\Models\SalesBoard;
 use Platform\Sales\Models\SalesDeal;
 use Platform\Sales\Models\SalesBoardSlot;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Collection;
 
 class Board extends Component
 {
     public SalesBoard $salesBoard;
-    public Collection $groups;
+    public $groups;
 
     public function mount(SalesBoard $salesBoard)
     {
         $this->salesBoard = $salesBoard;
-        $this->groups = collect(); // Initialisiere als leere Collection
-        
-        try {
-            $this->loadGroups();
-        } catch (\Exception $e) {
-            // Log den Fehler und setze leere Collection
-            \Log::error('Sales Board loadGroups Fehler: ' . $e->getMessage());
-            $this->groups = collect();
-        }
+        $this->loadGroups();
     }
 
     public function loadGroups()
     {
-        // Prüfe ob salesBoard existiert
-        if (!$this->salesBoard) {
-            $this->groups = collect();
-            return;
-        }
-
         // Lade alle Slots des Boards
         $slots = $this->salesBoard->slots()->orderBy('order')->get();
         
         // Erstelle Gruppen für jedes Slot
-        $groups = $slots->map(function ($slot) {
+        $this->groups = $slots->map(function ($slot) {
             $slot->label = $slot->name;
             $slot->tasks = $slot->deals()
                 ->orderBy('slot_order')
@@ -60,7 +45,7 @@ class Board extends Component
             ->orderBy('done_at', 'desc')
             ->get();
         
-        $this->groups = $groups->push($wonGroup);
+        $this->groups->push($wonGroup);
     }
 
     public function createDeal($slotId = null)
@@ -153,16 +138,6 @@ class Board extends Component
 
     public function render()
     {
-        // Stelle sicher, dass groups geladen ist
-        if (!$this->groups || $this->groups->isEmpty()) {
-            try {
-                $this->loadGroups();
-            } catch (\Exception $e) {
-                \Log::error('Sales Board render loadGroups Fehler: ' . $e->getMessage());
-                $this->groups = collect();
-            }
-        }
-        
         return view('sales::livewire.board')->layout('platform::layouts.app');
     }
 }
