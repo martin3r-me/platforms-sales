@@ -1,30 +1,42 @@
 <div class="h-full d-flex">
-    <!-- Minimale Debug-Version -->
-    <div class="p-4">
-        <h1>Sales Board Debug</h1>
+    <!-- Info-Bereich -->
+    <div class="w-80 border-r border-muted p-4 flex-shrink-0">
+        <h3 class="text-lg font-semibold">{{ $salesBoard->name }}</h3>
+        <div class="text-sm text-gray-600 mb-4">{{ $salesBoard->description ?? 'Keine Beschreibung' }}</div>
         
-        <h2>SalesBoard Info:</h2>
-        <p>ID: {{ $salesBoard->id ?? 'NULL' }}</p>
-        <p>Name: {{ $salesBoard->name ?? 'NULL' }}</p>
-        
-        <h2>Groups Info:</h2>
-        <p>Groups Type: {{ gettype($groups) }}</p>
-        <p>Groups Class: {{ $groups ? get_class($groups) : 'NULL' }}</p>
-        <p>Groups Count: {{ $groups ? $groups->count() : 'NULL' }}</p>
-        
-        @if($groups && $groups->count() > 0)
-            <h3>Gruppen Details:</h3>
-            @foreach($groups as $index => $group)
-                <div class="border p-2 mb-2">
-                    <p><strong>Gruppe {{ $index + 1 }}:</strong></p>
-                    <p>ID: {{ $group->id ?? 'NULL' }}</p>
-                    <p>Name: {{ $group->name ?? 'NULL' }}</p>
-                    <p>Label: {{ $group->label ?? 'NULL' }}</p>
-                    <p>Deals Type: {{ gettype($group->deals ?? null) }}</p>
-                    <p>Deals Class: {{ $group->deals ? get_class($group->deals) : 'NULL' }}</p>
-                    <p>Deals Count: {{ $group->deals ? $group->deals->count() : 'NULL' }}</p>
+        <!-- Einfache Statistiken -->
+        <div class="grid grid-cols-2 gap-2 mb-4">
+            <div class="p-3 bg-blue-50 border border-blue-200 rounded">
+                <div class="text-sm text-blue-600">Offene Deals</div>
+                <div class="text-xl font-bold text-blue-800">{{ $groups->filter(fn($g) => !($g->isWonGroup ?? false))->sum(fn($g) => $g->deals->count()) }}</div>
+            </div>
+            <div class="p-3 bg-green-50 border border-green-200 rounded">
+                <div class="text-sm text-green-600">Gewonnene Deals</div>
+                <div class="text-xl font-bold text-green-800">{{ $groups->filter(fn($g) => $g->isWonGroup ?? false)->sum(fn($g) => $g->deals->count()) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kanban-Board -->
+    <div class="flex-grow-1 overflow-hidden">
+        <div class="h-full p-4">
+            <h2 class="text-lg font-semibold mb-4">Kanban Board</h2>
+            
+            <!-- Einfache Spalten-Liste -->
+            @foreach($groups as $group)
+                <div class="border p-4 mb-4 rounded">
+                    <h3>{{ $group->label }} ({{ $group->deals->count() }} Deals)</h3>
+                    @if($group->deals->count() > 0)
+                        @foreach($group->deals as $deal)
+                            <div class="p-2 bg-gray-50 rounded mb-2">
+                                {{ $deal->title }}
+                            </div>
+                        @endforeach
+                    @else
+                        <p class="text-gray-500 italic">Keine Deals</p>
+                    @endif
                 </div>
             @endforeach
-        @endif
+        </div>
     </div>
 </div>
