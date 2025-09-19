@@ -5,28 +5,28 @@
         <div class="border-top-1 border-bottom-1 border-muted border-top-solid border-bottom-solid p-2 flex-shrink-0">
             <div class="d-flex gap-1">
                 <div class="d-flex">
-                    @if($ticket->helpdeskBoard)
-                        @can('view', $ticket->helpdeskBoard)
-                            <a href="{{ route('helpdesk.boards.show', $ticket->helpdeskBoard) }}" class="px-3 underline" wire:navigate>
-                                Board: {{ $ticket->helpdeskBoard?->name }}
+                    @if($deal->salesBoard)
+                        @can('view', $deal->salesBoard)
+                            <a href="{{ route('sales.boards.show', $deal->salesBoard) }}" class="px-3 underline" wire:navigate>
+                                Board: {{ $deal->salesBoard?->name }}
                             </a>
                         @else
                             <span class="px-3 text-gray-400" title="Kein Zugriff auf das Board">
-                                Board: {{ $ticket->helpdeskBoard?->name }} <span class="italic">(kein Zugriff)</span>
+                                Board: {{ $deal->salesBoard?->name }} <span class="italic">(kein Zugriff)</span>
                             </span>
                         @endcan
                     @endif
 
-                    <a href="{{ route('helpdesk.my-tickets') }}" class="d-flex px-3 border-right-solid border-right-1 border-right-muted underline" wire:navigate>
-                        Meine Tickets
+                    <a href="{{ route('sales.my-deals') }}" class="d-flex px-3 border-right-solid border-right-1 border-right-muted underline" wire:navigate>
+                        Meine Deals
                     </a>
                 </div>
                 <div class="flex-grow-1 text-right d-flex items-center justify-end gap-2">
-                    <span>{{ $ticket->title }}</span>
-                    @if($ticket->is_done)
+                    <span>{{ $deal->title }}</span>
+                    @if($deal->is_done)
                         <x-ui-badge variant="success" size="sm">
                             @svg('heroicon-o-check-circle', 'w-3 h-3')
-                            Erledigt
+                            Gewonnen
                         </x-ui-badge>
                     @endif
                 </div>
@@ -36,283 +36,249 @@
         <!-- Haupt-Content (nimmt Restplatz, scrollt) -->
         <div class="flex-grow-1 overflow-y-auto p-4">
             
-            {{-- SLA Dashboard --}}
-            @if($ticket->sla)
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold mb-4 text-secondary d-flex items-center gap-2">
-                        @svg('heroicon-o-clock', 'w-5 h-5')
-                        Service Level Agreement
-                    </h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        {{-- SLA Info --}}
-                        <div class="p-4 bg-white border rounded-lg shadow-sm">
-                            <div class="d-flex items-center gap-2 mb-2">
-                                <x-heroicon-o-information-circle class="w-4 h-4 text-primary"/>
-                                <span class="font-medium text-sm">SLA Details</span>
-                            </div>
-                            <div class="space-y-1">
-                                <div class="text-sm">
-                                    <span class="font-medium">{{ $ticket->sla->name }}</span>
-                                </div>
-                                @if($ticket->sla->description)
-                                    <div class="text-xs text-gray-500">{{ Str::limit($ticket->sla->description, 50) }}</div>
-                                @endif
-                                <div class="d-flex items-center gap-1">
-                                    @if($ticket->sla->is_active)
-                                        <div class="w-2 h-2 bg-success rounded-full"></div>
-                                        <span class="text-xs text-success">Aktiv</span>
-                                    @else
-                                        <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
-                                        <span class="text-xs text-gray-500">Inaktiv</span>
-                                    @endif
-                                </div>
-                            </div>
+            {{-- Deal Dashboard --}}
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-4 text-secondary d-flex items-center gap-2">
+                    @svg('heroicon-o-currency-euro', 'w-5 h-5')
+                    Deal Übersicht
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    {{-- Deal Wert --}}
+                    <div class="p-4 bg-white border rounded-lg shadow-sm">
+                        <div class="d-flex items-center gap-2 mb-2">
+                            <x-heroicon-o-currency-euro class="w-4 h-4 text-primary"/>
+                            <span class="font-medium text-sm">Deal Wert</span>
                         </div>
-
-                        {{-- Zeit seit Eingang --}}
-                        <div class="p-4 bg-white border rounded-lg shadow-sm">
-                            <div class="d-flex items-center gap-2 mb-2">
-                                <x-heroicon-o-calendar class="w-4 h-4 text-primary"/>
-                                <span class="font-medium text-sm">Zeit seit Eingang</span>
-                            </div>
-                            <div class="space-y-1">
-                                <div class="text-2xl font-bold text-primary">
-                                    {{ $ticket->created_at->diffForHumans() }}
-                                </div>
-                                <div class="text-xs text-gray-500">
-                                    Erstellt am {{ $ticket->created_at->format('d.m.Y H:i') }}
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Restzeit --}}
-                        <div class="p-4 bg-white border rounded-lg shadow-sm">
-                            <div class="d-flex items-center gap-2 mb-2">
-                                <x-heroicon-o-clock class="w-4 h-4 text-primary"/>
-                                <span class="font-medium text-sm">Restzeit</span>
-                            </div>
-                            <div class="space-y-1">
-                                @php
-                                    $remainingTime = $ticket->sla->getRemainingTime($ticket);
-                                    $isOverdue = $ticket->sla->isOverdue($ticket);
-                                @endphp
-                                
-                                @if($remainingTime !== null)
-                                    @if($isOverdue)
-                                        <div class="text-2xl font-bold text-danger">
-                                            <x-heroicon-o-exclamation-triangle class="w-5 h-5 inline"/>
-                                            Überschritten
-                                        </div>
-                                        <div class="text-xs text-danger">
-                                            {{ abs($remainingTime) }}h überfällig
-                                        </div>
-                                    @else
-                                        <div class="text-2xl font-bold text-success">
-                                            {{ $remainingTime }}h
-                                        </div>
-                                        <div class="text-xs text-success">
-                                            verbleibend
-                                        </div>
-                                    @endif
+                        <div class="space-y-1">
+                            <div class="text-2xl font-bold text-primary">
+                                @if($deal->deal_value)
+                                    {{ number_format((float) $deal->deal_value, 0, ',', '.') }} €
                                 @else
-                                    <div class="text-2xl font-bold text-gray-400">
-                                        –
-                                    </div>
-                                    <div class="text-xs text-gray-500">
-                                        Keine Zeitvorgabe
-                                    </div>
+                                    –
                                 @endif
                             </div>
+                            @if($deal->deal_value)
+                                <div class="text-xs text-gray-500">
+                                    Erwarteter Wert: {{ number_format((float) $deal->expected_value, 0, ',', '.') }} €
+                                </div>
+                            @endif
                         </div>
                     </div>
 
-                    {{-- SLA Zeitvorgaben --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        @if($ticket->sla->response_time_hours)
-                            <div class="p-3 bg-muted-5 rounded-lg">
-                                <div class="d-flex items-center gap-2 mb-1">
-                                    <x-heroicon-o-chat-bubble-left class="w-4 h-4 text-muted"/>
-                                    <span class="text-sm font-medium">Reaktionszeit</span>
-                                </div>
-                                <div class="text-sm">
-                                    <span class="font-bold">{{ $ticket->sla->response_time_hours }} Stunden</span>
-                                    @php
-                                        $responseTime = $ticket->created_at->addHours($ticket->sla->response_time_hours);
-                                        $isResponseOverdue = now()->isAfter($responseTime);
-                                    @endphp
-                                    @if($isResponseOverdue)
-                                        <span class="text-danger">({{ $responseTime->diffForHumans() }} überschritten)</span>
+                    {{-- Wahrscheinlichkeit --}}
+                    <div class="p-4 bg-white border rounded-lg shadow-sm">
+                        <div class="d-flex items-center gap-2 mb-2">
+                            <x-heroicon-o-chart-pie class="w-4 h-4 text-primary"/>
+                            <span class="font-medium text-sm">Wahrscheinlichkeit</span>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="text-2xl font-bold text-primary">
+                                @if($deal->probability_percent)
+                                    {{ $deal->probability_percent }}%
+                                @else
+                                    –
+                                @endif
+                            </div>
+                            @if($deal->probability_percent)
+                                <div class="text-xs text-gray-500">
+                                    @if($deal->probability_percent <= 30)
+                                        <span class="text-red-600">Niedrig</span>
+                                    @elseif($deal->probability_percent <= 70)
+                                        <span class="text-yellow-600">Mittel</span>
                                     @else
-                                        <span class="text-success">(bis {{ $responseTime->format('d.m.Y H:i') }})</span>
+                                        <span class="text-green-600">Hoch</span>
                                     @endif
                                 </div>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
+                    </div>
 
-                        @if($ticket->sla->resolution_time_hours && !$ticket->is_done)
-                            <div class="p-3 bg-muted-5 rounded-lg">
-                                <div class="d-flex items-center gap-2 mb-1">
-                                    <x-heroicon-o-check-circle class="w-4 h-4 text-muted"/>
-                                    <span class="text-sm font-medium">Lösungszeit</span>
-                                </div>
-                                <div class="text-sm">
-                                    <span class="font-bold">{{ $ticket->sla->resolution_time_hours }} Stunden</span>
-                                    @php
-                                        $resolutionTime = $ticket->created_at->addHours($ticket->sla->resolution_time_hours);
-                                        $isResolutionOverdue = now()->isAfter($resolutionTime);
-                                    @endphp
-                                    @if($isResolutionOverdue)
-                                        <span class="text-danger">({{ $resolutionTime->diffForHumans() }} überschritten)</span>
+                    {{-- Fälligkeitsdatum --}}
+                    <div class="p-4 bg-white border rounded-lg shadow-sm">
+                        <div class="d-flex items-center gap-2 mb-2">
+                            <x-heroicon-o-calendar class="w-4 h-4 text-primary"/>
+                            <span class="font-medium text-sm">Fälligkeitsdatum</span>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="text-2xl font-bold text-primary">
+                                @if($deal->due_date)
+                                    {{ $deal->due_date->format('d.m.Y') }}
+                                @else
+                                    –
+                                @endif
+                            </div>
+                            @if($deal->due_date)
+                                <div class="text-xs text-gray-500">
+                                    @if($deal->due_date->isPast() && !$deal->is_done)
+                                        <span class="text-red-600">Überfällig</span>
+                                    @elseif($deal->due_date->isToday())
+                                        <span class="text-yellow-600">Heute fällig</span>
                                     @else
-                                        <span class="text-success">(bis {{ $resolutionTime->format('d.m.Y H:i') }})</span>
+                                        <span class="text-green-600">{{ $deal->due_date->diffForHumans() }}</span>
                                     @endif
                                 </div>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
                     </div>
                 </div>
-            @endif
+            </div>
 
-            {{-- Ticket Details --}}
+            {{-- Deal Details --}}
             <div class="mb-6">
-                <h3 class="text-lg font-semibold mb-4 text-secondary">Ticket Details</h3>
+                <h3 class="text-lg font-semibold mb-4 text-secondary">Deal Details</h3>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {{-- Linke Spalte: Titel & Beschreibung --}}
                     <div class="space-y-4">
-                        @can('update', $ticket)
+                        @can('update', $deal)
                             <x-ui-input-text 
-                                name="ticket.title"
-                                label="Ticket-Titel"
-                                wire:model.live.debounce.500ms="ticket.title"
-                                placeholder="Ticket-Titel eingeben..."
+                                name="deal.title"
+                                label="Deal-Titel"
+                                wire:model.live.debounce.500ms="deal.title"
+                                placeholder="Deal-Titel eingeben..."
                                 required
-                                :errorKey="'ticket.title'"
+                                :errorKey="'deal.title'"
                             />
                         @else
                             <div>
-                                <label class="font-semibold">Ticket-Titel:</label>
-                                <div class="p-3 bg-muted-5 rounded-lg">{{ $ticket->title }}</div>
+                                <label class="font-semibold">Deal-Titel:</label>
+                                <div class="p-3 bg-muted-5 rounded-lg">{{ $deal->title }}</div>
                             </div>
                         @endcan
 
-                        @can('update', $ticket)
+                        @can('update', $deal)
                             <x-ui-input-textarea 
-                                name="ticket.description"
-                                label="Ticket Beschreibung"
-                                wire:model.live.debounce.500ms="ticket.description"
-                                placeholder="Ticket Beschreibung eingeben..."
+                                name="deal.description"
+                                label="Deal Beschreibung"
+                                wire:model.live.debounce.500ms="deal.description"
+                                placeholder="Deal Beschreibung eingeben..."
                                 rows="6"
-                                :errorKey="'ticket.description'"
+                                :errorKey="'deal.description'"
                             />
                         @else
                             <div>
                                 <label class="font-semibold">Beschreibung:</label>
-                                <div class="p-3 bg-muted-5 rounded-lg whitespace-pre-wrap">{{ $ticket->description ?: 'Keine Beschreibung vorhanden' }}</div>
+                                <div class="p-3 bg-muted-5 rounded-lg whitespace-pre-wrap">{{ $deal->description ?: 'Keine Beschreibung vorhanden' }}</div>
                             </div>
                         @endcan
                     </div>
 
                     {{-- Rechte Spalte: Metadaten --}}
                     <div class="space-y-4">
-                        {{-- Status & Priorität --}}
+                        {{-- Deal Wert & Wahrscheinlichkeit --}}
                         <div class="grid grid-cols-2 gap-4">
-                            @can('update', $ticket)
-                                <x-ui-input-select
-                                    name="ticket.status"
-                                    label="Status"
-                                    :options="\Platform\Helpdesk\Enums\TicketStatus::cases()"
-                                    optionValue="value"
-                                    optionLabel="label"
-                                    :nullable="true"
-                                    nullLabel="– Kein Status –"
-                                    wire:model.live="ticket.status"
+                            @can('update', $deal)
+                                <x-ui-input-number
+                                    name="deal.deal_value"
+                                    label="Deal Wert (€)"
+                                    wire:model.live.debounce.500ms="deal.deal_value"
+                                    placeholder="0.00"
+                                    step="0.01"
+                                    min="0"
+                                    :errorKey="'deal.deal_value'"
                                 />
                             @else
                                 <div>
-                                    <label class="font-semibold">Status:</label>
-                                    <div class="p-2 bg-muted-5 rounded-lg">{{ $ticket->status?->label() ?? '–' }}</div>
-                                </div>
-                            @endcan
-
-                            @can('update', $ticket)
-                                <x-ui-input-select
-                                    name="ticket.priority"
-                                    label="Priorität"
-                                    :options="\Platform\Helpdesk\Enums\TicketPriority::cases()"
-                                    optionValue="value"
-                                    optionLabel="label"
-                                    :nullable="true"
-                                    nullLabel="– Keine Priorität –"
-                                    wire:model.live="ticket.priority"
-                                />
-                            @else
-                                <div>
-                                    <label class="font-semibold">Priorität:</label>
-                                    <div class="p-2 bg-muted-5 rounded-lg">{{ $ticket->priority?->label() ?? '–' }}</div>
-                                </div>
-                            @endcan
-                        </div>
-
-                        {{-- Story Points & Fälligkeitsdatum --}}
-                        <div class="grid grid-cols-2 gap-4">
-                            @can('update', $ticket)
-                                <x-ui-input-select
-                                    name="ticket.story_points"
-                                    label="Story Points"
-                                    :options="\Platform\Helpdesk\Enums\TicketStoryPoints::cases()"
-                                    optionValue="value"
-                                    optionLabel="label"
-                                    :nullable="true"
-                                    nullLabel="– Kein Wert –"
-                                    wire:model.live="ticket.story_points"
-                                />
-                            @else
-                                <div>
-                                    <label class="font-semibold">Story Points:</label>
-                                    <div class="p-2 bg-muted-5 rounded-lg">{{ $ticket->story_points?->label() ?? '–' }}</div>
-                                </div>
-                            @endcan
-
-                            @can('update', $ticket)
-                                <x-ui-input-date
-                                    name="ticket.due_date"
-                                    label="Fälligkeitsdatum"
-                                    wire:model.live="ticket.due_date"
-                                    :nullable="true"
-                                    :errorKey="'ticket.due_date'"
-                                />
-                            @else
-                                <div>
-                                    <label class="font-semibold">Fälligkeitsdatum:</label>
+                                    <label class="font-semibold">Deal Wert:</label>
                                     <div class="p-2 bg-muted-5 rounded-lg">
-                                        {{ $ticket->due_date ? $ticket->due_date->format('d.m.Y') : '–' }}
+                                        {{ $deal->deal_value ? number_format((float) $deal->deal_value, 2, ',', '.') . ' €' : '–' }}
+                                    </div>
+                                </div>
+                            @endcan
+
+                            @can('update', $deal)
+                                <x-ui-input-number
+                                    name="deal.probability_percent"
+                                    label="Wahrscheinlichkeit (%)"
+                                    wire:model.live.debounce.500ms="deal.probability_percent"
+                                    placeholder="0"
+                                    min="0"
+                                    max="100"
+                                    :errorKey="'deal.probability_percent'"
+                                />
+                            @else
+                                <div>
+                                    <label class="font-semibold">Wahrscheinlichkeit:</label>
+                                    <div class="p-2 bg-muted-5 rounded-lg">
+                                        {{ $deal->probability_percent ? $deal->probability_percent . '%' : '–' }}
                                     </div>
                                 </div>
                             @endcan
                         </div>
 
-                        {{-- Zugewiesener Benutzer --}}
-                        @can('update', $ticket)
-                            <x-ui-input-select
-                                name="ticket.user_in_charge_id"
-                                label="Zugewiesen an"
-                                :options="$teamUsers"
-                                optionValue="id"
-                                optionLabel="name"
-                                :nullable="true"
-                                nullLabel="– Niemand zugewiesen –"
-                                wire:model.live="ticket.user_in_charge_id"
-                            />
-                        @else
-                            <div>
-                                <label class="font-semibold">Zugewiesen an:</label>
-                                <div class="p-2 bg-muted-5 rounded-lg">
-                                    {{ $ticket->userInCharge?->name ?? 'Niemand zugewiesen' }}
+                        {{-- Deal Source & Type --}}
+                        <div class="grid grid-cols-2 gap-4">
+                            @can('update', $deal)
+                                <x-ui-input-text
+                                    name="deal.deal_source"
+                                    label="Deal Quelle"
+                                    wire:model.live.debounce.500ms="deal.deal_source"
+                                    placeholder="z.B. Website, Empfehlung, Messe..."
+                                    :errorKey="'deal.deal_source'"
+                                />
+                            @else
+                                <div>
+                                    <label class="font-semibold">Deal Quelle:</label>
+                                    <div class="p-2 bg-muted-5 rounded-lg">{{ $deal->deal_source ?: '–' }}</div>
                                 </div>
-                            </div>
-                        @endcan
+                            @endcan
+
+                            @can('update', $deal)
+                                <x-ui-input-text
+                                    name="deal.deal_type"
+                                    label="Deal Typ"
+                                    wire:model.live.debounce.500ms="deal.deal_type"
+                                    placeholder="z.B. Neukunde, Upsell, Renewal..."
+                                    :errorKey="'deal.deal_type'"
+                                />
+                            @else
+                                <div>
+                                    <label class="font-semibold">Deal Typ:</label>
+                                    <div class="p-2 bg-muted-5 rounded-lg">{{ $deal->deal_type ?: '–' }}</div>
+                                </div>
+                            @endcan
+                        </div>
+
+                        {{-- Fälligkeitsdatum & Zugewiesener Benutzer --}}
+                        <div class="grid grid-cols-2 gap-4">
+                            @can('update', $deal)
+                                <x-ui-input-date
+                                    name="deal.due_date"
+                                    label="Fälligkeitsdatum"
+                                    wire:model.live="deal.due_date"
+                                    :nullable="true"
+                                    :errorKey="'deal.due_date'"
+                                />
+                            @else
+                                <div>
+                                    <label class="font-semibold">Fälligkeitsdatum:</label>
+                                    <div class="p-2 bg-muted-5 rounded-lg">
+                                        {{ $deal->due_date ? $deal->due_date->format('d.m.Y') : '–' }}
+                                    </div>
+                                </div>
+                            @endcan
+
+                            @can('update', $deal)
+                                <x-ui-input-select
+                                    name="deal.user_in_charge_id"
+                                    label="Zugewiesen an"
+                                    :options="$teamUsers"
+                                    optionValue="id"
+                                    optionLabel="name"
+                                    :nullable="true"
+                                    nullLabel="– Niemand zugewiesen –"
+                                    wire:model.live="deal.user_in_charge_id"
+                                />
+                            @else
+                                <div>
+                                    <label class="font-semibold">Zugewiesen an:</label>
+                                    <div class="p-2 bg-muted-5 rounded-lg">
+                                        {{ $deal->userInCharge?->name ?? 'Niemand zugewiesen' }}
+                                    </div>
+                                </div>
+                            @endcan
+                        </div>
                     </div>
                 </div>
             </div>
@@ -326,7 +292,7 @@
             >
                 AKTIVITÄTEN 
                 <span class="text-xs">
-                    {{$ticket->activities->count()}}
+                    {{$deal->activities->count()}}
                 </span>
                 <x-heroicon-o-chevron-double-down 
                     class="w-3 h-3" 
@@ -339,8 +305,8 @@
             </div>
             <div x-show="open" class="p-2 max-h-xs overflow-y-auto">
                 <livewire:activity-log.index
-                    :model="$ticket"
-                    :key="get_class($ticket) . '_' . $ticket->id"
+                    :model="$deal"
+                    :key="get_class($deal) . '_' . $deal->id"
                 />
             </div>
         </div>
@@ -357,18 +323,18 @@
 
             {{-- Navigation Buttons --}}
             <div class="d-flex flex-col gap-2 mb-4">
-                @if($ticket->helpdeskBoard)
-                    @can('view', $ticket->helpdeskBoard)
+                @if($deal->salesBoard)
+                    @can('view', $deal->salesBoard)
                         <x-ui-button 
                             variant="secondary-outline" 
                             size="md" 
-                            :href="route('helpdesk.boards.show', $ticket->helpdeskBoard)" 
+                            :href="route('sales.boards.show', $deal->salesBoard)" 
                             wire:navigate
                             class="w-full d-flex"
                         >
                             <div class="d-flex items-center gap-2">
                                 @svg('heroicon-o-arrow-left', 'w-4 h-4')
-                                Board: {{ $ticket->helpdeskBoard?->name }}
+                                Board: {{ $deal->salesBoard?->name }}
                             </div>
                         </x-ui-button>
                     @else
@@ -381,7 +347,7 @@
                         >
                             <div class="d-flex items-center gap-2">
                                 @svg('heroicon-o-arrow-left', 'w-4 h-4')
-                                Board: {{ $ticket->helpdeskBoard?->name }}
+                                Board: {{ $deal->salesBoard?->name }}
                             </div>
                         </x-ui-button>
                     @endcan
@@ -389,13 +355,13 @@
                 <x-ui-button 
                     variant="secondary-outline" 
                     size="md" 
-                    :href="route('helpdesk.my-tickets')" 
+                    :href="route('sales.my-deals')" 
                     wire:navigate
                     class="w-full d-flex"
                 >
                     <div class="d-flex items-center gap-2">
                         @svg('heroicon-o-arrow-left', 'w-4 h-4')
-                        Meine Tickets
+                        Meine Deals
                     </div>
                 </x-ui-button>
             </div>
@@ -404,12 +370,12 @@
             <div class="mb-4">
                 <h4 class="font-semibold mb-2 text-secondary">Quick Actions</h4>
                 
-                {{-- Erledigt-Checkbox --}}
-                @can('update', $ticket)
+                {{-- Gewonnen-Checkbox --}}
+                @can('update', $deal)
                     <x-ui-input-checkbox
-                        model="ticket.is_done"
-                        checked-label="Erledigt"
-                        unchecked-label="Als erledigt markieren"
+                        model="deal.is_done"
+                        checked-label="Gewonnen"
+                        unchecked-label="Als gewonnen markieren"
                         size="md"
                         block="true"
                         variant="success"
@@ -417,38 +383,48 @@
                     />
                 @else
                     <div class="mb-2">
-                        <x-ui-badge variant="{{ $ticket->is_done ? 'success' : 'gray' }}">
+                        <x-ui-badge variant="{{ $deal->is_done ? 'success' : 'gray' }}">
                             @svg('heroicon-o-check-circle', 'w-4 h-4')
-                            {{ $ticket->is_done ? 'Erledigt' : 'Offen' }}
+                            {{ $deal->is_done ? 'Gewonnen' : 'Offen' }}
                         </x-ui-badge>
                     </div>
                 @endcan
-
-
             </div>
 
             <hr>
 
-            {{-- Ticket Info --}}
+            {{-- Deal Info --}}
             <div class="mb-4">
-                <h4 class="font-semibold mb-2 text-secondary">Ticket Info</h4>
+                <h4 class="font-semibold mb-2 text-secondary">Deal Info</h4>
                 <div class="space-y-2 text-sm">
                     <div class="d-flex justify-between">
                         <span class="text-gray-600">Erstellt:</span>
-                        <span>{{ $ticket->created_at->format('d.m.Y H:i') }}</span>
+                        <span>{{ $deal->created_at->format('d.m.Y H:i') }}</span>
                     </div>
                     <div class="d-flex justify-between">
                         <span class="text-gray-600">Aktualisiert:</span>
-                        <span>{{ $ticket->updated_at->format('d.m.Y H:i') }}</span>
+                        <span>{{ $deal->updated_at->format('d.m.Y H:i') }}</span>
                     </div>
                     <div class="d-flex justify-between">
                         <span class="text-gray-600">Erstellt von:</span>
-                        <span>{{ $ticket->user?->name ?? 'Unbekannt' }}</span>
+                        <span>{{ $deal->user?->name ?? 'Unbekannt' }}</span>
                     </div>
-                    @if($ticket->userInCharge)
+                    @if($deal->userInCharge)
                         <div class="d-flex justify-between">
                             <span class="text-gray-600">Zugewiesen an:</span>
-                            <span>{{ $ticket->userInCharge->name }}</span>
+                            <span>{{ $deal->userInCharge->name }}</span>
+                        </div>
+                    @endif
+                    @if($deal->deal_value)
+                        <div class="d-flex justify-between">
+                            <span class="text-gray-600">Deal Wert:</span>
+                            <span>{{ number_format((float) $deal->deal_value, 0, ',', '.') }} €</span>
+                        </div>
+                    @endif
+                    @if($deal->probability_percent)
+                        <div class="d-flex justify-between">
+                            <span class="text-gray-600">Wahrscheinlichkeit:</span>
+                            <span>{{ $deal->probability_percent }}%</span>
                         </div>
                     @endif
                 </div>
@@ -457,19 +433,19 @@
             <hr>
 
             {{-- Löschen-Buttons --}}
-            @can('delete', $ticket)
+            @can('delete', $deal)
                 <div class="d-flex flex-col gap-2">
                     <x-ui-confirm-button 
-                        action="deleteTicketAndReturnToDashboard" 
-                        text="Zu Meinen Tickets" 
+                        action="deleteDealAndReturnToDashboard" 
+                        text="Zu Meinen Deals" 
                         confirmText="Löschen?" 
                         variant="danger-outline"
                         :icon="@svg('heroicon-o-trash', 'w-4 h-4')->toHtml()"
                     />
                     
-                    @if($ticket->helpdeskBoard)
+                    @if($deal->salesBoard)
                         <x-ui-confirm-button 
-                            action="deleteTicketAndReturnToBoard" 
+                            action="deleteDealAndReturnToBoard" 
                             text="Zum Board" 
                             confirmText="Löschen?" 
                             variant="danger-outline"
