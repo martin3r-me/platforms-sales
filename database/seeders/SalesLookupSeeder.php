@@ -16,44 +16,53 @@ class SalesLookupSeeder extends Seeder
     {
         // Sales Priorities
         $priorities = [
-            ['name' => 'low', 'label' => 'Niedrig', 'color' => 'green', 'icon' => '⬇', 'order' => 1],
-            ['name' => 'normal', 'label' => 'Normal', 'color' => 'blue', 'icon' => '⭘', 'order' => 2],
-            ['name' => 'high', 'label' => 'Hoch', 'color' => 'orange', 'icon' => '⬆', 'order' => 3],
-            ['name' => 'critical', 'label' => 'Kritisch', 'color' => 'red', 'icon' => '🔥', 'order' => 4],
+            ['name' => 'low', 'label' => 'Niedrig', 'color' => 'green', 'icon' => 'arrow-down', 'order' => 1],
+            ['name' => 'medium', 'label' => 'Mittel', 'color' => 'yellow', 'icon' => 'minus', 'order' => 2],
+            ['name' => 'high', 'label' => 'Hoch', 'color' => 'orange', 'icon' => 'arrow-up', 'order' => 3],
+            ['name' => 'urgent', 'label' => 'Dringend', 'color' => 'red', 'icon' => 'exclamation-triangle', 'order' => 4],
         ];
 
         foreach ($priorities as $priority) {
-            SalesPriority::create($priority);
+            SalesPriority::firstOrCreate(
+                ['name' => $priority['name']],
+                $priority
+            );
         }
 
         // Sales Deal Sources
         $sources = [
-            ['name' => 'website', 'label' => 'Website', 'color' => 'blue', 'icon' => '🌐', 'order' => 1],
-            ['name' => 'referral', 'label' => 'Empfehlung', 'color' => 'green', 'icon' => '👥', 'order' => 2],
-            ['name' => 'cold_call', 'label' => 'Cold Call', 'color' => 'yellow', 'icon' => '📞', 'order' => 3],
-            ['name' => 'linkedin', 'label' => 'LinkedIn', 'color' => 'blue', 'icon' => '💼', 'order' => 4],
-            ['name' => 'email', 'label' => 'E-Mail', 'color' => 'purple', 'icon' => '📧', 'order' => 5],
-            ['name' => 'trade_show', 'label' => 'Messe', 'color' => 'orange', 'icon' => '🏢', 'order' => 6],
-            ['name' => 'social_media', 'label' => 'Social Media', 'color' => 'pink', 'icon' => '📱', 'order' => 7],
-            ['name' => 'advertising', 'label' => 'Werbung', 'color' => 'red', 'icon' => '📢', 'order' => 8],
+            ['name' => 'website', 'label' => 'Website', 'color' => 'blue', 'icon' => 'globe-alt', 'order' => 1],
+            ['name' => 'referral', 'label' => 'Empfehlung', 'color' => 'green', 'icon' => 'user-group', 'order' => 2],
+            ['name' => 'cold_call', 'label' => 'Kaltakquise', 'color' => 'yellow', 'icon' => 'phone', 'order' => 3],
+            ['name' => 'email', 'label' => 'E-Mail Marketing', 'color' => 'purple', 'icon' => 'envelope', 'order' => 4],
+            ['name' => 'social_media', 'label' => 'Social Media', 'color' => 'pink', 'icon' => 'share', 'order' => 5],
+            ['name' => 'trade_show', 'label' => 'Messe', 'color' => 'indigo', 'icon' => 'building-storefront', 'order' => 6],
+            ['name' => 'partner', 'label' => 'Partner', 'color' => 'orange', 'icon' => 'handshake', 'order' => 7],
+            ['name' => 'other', 'label' => 'Sonstige', 'color' => 'gray', 'icon' => 'ellipsis-horizontal', 'order' => 8],
         ];
 
         foreach ($sources as $source) {
-            SalesDealSource::create($source);
+            SalesDealSource::firstOrCreate(
+                ['name' => $source['name']],
+                $source
+            );
         }
 
         // Sales Deal Types
         $types = [
-            ['name' => 'new_customer', 'label' => 'Neukunde', 'color' => 'green', 'icon' => '🆕', 'order' => 1],
-            ['name' => 'upsell', 'label' => 'Upsell', 'color' => 'blue', 'icon' => '⬆', 'order' => 2],
-            ['name' => 'cross_sell', 'label' => 'Cross-Sell', 'color' => 'purple', 'icon' => '↔', 'order' => 3],
-            ['name' => 'renewal', 'label' => 'Verlängerung', 'color' => 'orange', 'icon' => '🔄', 'order' => 4],
-            ['name' => 'consulting', 'label' => 'Beratung', 'color' => 'yellow', 'icon' => '💡', 'order' => 5],
-            ['name' => 'support', 'label' => 'Support', 'color' => 'red', 'icon' => '🛠', 'order' => 6],
+            ['name' => 'new_customer', 'label' => 'Neukunde', 'color' => 'green', 'icon' => 'user-plus', 'order' => 1],
+            ['name' => 'upsell', 'label' => 'Upsell', 'color' => 'blue', 'icon' => 'arrow-trending-up', 'order' => 2],
+            ['name' => 'cross_sell', 'label' => 'Cross-Sell', 'color' => 'purple', 'icon' => 'arrows-right-left', 'order' => 3],
+            ['name' => 'renewal', 'label' => 'Verlängerung', 'color' => 'yellow', 'icon' => 'arrow-path', 'order' => 4],
+            ['name' => 'expansion', 'label' => 'Erweiterung', 'color' => 'orange', 'icon' => 'plus-circle', 'order' => 5],
+            ['name' => 'replacement', 'label' => 'Ersatz', 'color' => 'red', 'icon' => 'arrow-path', 'order' => 6],
         ];
 
         foreach ($types as $type) {
-            SalesDealType::create($type);
+            SalesDealType::firstOrCreate(
+                ['name' => $type['name']],
+                $type
+            );
         }
     }
 }

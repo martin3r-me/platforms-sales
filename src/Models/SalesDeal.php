@@ -22,23 +22,44 @@ class SalesDeal extends Model
         'team_id',
         'title',
         'description',
+        'notes',
         'due_date',
+        'close_date',
         'deal_value',
+        'expected_value',
+        'minimum_value',
+        'maximum_value',
         'probability_percent',
         'deal_source',
         'deal_type',
+        'competitor',
+        'next_step',
+        'next_step_date',
 
         'is_done',
+        'is_hot',
+        'is_starred',
         'order',
         'slot_order',
         'sales_board_id',
         'sales_board_slot_id',
+        'sales_priority_id',
+        'sales_deal_source_id',
+        'sales_deal_type_id',
     ];
 
     protected $casts = [
         'due_date' => 'date',
+        'close_date' => 'date',
+        'next_step_date' => 'date',
         'deal_value' => 'decimal:2',
+        'expected_value' => 'decimal:2',
+        'minimum_value' => 'decimal:2',
+        'maximum_value' => 'decimal:2',
         'probability_percent' => 'integer',
+        'is_done' => 'boolean',
+        'is_hot' => 'boolean',
+        'is_starred' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -81,6 +102,31 @@ class SalesDeal extends Model
         $this->attributes['deal_value'] = empty($value) || $value === '' || $value === 'null' ? null : $value;
     }
 
+    public function setExpectedValueAttribute($value)
+    {
+        $this->attributes['expected_value'] = empty($value) || $value === '' || $value === 'null' ? null : $value;
+    }
+
+    public function setMinimumValueAttribute($value)
+    {
+        $this->attributes['minimum_value'] = empty($value) || $value === '' || $value === 'null' ? null : $value;
+    }
+
+    public function setMaximumValueAttribute($value)
+    {
+        $this->attributes['maximum_value'] = empty($value) || $value === '' || $value === 'null' ? null : $value;
+    }
+
+    public function setCloseDateAttribute($value)
+    {
+        $this->attributes['close_date'] = empty($value) || $value === 'null' ? null : $value;
+    }
+
+    public function setNextStepDateAttribute($value)
+    {
+        $this->attributes['next_step_date'] = empty($value) || $value === 'null' ? null : $value;
+    }
+
     public function user()
     {
         return $this->belongsTo(\Platform\Core\Models\User::class);
@@ -106,8 +152,23 @@ class SalesDeal extends Model
         return $this->belongsTo(\Platform\Core\Models\User::class, 'user_in_charge_id');
     }
 
+    public function priority()
+    {
+        return $this->belongsTo(SalesPriority::class, 'sales_priority_id');
+    }
+
+    public function dealSource()
+    {
+        return $this->belongsTo(SalesDealSource::class, 'sales_deal_source_id');
+    }
+
+    public function dealType()
+    {
+        return $this->belongsTo(SalesDealType::class, 'sales_deal_type_id');
+    }
+
     // Vertriebsspezifische Methoden
-    public function getExpectedValueAttribute(): float
+    public function getCalculatedExpectedValueAttribute(): float
     {
         if (!$this->deal_value || !$this->probability_percent) {
             return 0;
@@ -122,6 +183,6 @@ class SalesDeal extends Model
 
     public function isHot(): bool
     {
-        return $this->probability_percent && $this->probability_percent >= 80;
+        return $this->is_hot || ($this->probability_percent && $this->probability_percent >= 80);
     }
 }

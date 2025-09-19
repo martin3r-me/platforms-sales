@@ -27,10 +27,9 @@ class SalesServiceProvider extends ServiceProvider
     {
         // Commands registrieren
         if ($this->app->runningInConsole()) {
-            // Commands für Sales-Modul (falls benötigt)
-            // $this->commands([
-            //     \Platform\Sales\Console\Commands\CheckDealEscalationsCommand::class,
-            // ]);
+            $this->commands([
+                \Platform\Sales\Console\Commands\SeedSalesLookupData::class,
+            ]);
         }
     }
 

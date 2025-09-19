@@ -4,17 +4,64 @@
         <h3 class="text-lg font-semibold">{{ $salesBoard->name }}</h3>
         <div class="text-sm text-gray-600 mb-4">{{ $salesBoard->description ?? 'Keine Beschreibung' }}</div>
         
-        <!-- Einfache Statistiken -->
-        <div class="grid grid-cols-2 gap-2 mb-4">
-                <div class="p-3 bg-blue-50 border border-blue-200 rounded">
-                    <div class="text-sm text-blue-600">Offene Deals</div>
-                    <div class="text-xl font-bold text-blue-800">{{ $groups->filter(fn($g) => !($g->isWonGroup ?? false))->sum(fn($g) => $g->deals->count()) }}</div>
+            <!-- Dashboard Tiles -->
+            <div class="space-y-3 mb-4">
+                <h4 class="font-medium text-gray-900">Board Statistiken</h4>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <x-ui-dashboard-tile
+                        title="Offene Deals"
+                        :count="$groups->filter(fn($g) => !($g->isWonGroup ?? false))->sum(fn($g) => $g->deals->count())"
+                        icon="clock"
+                        variant="blue"
+                        size="sm"
+                    />
+                    
+                    <x-ui-dashboard-tile
+                        title="Gewonnene Deals"
+                        :count="$groups->filter(fn($g) => $g->isWonGroup ?? false)->sum(fn($g) => $g->deals->count())"
+                        icon="check-circle"
+                        variant="green"
+                        size="sm"
+                    />
                 </div>
-                <div class="p-3 bg-green-50 border border-green-200 rounded">
-                    <div class="text-sm text-green-600">Gewonnene Deals</div>
-                    <div class="text-xl font-bold text-green-800">{{ $groups->filter(fn($g) => $g->isWonGroup ?? false)->sum(fn($g) => $g->deals->count()) }}</div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <x-ui-dashboard-tile
+                        title="Deal Wert"
+                        :count="number_format($groups->flatMap(fn($g) => $g->deals)->sum(fn($d) => $d->deal_value ?? 0), 0, ',', '.') . ' €'"
+                        icon="currency-euro"
+                        variant="purple"
+                        size="sm"
+                    />
+                    
+                    <x-ui-dashboard-tile
+                        title="Erwarteter Wert"
+                        :count="number_format($groups->flatMap(fn($g) => $g->deals)->sum(fn($d) => $d->expected_value ?? 0), 0, ',', '.') . ' €'"
+                        icon="chart-pie"
+                        variant="orange"
+                        size="sm"
+                    />
                 </div>
-        </div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <x-ui-dashboard-tile
+                        title="Überfällig"
+                        :count="$groups->flatMap(fn($g) => $g->deals)->filter(fn($d) => $d->due_date && $d->due_date->isPast() && !$d->is_done)->count()"
+                        icon="exclamation-circle"
+                        variant="red"
+                        size="sm"
+                    />
+                    
+                    <x-ui-dashboard-tile
+                        title="Heute fällig"
+                        :count="$groups->flatMap(fn($g) => $g->deals)->filter(fn($d) => $d->due_date && $d->due_date->isToday())->count()"
+                        icon="calendar"
+                        variant="yellow"
+                        size="sm"
+                    />
+                </div>
+            </div>
 
         <!-- Aktionen -->
         @can('update', $salesBoard)
