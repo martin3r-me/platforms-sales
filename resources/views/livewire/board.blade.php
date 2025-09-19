@@ -121,6 +121,6 @@
     </div>
 
     <!-- Modals -->
-    <livewire:board-settings-modal />
-    <livewire:board-slot-settings-modal />
+    <livewire:sales.board-settings-modal />
+    <livewire:sales.board-slot-settings-modal />
 </div>
