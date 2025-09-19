@@ -5,10 +5,16 @@ namespace Platform\Sales\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Platform\Sales\Models\SalesDeal;
+use Platform\Sales\Models\SalesDealSource;
+use Platform\Sales\Models\SalesDealType;
+use Platform\Sales\Models\SalesPriority;
 
 class Deal extends Component
 {
     public $deal;
+    public $dealSources;
+    public $dealTypes;
+    public $priorities;
 
     protected $rules = [
         'deal.title' => 'required|string|max:255',
@@ -19,8 +25,12 @@ class Deal extends Component
         'deal.user_in_charge_id' => 'nullable|integer',
         'deal.deal_value' => 'nullable|numeric|min:0',
         'deal.probability_percent' => 'nullable|integer|min:0|max:100',
-        'deal.deal_source' => 'nullable|string',
-        'deal.deal_type' => 'nullable|string',
+        'deal.sales_deal_source_id' => 'nullable|integer|exists:sales_deal_sources,id',
+        'deal.sales_deal_type_id' => 'nullable|integer|exists:sales_deal_types,id',
+        'deal.sales_priority_id' => 'nullable|integer|exists:sales_priorities,id',
+        'deal.billing_interval' => 'nullable|in:one_time,monthly,quarterly,yearly',
+        'deal.billing_duration_months' => 'nullable|integer|min:1',
+        'deal.monthly_recurring_value' => 'nullable|numeric|min:0',
         'deal.sales_board_id' => 'nullable|integer',
     ];
 
@@ -28,6 +38,11 @@ class Deal extends Component
     {
         $this->authorize('view', $salesDeal);
         $this->deal = $salesDeal;
+        
+        // Lookup-Daten laden
+        $this->dealSources = SalesDealSource::active()->ordered()->get();
+        $this->dealTypes = SalesDealType::active()->ordered()->get();
+        $this->priorities = SalesPriority::active()->ordered()->get();
     }
 
     public function rendered()

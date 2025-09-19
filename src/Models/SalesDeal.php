@@ -26,6 +26,9 @@ class SalesDeal extends Model
         'due_date',
         'close_date',
         'deal_value',
+        'billing_interval',
+        'billing_duration_months',
+        'monthly_recurring_value',
         'expected_value',
         'minimum_value',
         'maximum_value',
@@ -53,6 +56,7 @@ class SalesDeal extends Model
         'close_date' => 'date',
         'next_step_date' => 'date',
         'deal_value' => 'decimal:2',
+        'monthly_recurring_value' => 'decimal:2',
         'expected_value' => 'decimal:2',
         'minimum_value' => 'decimal:2',
         'maximum_value' => 'decimal:2',
@@ -125,6 +129,16 @@ class SalesDeal extends Model
     public function setNextStepDateAttribute($value)
     {
         $this->attributes['next_step_date'] = empty($value) || $value === 'null' ? null : $value;
+    }
+
+    public function setBillingDurationMonthsAttribute($value)
+    {
+        $this->attributes['billing_duration_months'] = empty($value) || $value === '' || $value === 'null' ? null : (int)$value;
+    }
+
+    public function setMonthlyRecurringValueAttribute($value)
+    {
+        $this->attributes['monthly_recurring_value'] = empty($value) || $value === '' || $value === 'null' ? null : $value;
     }
 
     public function user()

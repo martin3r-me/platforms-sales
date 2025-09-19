@@ -207,38 +207,123 @@
                             @endcan
                         </div>
 
-                        {{-- Deal Source & Type --}}
-                        <div class="grid grid-cols-2 gap-4">
-                            @can('update', $deal)
-                                <x-ui-input-text
-                                    name="deal.deal_source"
-                                    label="Deal Quelle"
-                                    wire:model.live.debounce.500ms="deal.deal_source"
-                                    placeholder="z.B. Website, Empfehlung, Messe..."
-                                    :errorKey="'deal.deal_source'"
-                                />
-                            @else
-                                <div>
-                                    <label class="font-semibold">Deal Quelle:</label>
-                                    <div class="p-2 bg-muted-5 rounded-lg">{{ $deal->deal_source ?: '–' }}</div>
-                                </div>
-                            @endcan
+                            {{-- Deal Source & Type --}}
+                            <div class="grid grid-cols-2 gap-4">
+                                @can('update', $deal)
+                                    <x-ui-input-select
+                                        name="deal.sales_deal_source_id"
+                                        label="Deal Quelle"
+                                        :options="$dealSources"
+                                        optionValue="id"
+                                        optionLabel="label"
+                                        :nullable="true"
+                                        nullLabel="– Quelle auswählen –"
+                                        wire:model.live="deal.sales_deal_source_id"
+                                        :errorKey="'deal.sales_deal_source_id'"
+                                    />
+                                @else
+                                    <div>
+                                        <label class="font-semibold">Deal Quelle:</label>
+                                        <div class="p-2 bg-muted-5 rounded-lg">{{ $deal->dealSource?->label ?: '–' }}</div>
+                                    </div>
+                                @endcan
 
-                            @can('update', $deal)
-                                <x-ui-input-text
-                                    name="deal.deal_type"
-                                    label="Deal Typ"
-                                    wire:model.live.debounce.500ms="deal.deal_type"
-                                    placeholder="z.B. Neukunde, Upsell, Renewal..."
-                                    :errorKey="'deal.deal_type'"
-                                />
-                            @else
-                                <div>
-                                    <label class="font-semibold">Deal Typ:</label>
-                                    <div class="p-2 bg-muted-5 rounded-lg">{{ $deal->deal_type ?: '–' }}</div>
+                                @can('update', $deal)
+                                    <x-ui-input-select
+                                        name="deal.sales_deal_type_id"
+                                        label="Deal Typ"
+                                        :options="$dealTypes"
+                                        optionValue="id"
+                                        optionLabel="label"
+                                        :nullable="true"
+                                        nullLabel="– Typ auswählen –"
+                                        wire:model.live="deal.sales_deal_type_id"
+                                        :errorKey="'deal.sales_deal_type_id'"
+                                    />
+                                @else
+                                    <div>
+                                        <label class="font-semibold">Deal Typ:</label>
+                                        <div class="p-2 bg-muted-5 rounded-lg">{{ $deal->dealType?->label ?: '–' }}</div>
+                                    </div>
+                                @endcan
+                            </div>
+
+                            {{-- Billing Interval & Duration --}}
+                            <div class="grid grid-cols-2 gap-4">
+                                @can('update', $deal)
+                                    <x-ui-input-select
+                                        name="deal.billing_interval"
+                                        label="Abrechnungsintervall"
+                                        :options="collect([
+                                            (object)['value' => 'one_time', 'label' => 'Einmalig'],
+                                            (object)['value' => 'monthly', 'label' => 'Monatlich'],
+                                            (object)['value' => 'quarterly', 'label' => 'Vierteljährlich'],
+                                            (object)['value' => 'yearly', 'label' => 'Jährlich']
+                                        ])"
+                                        optionValue="value"
+                                        optionLabel="label"
+                                        wire:model.live="deal.billing_interval"
+                                        :errorKey="'deal.billing_interval'"
+                                    />
+                                @else
+                                    <div>
+                                        <label class="font-semibold">Abrechnungsintervall:</label>
+                                        <div class="p-2 bg-muted-5 rounded-lg">
+                                            @switch($deal->billing_interval)
+                                                @case('one_time') Einmalig @break
+                                                @case('monthly') Monatlich @break
+                                                @case('quarterly') Vierteljährlich @break
+                                                @case('yearly') Jährlich @break
+                                                @default –
+                                            @endswitch
+                                        </div>
+                                    </div>
+                                @endcan
+
+                                @can('update', $deal)
+                                    <x-ui-input-number
+                                        name="deal.billing_duration_months"
+                                        label="Laufzeit (Monate)"
+                                        wire:model.live.debounce.500ms="deal.billing_duration_months"
+                                        placeholder="z.B. 12"
+                                        min="1"
+                                        :nullable="true"
+                                        :errorKey="'deal.billing_duration_months'"
+                                    />
+                                @else
+                                    <div>
+                                        <label class="font-semibold">Laufzeit:</label>
+                                        <div class="p-2 bg-muted-5 rounded-lg">
+                                            {{ $deal->billing_duration_months ? $deal->billing_duration_months . ' Monate' : '–' }}
+                                        </div>
+                                    </div>
+                                @endcan
+                            </div>
+
+                            {{-- Monthly Recurring Value (nur bei wiederkehrenden Deals) --}}
+                            @if($deal->billing_interval && $deal->billing_interval !== 'one_time')
+                                <div class="grid grid-cols-1 gap-4">
+                                    @can('update', $deal)
+                                        <x-ui-input-number
+                                            name="deal.monthly_recurring_value"
+                                            label="Monatlicher wiederkehrender Wert (MRR)"
+                                            wire:model.live.debounce.500ms="deal.monthly_recurring_value"
+                                            placeholder="0.00"
+                                            step="0.01"
+                                            min="0"
+                                            :nullable="true"
+                                            :errorKey="'deal.monthly_recurring_value'"
+                                        />
+                                    @else
+                                        <div>
+                                            <label class="font-semibold">Monatlicher wiederkehrender Wert:</label>
+                                            <div class="p-2 bg-muted-5 rounded-lg">
+                                                {{ $deal->monthly_recurring_value ? number_format((float) $deal->monthly_recurring_value, 2, ',', '.') . ' €' : '–' }}
+                                            </div>
+                                        </div>
+                                    @endcan
                                 </div>
-                            @endcan
-                        </div>
+                            @endif
 
                         {{-- Fälligkeitsdatum & Zugewiesener Benutzer --}}
                         <div class="grid grid-cols-2 gap-4">
