@@ -19,24 +19,50 @@
 
     <!-- Kanban-Board -->
     <div class="flex-grow-1 overflow-hidden">
-        <div class="h-full p-4">
-            <h2 class="text-lg font-semibold mb-4">Kanban Board</h2>
-            
-            <!-- Einfache Spalten-Liste -->
+        <x-ui-kanban-board>
             @foreach($groups as $group)
-                <div class="border p-4 mb-4 rounded">
-                    <h3>{{ $group->label }} ({{ $group->deals->count() }} Deals)</h3>
-                    @if($group->deals->count() > 0)
-                        @foreach($group->deals as $deal)
-                            <div class="p-2 bg-gray-50 rounded mb-2">
-                                {{ $deal->title }}
+                <x-ui-kanban-column 
+                    :key="$group->id"
+                    :title="$group->label"
+                    :color="$group->color ?? 'blue'"
+                    :count="$group->deals->count()"
+                >
+                    @foreach($group->deals as $deal)
+                        <x-ui-kanban-card 
+                            :key="$deal->id"
+                            :title="$deal->title"
+                            :href="route('sales.deals.show', $deal)"
+                            wire:navigate
+                        >
+                            <div class="space-y-2">
+                                @if($deal->deal_value)
+                                    <div class="font-semibold text-primary">
+                                        {{ number_format((float) $deal->deal_value, 0, ',', '.') }} €
+                                    </div>
+                                @endif
+                                
+                                @if($deal->probability_percent)
+                                    <div class="text-sm text-gray-600">
+                                        {{ $deal->probability_percent }}% Wahrscheinlichkeit
+                                    </div>
+                                @endif
+                                
+                                @if($deal->due_date)
+                                    <div class="text-sm {{ $deal->due_date->isPast() ? 'text-red-600' : 'text-gray-600' }}">
+                                        Fällig: {{ $deal->due_date->format('d.m.Y') }}
+                                    </div>
+                                @endif
+                                
+                                @if($deal->userInCharge)
+                                    <div class="text-sm text-gray-600">
+                                        {{ $deal->userInCharge->name }}
+                                    </div>
+                                @endif
                             </div>
-                        @endforeach
-                    @else
-                        <p class="text-gray-500 italic">Keine Deals</p>
-                    @endif
-                </div>
+                        </x-ui-kanban-card>
+                    @endforeach
+                </x-ui-kanban-column>
             @endforeach
-        </div>
+        </x-ui-kanban-board>
     </div>
 </div>
