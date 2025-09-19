@@ -27,25 +27,29 @@
                 </div>
                 
                 <div class="grid grid-cols-2 gap-2">
-                    <x-ui-dashboard-tile
-                        title="Deal Wert"
-                        :count="number_format($groups->flatMap(fn($g) => $g->deals)->reduce(fn($carry, $d) => $carry + (float) ($d->deal_value ?? 0), 0), 0, ',', '.') . ' €'"
-                        icon="currency-euro"
-                        variant="purple"
-                        size="sm"
-                    />
+                    <div class="p-3 bg-purple-50 border border-purple-200 rounded">
+                        <div class="text-sm text-purple-600">Deal Wert</div>
+                        <div class="text-xl font-bold text-purple-800">
+                            @php
+                                $totalDealValue = $groups->flatMap(fn($g) => $g->deals)->reduce(fn($carry, $d) => $carry + (float) ($d->deal_value ?? 0), 0);
+                            @endphp
+                            {{ number_format($totalDealValue, 0, ',', '.') }} €
+                        </div>
+                    </div>
                     
-                    <x-ui-dashboard-tile
-                        title="Erwarteter Wert"
-                        :count="number_format($groups->flatMap(fn($g) => $g->deals)->reduce(function($carry, $d) { 
-                            $dealValue = (float) ($d->deal_value ?? 0);
-                            $probability = (float) ($d->probability_percent ?? 0);
-                            return $carry + ($dealValue * $probability / 100);
-                        }, 0), 0, ',', '.') . ' €'"
-                        icon="chart-pie"
-                        variant="orange"
-                        size="sm"
-                    />
+                    <div class="p-3 bg-orange-50 border border-orange-200 rounded">
+                        <div class="text-sm text-orange-600">Erwarteter Wert</div>
+                        <div class="text-xl font-bold text-orange-800">
+                            @php
+                                $totalExpectedValue = $groups->flatMap(fn($g) => $g->deals)->reduce(function($carry, $d) { 
+                                    $dealValue = (float) ($d->deal_value ?? 0);
+                                    $probability = (float) ($d->probability_percent ?? 0);
+                                    return $carry + ($dealValue * $probability / 100);
+                                }, 0);
+                            @endphp
+                            {{ number_format($totalExpectedValue, 0, ',', '.') }} €
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-2">
