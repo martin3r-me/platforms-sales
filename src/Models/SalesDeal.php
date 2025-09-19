@@ -71,6 +71,16 @@ class SalesDeal extends Model
         $this->attributes['due_date'] = empty($value) || $value === 'null' ? null : $value;
     }
 
+    public function setProbabilityPercentAttribute($value)
+    {
+        $this->attributes['probability_percent'] = empty($value) || $value === '' || $value === 'null' ? null : (int)$value;
+    }
+
+    public function setDealValueAttribute($value)
+    {
+        $this->attributes['deal_value'] = empty($value) || $value === '' || $value === 'null' ? null : $value;
+    }
+
     public function user()
     {
         return $this->belongsTo(\Platform\Core\Models\User::class);
