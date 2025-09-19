@@ -18,11 +18,24 @@ class Board extends Component
     {
         $this->salesBoard = $salesBoard;
         $this->groups = collect(); // Initialisiere als leere Collection
-        $this->loadGroups();
+        
+        try {
+            $this->loadGroups();
+        } catch (\Exception $e) {
+            // Log den Fehler und setze leere Collection
+            \Log::error('Sales Board loadGroups Fehler: ' . $e->getMessage());
+            $this->groups = collect();
+        }
     }
 
     public function loadGroups()
     {
+        // Prüfe ob salesBoard existiert
+        if (!$this->salesBoard) {
+            $this->groups = collect();
+            return;
+        }
+
         // Lade alle Slots des Boards
         $slots = $this->salesBoard->slots()->orderBy('order')->get();
         
@@ -142,7 +155,12 @@ class Board extends Component
     {
         // Stelle sicher, dass groups geladen ist
         if (!$this->groups || $this->groups->isEmpty()) {
-            $this->loadGroups();
+            try {
+                $this->loadGroups();
+            } catch (\Exception $e) {
+                \Log::error('Sales Board render loadGroups Fehler: ' . $e->getMessage());
+                $this->groups = collect();
+            }
         }
         
         return view('sales::livewire.board')->layout('platform::layouts.app');

@@ -1,11 +1,21 @@
 <div class="h-full d-flex">
+    <!-- Debug Info -->
+    <div class="p-4 bg-yellow-100 border border-yellow-300 rounded mb-4">
+        <h4 class="font-bold text-yellow-800">Debug Info:</h4>
+        <p><strong>SalesBoard ID:</strong> {{ $salesBoard->id ?? 'NULL' }}</p>
+        <p><strong>SalesBoard Name:</strong> {{ $salesBoard->name ?? 'NULL' }}</p>
+        <p><strong>Groups Type:</strong> {{ gettype($groups) }}</p>
+        <p><strong>Groups Count:</strong> {{ $groups ? $groups->count() : 'NULL' }}</p>
+        <p><strong>Groups Empty:</strong> {{ $groups ? ($groups->isEmpty() ? 'YES' : 'NO') : 'NULL' }}</p>
+    </div>
+
     <!-- Info-Bereich (fixe Breite) -->
     <div class="w-80 border-r border-muted p-4 flex-shrink-0">
         <!-- Board-Info -->
         <div class="mb-6">
             <div class="d-flex justify-between items-start mb-2">
-                <h3 class="text-lg font-semibold">{{ $salesBoard->name }}</h3>
-                <x-ui-button variant="info" size="sm" @click="$dispatch('open-modal-board-settings', { boardId: {{ $salesBoard->id }} })">
+                <h3 class="text-lg font-semibold">{{ $salesBoard->name ?? 'Unbekanntes Board' }}</h3>
+                <x-ui-button variant="info" size="sm" @click="$dispatch('open-modal-board-settings', { boardId: {{ $salesBoard->id ?? 0 }} })">
                     <div class="d-flex items-center gap-2">
                         @svg('heroicon-o-information-circle', 'w-4 h-4')
                         Info
