@@ -179,7 +179,7 @@ class SalesDeal extends Model
     public function getExpectedValueAttribute($value): float
     {
         // Wenn expected_value in der DB gesetzt ist, verwende das
-        if ($value !== null) {
+        if ($value !== null && $value !== '') {
             return (float) $value;
         }
         
