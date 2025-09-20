@@ -19,19 +19,23 @@ class SalesDealBillable extends Model
         'name',
         'description',
         'amount',
+        'probability_percent',
         'billing_type',
         'billing_interval',
         'duration_months',
         'start_date',
         'end_date',
         'total_value',
+        'expected_value',
         'order',
         'is_active',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'probability_percent' => 'integer',
         'total_value' => 'decimal:2',
+        'expected_value' => 'decimal:2',
         'start_date' => 'date',
         'end_date' => 'date',
         'is_active' => 'boolean',
@@ -54,6 +58,10 @@ class SalesDealBillable extends Model
             } else {
                 $model->total_value = (float) $model->amount;
             }
+            
+            // Berechne expected_value automatisch
+            $probability = (int) ($model->probability_percent ?? 100);
+            $model->expected_value = (float) $model->total_value * $probability / 100;
         });
 
         static::saved(function (self $model) {
@@ -106,5 +114,30 @@ class SalesDealBillable extends Model
         }
         
         return $this->formatted_amount . ' (einmalig)';
+    }
+
+    public function getFormattedExpectedValueAttribute(): string
+    {
+        return number_format((float) $this->expected_value, 2, ',', '.') . ' €';
+    }
+
+    public function getProbabilityColorAttribute(): string
+    {
+        return match(true) {
+            $this->probability_percent >= 80 => 'green',
+            $this->probability_percent >= 60 => 'yellow',
+            $this->probability_percent >= 40 => 'orange',
+            default => 'red'
+        };
+    }
+
+    public function getProbabilityLabelAttribute(): string
+    {
+        return match(true) {
+            $this->probability_percent >= 80 => 'Hoch',
+            $this->probability_percent >= 60 => 'Mittel',
+            $this->probability_percent >= 40 => 'Niedrig',
+            default => 'Sehr niedrig'
+        };
     }
 }

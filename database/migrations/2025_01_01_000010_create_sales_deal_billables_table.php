@@ -20,14 +20,16 @@ return new class extends Migration
             $table->string('name'); // z.B. "Setup-Gebühr", "Monatliche Lizenz"
             $table->text('description')->nullable();
             $table->decimal('amount', 15, 2); // Betrag
+            $table->integer('probability_percent')->default(100); // Wahrscheinlichkeit in % (100% = sicher)
             $table->string('billing_type')->default('one_time'); // 'one_time', 'recurring'
             $table->string('billing_interval')->nullable(); // 'monthly', 'quarterly', 'yearly' (nur bei recurring)
             $table->integer('duration_months')->nullable(); // Laufzeit in Monaten (nur bei recurring)
             $table->date('start_date')->nullable(); // Startdatum für wiederkehrende Zahlungen
             $table->date('end_date')->nullable(); // Enddatum für wiederkehrende Zahlungen
             
-            // Berechneter Gesamtwert
+            // Berechnete Werte
             $table->decimal('total_value', 15, 2); // amount * duration_months (bei recurring)
+            $table->decimal('expected_value', 15, 2); // total_value * probability_percent / 100
             
             // Reihenfolge
             $table->integer('order')->default(0);

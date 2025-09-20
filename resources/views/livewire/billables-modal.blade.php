@@ -23,7 +23,7 @@
                 <div class="p-4 border border-gray-200 rounded-lg bg-gray-50">
                     <div class="grid grid-cols-12 gap-3 items-start">
                         {{-- Name --}}
-                        <div class="col-span-4">
+                        <div class="col-span-3">
                             <x-ui-input-text
                                 :name="'billables.' . $index . '.name'"
                                 label="Name"
@@ -44,6 +44,18 @@
                             />
                         </div>
 
+                        {{-- Wahrscheinlichkeit --}}
+                        <div class="col-span-1">
+                            <x-ui-input-number
+                                :name="'billables.' . $index . '.probability_percent'"
+                                label="Wahrscheinlichkeit (%)"
+                                wire:model.live="billables.{{ $index }}.probability_percent"
+                                placeholder="100"
+                                min="0"
+                                max="100"
+                            />
+                        </div>
+
                         {{-- Typ --}}
                         <div class="col-span-2">
                             <x-ui-input-select
@@ -60,7 +72,7 @@
                         </div>
 
                         {{-- Intervall (nur bei wiederkehrend) --}}
-                        <div class="col-span-2">
+                        <div class="col-span-1">
                             @if($billable['billing_type'] === 'recurring')
                                 <x-ui-input-select
                                     :name="'billables.' . $index . '.billing_interval'"
@@ -117,12 +129,32 @@
                         />
                     </div>
 
-                    {{-- Berechneter Gesamtwert --}}
-                    @if($billable['billing_type'] === 'recurring' && $billable['amount'] > 0 && $billable['duration_months'])
-                        <div class="mt-2 p-2 bg-green-50 border border-green-200 rounded">
-                            <div class="text-sm text-green-600">
-                                Gesamtwert: {{ number_format((float) $billable['amount'] * (int) $billable['duration_months'], 2, ',', '.') }} €
-                                ({{ number_format((float) $billable['amount'], 2, ',', '.') }} € × {{ $billable['duration_months'] }} Monate)
+                    {{-- Berechnete Werte --}}
+                    @if($billable['amount'] > 0)
+                        <div class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <div class="text-blue-600 font-medium">Gesamtwert:</div>
+                                    <div class="text-blue-800 font-bold">
+                                        @php
+                                            $totalValue = $billable['billing_type'] === 'recurring' && $billable['duration_months'] 
+                                                ? (float) $billable['amount'] * (int) $billable['duration_months']
+                                                : (float) $billable['amount'];
+                                        @endphp
+                                        {{ number_format($totalValue, 2, ',', '.') }} €
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-green-600 font-medium">Erwarteter Wert:</div>
+                                    <div class="text-green-800 font-bold">
+                                        @php
+                                            $probability = (int) ($billable['probability_percent'] ?? 100);
+                                            $expectedValue = $totalValue * $probability / 100;
+                                        @endphp
+                                        {{ number_format($expectedValue, 2, ',', '.') }} €
+                                        <span class="text-xs text-gray-600">({{ $probability }}%)</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     @endif
@@ -136,24 +168,46 @@
             @endforelse
         </div>
 
-        {{-- Gesamtwert --}}
+        {{-- Gesamtwerte --}}
         @if(count($billables) > 0)
-            <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div class="text-sm text-green-600">Gesamtwert aller Billables:</div>
-                <div class="text-2xl font-bold text-green-800">
-                    @php
-                        $totalValue = 0;
-                        foreach($billables as $billable) {
-                            if ($billable['amount'] > 0) {
-                                if ($billable['billing_type'] === 'recurring' && $billable['duration_months']) {
-                                    $totalValue += (float) $billable['amount'] * (int) $billable['duration_months'];
-                                } else {
-                                    $totalValue += (float) $billable['amount'];
+            <div class="grid grid-cols-2 gap-4">
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="text-sm text-blue-600">Gesamtwert aller Billables:</div>
+                    <div class="text-2xl font-bold text-blue-800">
+                        @php
+                            $totalValue = 0;
+                            foreach($billables as $billable) {
+                                if ($billable['amount'] > 0) {
+                                    if ($billable['billing_type'] === 'recurring' && $billable['duration_months']) {
+                                        $totalValue += (float) $billable['amount'] * (int) $billable['duration_months'];
+                                    } else {
+                                        $totalValue += (float) $billable['amount'];
+                                    }
                                 }
                             }
-                        }
-                    @endphp
-                    {{ number_format($totalValue, 2, ',', '.') }} €
+                        @endphp
+                        {{ number_format($totalValue, 2, ',', '.') }} €
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div class="text-sm text-green-600">Erwarteter Gesamtwert:</div>
+                    <div class="text-2xl font-bold text-green-800">
+                        @php
+                            $expectedTotalValue = 0;
+                            foreach($billables as $billable) {
+                                if ($billable['amount'] > 0) {
+                                    $billableTotal = $billable['billing_type'] === 'recurring' && $billable['duration_months'] 
+                                        ? (float) $billable['amount'] * (int) $billable['duration_months']
+                                        : (float) $billable['amount'];
+                                    
+                                    $probability = (int) ($billable['probability_percent'] ?? 100);
+                                    $expectedTotalValue += $billableTotal * $probability / 100;
+                                }
+                            }
+                        @endphp
+                        {{ number_format($expectedTotalValue, 2, ',', '.') }} €
+                    </div>
                 </div>
             </div>
         @endif

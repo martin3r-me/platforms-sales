@@ -185,11 +185,20 @@
                                         </div>
                                         
                                         @if($deal->hasBillables())
-                                            <div class="p-2 bg-green-50 border border-green-200 rounded-lg">
-                                                <div class="text-lg font-bold text-green-800">
-                                                    {{ number_format((float) $deal->deal_value, 2, ',', '.') }} €
+                                            <div class="space-y-2">
+                                                <div class="p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                                                    <div class="text-sm text-blue-600">Gesamtwert:</div>
+                                                    <div class="text-lg font-bold text-blue-800">
+                                                        {{ number_format((float) $deal->deal_value, 2, ',', '.') }} €
+                                                    </div>
                                                 </div>
-                                                <div class="text-xs text-green-600">
+                                                <div class="p-2 bg-green-50 border border-green-200 rounded-lg">
+                                                    <div class="text-sm text-green-600">Erwarteter Wert:</div>
+                                                    <div class="text-lg font-bold text-green-800">
+                                                        {{ number_format((float) $deal->billables_expected_total, 2, ',', '.') }} €
+                                                    </div>
+                                                </div>
+                                                <div class="text-xs text-gray-600">
                                                     Automatisch berechnet aus {{ $deal->billables->count() }} Billable(s)
                                                 </div>
                                             </div>
@@ -227,8 +236,11 @@
                                         <div class="p-2 bg-muted-5 rounded-lg">
                                             {{ $deal->deal_value ? number_format((float) $deal->deal_value, 2, ',', '.') . ' €' : '–' }}
                                             @if($deal->hasBillables())
+                                                <div class="text-xs text-blue-600 mt-1">
+                                                    Gesamtwert: {{ number_format((float) $deal->deal_value, 2, ',', '.') }} €
+                                                </div>
                                                 <div class="text-xs text-green-600 mt-1">
-                                                    (berechnet aus {{ $deal->billables->count() }} Billable(s))
+                                                    Erwarteter Wert: {{ number_format((float) $deal->billables_expected_total, 2, ',', '.') }} €
                                                 </div>
                                             @elseif($deal->billing_interval && $deal->billing_interval !== 'one_time' && $deal->monthly_recurring_value && $deal->billing_duration_months)
                                                 <div class="text-xs text-blue-600 mt-1">

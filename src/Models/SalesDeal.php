@@ -229,6 +229,11 @@ class SalesDeal extends Model
         return $this->activeBillables->sum('total_value');
     }
 
+    public function calculateExpectedValueFromBillables(): float
+    {
+        return $this->activeBillables->sum('expected_value');
+    }
+
     public function updateDealValueFromBillables(): void
     {
         $calculatedValue = $this->calculateTotalValueFromBillables();
@@ -246,5 +251,10 @@ class SalesDeal extends Model
     public function getBillablesTotalAttribute(): float
     {
         return $this->calculateTotalValueFromBillables();
+    }
+
+    public function getBillablesExpectedTotalAttribute(): float
+    {
+        return $this->calculateExpectedValueFromBillables();
     }
 }
