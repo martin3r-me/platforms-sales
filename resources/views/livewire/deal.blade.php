@@ -36,97 +36,13 @@
         <!-- Haupt-Content (nimmt Restplatz, scrollt) -->
         <div class="flex-grow-1 overflow-y-auto p-4">
             
-            {{-- Deal Dashboard --}}
+
+            {{-- Deal Form --}}
             <div class="mb-6">
                 <h3 class="text-lg font-semibold mb-4 text-secondary d-flex items-center gap-2">
-                    @svg('heroicon-o-currency-euro', 'w-5 h-5')
-                    Deal Übersicht
+                    @svg('heroicon-o-pencil-square', 'w-5 h-5')
+                    Deal bearbeiten
                 </h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    {{-- Deal Wert --}}
-                    <div class="p-4 bg-white border rounded-lg shadow-sm">
-                        <div class="d-flex items-center gap-2 mb-2">
-                            <x-heroicon-o-currency-euro class="w-4 h-4 text-primary"/>
-                            <span class="font-medium text-sm">Deal Wert</span>
-                        </div>
-                        <div class="space-y-1">
-                            <div class="text-2xl font-bold text-primary">
-                                @if($deal->deal_value)
-                                    {{ number_format((float) $deal->deal_value, 0, ',', '.') }} €
-                                @else
-                                    –
-                                @endif
-                            </div>
-                            @if($deal->deal_value)
-                                <div class="text-xs text-gray-500">
-                                    Erwarteter Wert: {{ number_format((float) $deal->expected_value, 0, ',', '.') }} €
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-
-                    {{-- Wahrscheinlichkeit --}}
-                    <div class="p-4 bg-white border rounded-lg shadow-sm">
-                        <div class="d-flex items-center gap-2 mb-2">
-                            <x-heroicon-o-chart-pie class="w-4 h-4 text-primary"/>
-                            <span class="font-medium text-sm">Wahrscheinlichkeit</span>
-                        </div>
-                        <div class="space-y-1">
-                            <div class="text-2xl font-bold text-primary">
-                                @if($deal->probability_percent)
-                                    {{ $deal->probability_percent }}%
-                                @else
-                                    –
-                                @endif
-                            </div>
-                            @if($deal->probability_percent)
-                                <div class="text-xs text-gray-500">
-                                    @if($deal->probability_percent <= 30)
-                                        <span class="text-red-600">Niedrig</span>
-                                    @elseif($deal->probability_percent <= 70)
-                                        <span class="text-yellow-600">Mittel</span>
-                                    @else
-                                        <span class="text-green-600">Hoch</span>
-                                    @endif
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-
-                    {{-- Fälligkeitsdatum --}}
-                    <div class="p-4 bg-white border rounded-lg shadow-sm">
-                        <div class="d-flex items-center gap-2 mb-2">
-                            <x-heroicon-o-calendar class="w-4 h-4 text-primary"/>
-                            <span class="font-medium text-sm">Fälligkeitsdatum</span>
-                        </div>
-                        <div class="space-y-1">
-                            <div class="text-2xl font-bold text-primary">
-                                @if($deal->due_date)
-                                    {{ $deal->due_date->format('d.m.Y') }}
-                                @else
-                                    –
-                                @endif
-                            </div>
-                            @if($deal->due_date)
-                                <div class="text-xs text-gray-500">
-                                    @if($deal->due_date->isPast() && !$deal->is_done)
-                                        <span class="text-red-600">Überfällig</span>
-                                    @elseif($deal->due_date->isToday())
-                                        <span class="text-yellow-600">Heute fällig</span>
-                                    @else
-                                        <span class="text-green-600">{{ $deal->due_date->diffForHumans() }}</span>
-                                    @endif
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Deal Details --}}
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold mb-4 text-secondary">Deal Details</h3>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {{-- Linke Spalte: Titel & Beschreibung --}}
