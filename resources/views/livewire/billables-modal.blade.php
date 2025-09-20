@@ -195,6 +195,9 @@
                     <div class="text-2xl font-bold text-green-800">
                         @php
                             $expectedTotalValue = 0;
+                            $weightedProbabilitySum = 0;
+                            $totalValue = 0;
+                            
                             foreach($billables as $billable) {
                                 if ($billable['amount'] > 0) {
                                     $billableTotal = $billable['billing_type'] === 'recurring' && $billable['duration_months'] 
@@ -203,10 +206,19 @@
                                     
                                     $probability = (int) ($billable['probability_percent'] ?? 100);
                                     $expectedTotalValue += $billableTotal * $probability / 100;
+                                    
+                                    // Für gewichteten Durchschnitt
+                                    $weightedProbabilitySum += $probability * $billableTotal;
+                                    $totalValue += $billableTotal;
                                 }
                             }
+                            
+                            $weightedAverage = $totalValue > 0 ? round($weightedProbabilitySum / $totalValue, 1) : 0;
                         @endphp
                         {{ number_format($expectedTotalValue, 2, ',', '.') }} €
+                        <div class="text-sm text-green-600 mt-1">
+                            Gewichtete Wahrscheinlichkeit: {{ $weightedAverage }}%
+                        </div>
                     </div>
                 </div>
             </div>

@@ -234,12 +234,42 @@ class SalesDeal extends Model
         return $this->activeBillables->sum('expected_value');
     }
 
+    public function calculateWeightedProbabilityFromBillables(): float
+    {
+        if (!$this->hasBillables()) {
+            return $this->probability_percent ?? 0;
+        }
+        
+        $totalValue = $this->calculateTotalValueFromBillables();
+        if ($totalValue == 0) return 0;
+        
+        $weightedSum = $this->activeBillables->reduce(function($carry, $billable) {
+            return $carry + ($billable->probability_percent * $billable->total_value);
+        }, 0);
+        
+        return round($weightedSum / $totalValue, 1);
+    }
+
     public function updateDealValueFromBillables(): void
     {
         $calculatedValue = $this->calculateTotalValueFromBillables();
         if ($this->deal_value != $calculatedValue) {
             $this->deal_value = $calculatedValue;
             $this->save();
+        }
+        
+        // Aktualisiere auch die Deal-Wahrscheinlichkeit
+        $this->updateDealProbabilityFromBillables();
+    }
+
+    public function updateDealProbabilityFromBillables(): void
+    {
+        if ($this->hasBillables()) {
+            $calculatedProbability = $this->calculateWeightedProbabilityFromBillables();
+            if ($this->probability_percent != $calculatedProbability) {
+                $this->probability_percent = $calculatedProbability;
+                $this->save();
+            }
         }
     }
 
@@ -256,5 +286,13 @@ class SalesDeal extends Model
     public function getBillablesExpectedTotalAttribute(): float
     {
         return $this->calculateExpectedValueFromBillables();
+    }
+
+    public function getCalculatedProbabilityAttribute(): float
+    {
+        if ($this->hasBillables()) {
+            return $this->calculateWeightedProbabilityFromBillables();
+        }
+        return $this->probability_percent ?? 0;
     }
 }

@@ -105,6 +105,14 @@ class Deal extends Component
         }
     }
 
+    public function recalculateDealProbability()
+    {
+        if ($this->deal->hasBillables()) {
+            $this->deal->updateDealProbabilityFromBillables();
+            $this->deal->refresh();
+        }
+    }
+
     public function deleteDeal()
     {
         $this->deal->delete();

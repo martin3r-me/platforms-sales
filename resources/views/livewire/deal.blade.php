@@ -252,20 +252,43 @@
                                 @endcan
 
                                 @can('update', $deal)
-                                    <x-ui-input-number
-                                        name="deal.probability_percent"
-                                        label="Wahrscheinlichkeit (%)"
-                                        wire:model.live.debounce.500ms="deal.probability_percent"
-                                        placeholder="0"
-                                        min="0"
-                                        max="100"
-                                        :errorKey="'deal.probability_percent'"
-                                    />
+                                    <div>
+                                        <x-ui-input-number
+                                            name="deal.probability_percent"
+                                            :label="$deal->hasBillables() ? 'Wahrscheinlichkeit (%) - Gewichtet' : 'Wahrscheinlichkeit (%)'"
+                                            wire:model.live.debounce.500ms="deal.probability_percent"
+                                            placeholder="0"
+                                            min="0"
+                                            max="100"
+                                            :errorKey="'deal.probability_percent'"
+                                        />
+                                        @if($deal->hasBillables())
+                                            <div class="d-flex items-center justify-between mt-1">
+                                                <div class="text-xs text-blue-600">
+                                                    💡 Automatisch berechnet aus Billable-Wahrscheinlichkeiten (gewichtet nach Werten)
+                                                </div>
+                                                <x-ui-button 
+                                                    variant="primary-outline" 
+                                                    size="xs" 
+                                                    wire:click="recalculateDealProbability"
+                                                    class="text-xs">
+                                                    Neu berechnen
+                                                </x-ui-button>
+                                            </div>
+                                        @endif
+                                    </div>
                                 @else
                                     <div>
-                                        <label class="font-semibold">Wahrscheinlichkeit:</label>
+                                        <label class="font-semibold">
+                                            {{ $deal->hasBillables() ? 'Wahrscheinlichkeit (gewichtet):' : 'Wahrscheinlichkeit:' }}
+                                        </label>
                                         <div class="p-2 bg-muted-5 rounded-lg">
-                                            {{ $deal->probability_percent ? $deal->probability_percent . '%' : '–' }}
+                                            {{ $deal->calculated_probability ? $deal->calculated_probability . '%' : '–' }}
+                                            @if($deal->hasBillables())
+                                                <div class="text-xs text-blue-600 mt-1">
+                                                    (berechnet aus {{ $deal->billables->count() }} Billable(s))
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 @endcan
