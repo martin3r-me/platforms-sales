@@ -184,24 +184,27 @@
                                             </x-ui-button>
                                         </div>
                                         
-                                        @if($deal->hasBillables())
-                                            <div class="space-y-2">
-                                                <div class="p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                                                    <div class="text-sm text-blue-600">Gesamtwert:</div>
-                                                    <div class="text-lg font-bold text-blue-800">
-                                                        {{ number_format((float) $deal->deal_value, 2, ',', '.') }} €
-                                                    </div>
-                                                </div>
-                                                <div class="p-2 bg-green-50 border border-green-200 rounded-lg">
-                                                    <div class="text-sm text-green-600">Erwarteter Wert:</div>
-                                                    <div class="text-lg font-bold text-green-800">
-                                                        {{ number_format((float) $deal->billables_expected_total, 2, ',', '.') }} €
-                                                    </div>
-                                                </div>
-                                                <div class="text-xs text-gray-600">
-                                                    Automatisch berechnet aus {{ $deal->billables->count() }} Billable(s)
-                                                </div>
-                                            </div>
+                        @if($deal->hasBillables())
+                            <div class="space-y-3">
+                                <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="text-sm font-medium text-blue-700">Gesamtwert</div>
+                                        <x-ui-badge variant="blue" size="sm">{{ $deal->billables->count() }} Billable(s)</x-ui-badge>
+                                    </div>
+                                    <div class="text-2xl font-bold text-blue-800">
+                                        {{ number_format((float) $deal->deal_value, 2, ',', '.') }} €
+                                    </div>
+                                </div>
+                                <div class="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
+                                    <div class="text-sm font-medium text-green-700 mb-2">Erwarteter Wert</div>
+                                    <div class="text-2xl font-bold text-green-800">
+                                        {{ number_format((float) $deal->billables_expected_total, 2, ',', '.') }} €
+                                    </div>
+                                    <div class="text-xs text-green-600 mt-1">
+                                        Gewichtete Wahrscheinlichkeit: {{ $deal->calculated_probability }}%
+                                    </div>
+                                </div>
+                            </div>
                                         @else
                                             <x-ui-input-number
                                                 name="deal.deal_value"
@@ -263,17 +266,21 @@
                                             :errorKey="'deal.probability_percent'"
                                         />
                                         @if($deal->hasBillables())
-                                            <div class="d-flex items-center justify-between mt-1">
-                                                <div class="text-xs text-blue-600">
-                                                    💡 Automatisch berechnet aus Billable-Wahrscheinlichkeiten (gewichtet nach Werten)
+                                            <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <div class="text-sm font-medium text-blue-700">Automatische Berechnung</div>
+                                                    <x-ui-button 
+                                                        variant="primary-outline" 
+                                                        size="xs" 
+                                                        wire:click="recalculateDealProbability"
+                                                        class="text-xs">
+                                                        @svg('heroicon-o-arrow-path', 'w-3 h-3')
+                                                        Neu berechnen
+                                                    </x-ui-button>
                                                 </div>
-                                                <x-ui-button 
-                                                    variant="primary-outline" 
-                                                    size="xs" 
-                                                    wire:click="recalculateDealProbability"
-                                                    class="text-xs">
-                                                    Neu berechnen
-                                                </x-ui-button>
+                                                <div class="text-xs text-blue-600">
+                                                    Gewichteter Durchschnitt aus {{ $deal->billables->count() }} Billable(s) basierend auf deren Werten
+                                                </div>
                                             </div>
                                         @endif
                                     </div>
@@ -282,11 +289,13 @@
                                         <label class="font-semibold">
                                             {{ $deal->hasBillables() ? 'Wahrscheinlichkeit (gewichtet):' : 'Wahrscheinlichkeit:' }}
                                         </label>
-                                        <div class="p-2 bg-muted-5 rounded-lg">
-                                            {{ $deal->calculated_probability ? $deal->calculated_probability . '%' : '–' }}
+                                        <div class="p-4 bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200 rounded-lg">
+                                            <div class="text-2xl font-bold text-gray-800">
+                                                {{ $deal->calculated_probability ? $deal->calculated_probability . '%' : '–' }}
+                                            </div>
                                             @if($deal->hasBillables())
-                                                <div class="text-xs text-blue-600 mt-1">
-                                                    (berechnet aus {{ $deal->billables->count() }} Billable(s))
+                                                <div class="text-sm text-blue-600 mt-1">
+                                                    Berechnet aus {{ $deal->billables->count() }} Billable(s)
                                                 </div>
                                             @endif
                                         </div>
@@ -488,11 +497,41 @@
     <!-- Rechte Spalte -->
     <div class="min-w-80 w-80 d-flex flex-col border-left-1 border-left-solid border-left-muted">
 
-        <div class="d-flex gap-2 border-top-1 border-bottom-1 border-muted border-top-solid border-bottom-solid p-2 flex-shrink-0">
-            <x-heroicon-o-cog-6-tooth class="w-6 h-6"/>
-            Einstellungen
+        <div class="d-flex gap-2 border-top-1 border-bottom-1 border-muted border-top-solid border-bottom-solid p-3 flex-shrink-0 bg-gray-50">
+            <x-heroicon-o-cog-6-tooth class="w-5 h-5 text-gray-600"/>
+            <span class="font-medium text-gray-900">Deal Übersicht</span>
         </div>
         <div class="flex-grow-1 overflow-y-auto p-4">
+
+            {{-- Quick Stats --}}
+            <div class="mb-6">
+                <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    @svg('heroicon-o-chart-bar', 'w-4 h-4')
+                    Schnellübersicht
+                </h3>
+                <div class="space-y-3">
+                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="text-xs text-blue-600 font-medium">Deal Wert</div>
+                        <div class="text-lg font-bold text-blue-800">
+                            {{ $deal->deal_value ? number_format((float) $deal->deal_value, 2, ',', '.') . ' €' : 'Nicht festgelegt' }}
+                        </div>
+                    </div>
+                    <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="text-xs text-green-600 font-medium">Wahrscheinlichkeit</div>
+                        <div class="text-lg font-bold text-green-800">
+                            {{ $deal->calculated_probability ? $deal->calculated_probability . '%' : 'Nicht festgelegt' }}
+                        </div>
+                    </div>
+                    @if($deal->hasBillables())
+                        <div class="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                            <div class="text-xs text-purple-600 font-medium">Billables</div>
+                            <div class="text-lg font-bold text-purple-800">
+                                {{ $deal->billables->count() }} Komponente(n)
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
 
             {{-- Navigation Buttons --}}
             <div class="d-flex flex-col gap-2 mb-4">
@@ -539,67 +578,74 @@
                 </x-ui-button>
             </div>
 
-            {{-- Quick Actions --}}
-            <div class="mb-4">
-                <h4 class="font-semibold mb-2 text-secondary">Quick Actions</h4>
+            {{-- Deal Status --}}
+            <div class="mb-6">
+                <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    @svg('heroicon-o-flag', 'w-4 h-4')
+                    Deal Status
+                </h3>
                 
                 {{-- Gewonnen-Checkbox --}}
                 @can('update', $deal)
-                    <x-ui-input-checkbox
-                        model="deal.is_done"
-                        checked-label="Gewonnen"
-                        unchecked-label="Als gewonnen markieren"
-                        size="md"
-                        block="true"
-                        variant="success"
-                        :icon="@svg('heroicon-o-check-circle', 'w-4 h-4')->toHtml()"
-                    />
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <x-ui-input-checkbox
+                            model="deal.is_done"
+                            checked-label="Deal gewonnen"
+                            unchecked-label="Als gewonnen markieren"
+                            size="md"
+                            block="true"
+                            variant="success"
+                            :icon="@svg('heroicon-o-check-circle', 'w-4 h-4')->toHtml()"
+                        />
+                    </div>
                 @else
-                    <div class="mb-2">
-                        <x-ui-badge variant="{{ $deal->is_done ? 'success' : 'gray' }}">
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <x-ui-badge variant="{{ $deal->is_done ? 'success' : 'gray' }}" size="lg" class="w-full justify-center">
                             @svg('heroicon-o-check-circle', 'w-4 h-4')
-                            {{ $deal->is_done ? 'Gewonnen' : 'Offen' }}
+                            {{ $deal->is_done ? 'Deal gewonnen' : 'Deal offen' }}
                         </x-ui-badge>
                     </div>
                 @endcan
+                
+                @if($deal->is_done)
+                    <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            @svg('heroicon-o-check-circle', 'w-5 h-5 text-green-600')
+                            <span class="text-sm font-medium text-green-800">Deal erfolgreich abgeschlossen</span>
+                        </div>
+                    </div>
+                @endif
             </div>
-
-            <hr>
 
             {{-- Deal Info --}}
             <div class="mb-4">
-                <h4 class="font-semibold mb-2 text-secondary">Deal Info</h4>
-                <div class="space-y-2 text-sm">
-                    <div class="d-flex justify-between">
+                <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    @svg('heroicon-o-information-circle', 'w-4 h-4')
+                    Deal Info
+                </h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
                         <span class="text-gray-600">Erstellt:</span>
-                        <span>{{ $deal->created_at->format('d.m.Y H:i') }}</span>
+                        <span class="font-medium">{{ $deal->created_at->format('d.m.Y H:i') }}</span>
                     </div>
-                    <div class="d-flex justify-between">
-                        <span class="text-gray-600">Aktualisiert:</span>
-                        <span>{{ $deal->updated_at->format('d.m.Y H:i') }}</span>
+                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                        <span class="text-gray-600">Geändert:</span>
+                        <span class="font-medium">{{ $deal->updated_at->format('d.m.Y H:i') }}</span>
                     </div>
-                    <div class="d-flex justify-between">
+                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
                         <span class="text-gray-600">Erstellt von:</span>
-                        <span>{{ $deal->user?->name ?? 'Unbekannt' }}</span>
+                        <span class="font-medium">{{ $deal->user?->name ?? 'Unbekannt' }}</span>
                     </div>
                     @if($deal->userInCharge)
-                        <div class="d-flex justify-between">
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
                             <span class="text-gray-600">Zugewiesen an:</span>
-                            <span>{{ $deal->userInCharge->name }}</span>
+                            <span class="font-medium">{{ $deal->userInCharge->name }}</span>
                         </div>
                     @endif
-                    @if($deal->deal_value)
-                        <div class="d-flex justify-between">
-                            <span class="text-gray-600">Deal Wert:</span>
-                            <span>{{ number_format((float) $deal->deal_value, 0, ',', '.') }} €</span>
-                        </div>
-                    @endif
-                    @if($deal->probability_percent)
-                        <div class="d-flex justify-between">
-                            <span class="text-gray-600">Wahrscheinlichkeit:</span>
-                            <span>{{ $deal->probability_percent }}%</span>
-                        </div>
-                    @endif
+                    <div class="p-2 bg-gray-50 rounded">
+                        <div class="text-gray-600 mb-1">Deal ID:</div>
+                        <div class="font-mono text-xs text-gray-800 break-all">{{ $deal->uuid }}</div>
+                    </div>
                 </div>
             </div>
 
