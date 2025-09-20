@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Symfony\Component\Uid\UuidV7;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 use Platform\ActivityLog\Traits\LogsActivity;
 
@@ -181,6 +183,16 @@ class SalesDeal extends Model
         return $this->belongsTo(SalesDealType::class, 'sales_deal_type_id');
     }
 
+    public function billables(): HasMany
+    {
+        return $this->hasMany(SalesDealBillable::class, 'sales_deal_id')->orderBy('order');
+    }
+
+    public function activeBillables(): HasMany
+    {
+        return $this->hasMany(SalesDealBillable::class, 'sales_deal_id')->where('is_active', true)->orderBy('order');
+    }
+
     // Vertriebsspezifische Methoden
     public function getCalculatedExpectedValueAttribute(): float
     {
@@ -209,5 +221,30 @@ class SalesDeal extends Model
     public function isHot(): bool
     {
         return $this->is_hot || ($this->probability_percent && $this->probability_percent >= 80);
+    }
+
+    // Billables-basierte Berechnungen
+    public function calculateTotalValueFromBillables(): float
+    {
+        return $this->activeBillables->sum('total_value');
+    }
+
+    public function updateDealValueFromBillables(): void
+    {
+        $calculatedValue = $this->calculateTotalValueFromBillables();
+        if ($this->deal_value != $calculatedValue) {
+            $this->deal_value = $calculatedValue;
+            $this->save();
+        }
+    }
+
+    public function hasBillables(): bool
+    {
+        return $this->billables()->count() > 0;
+    }
+
+    public function getBillablesTotalAttribute(): float
+    {
+        return $this->calculateTotalValueFromBillables();
     }
 }
