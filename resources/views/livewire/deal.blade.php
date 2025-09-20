@@ -82,142 +82,6 @@
 
                     {{-- Rechte Spalte: Metadaten --}}
                     <div class="space-y-4">
-                            {{-- Deal Wert & Wahrscheinlichkeit --}}
-                            <div class="grid grid-cols-2 gap-4">
-                                @can('update', $deal)
-                                    <div>
-                                        <div class="d-flex items-center justify-between mb-2">
-                                            <label class="font-semibold">
-                                                {{ $deal->hasBillables() ? 'Gesamtwert (aus Billables)' : ($deal->billing_interval === 'one_time' || !$deal->billing_interval ? 'Deal Wert (€)' : 'Gesamtwert über Laufzeit (€)') }}
-                                            </label>
-                                            <x-ui-button 
-                                                variant="secondary-outline" 
-                                                size="xs" 
-                                                wire:click="openBillablesModal"
-                                                class="text-xs">
-                                                @svg('heroicon-o-calculator', 'w-4 h-4')
-                                                Billables
-                                            </x-ui-button>
-                                        </div>
-                                        
-                        @if($deal->hasBillables())
-                            <div class="space-y-3">
-                                <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <div class="text-sm font-medium text-blue-700">Gesamtwert</div>
-                                        <x-ui-badge variant="blue" size="sm">{{ $deal->billables->count() }} Billable(s)</x-ui-badge>
-                                    </div>
-                                    <div class="text-2xl font-bold text-blue-800">
-                                        {{ number_format((float) $deal->deal_value, 2, ',', '.') }} €
-                                    </div>
-                                </div>
-                                <div class="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
-                                    <div class="text-sm font-medium text-green-700 mb-2">Erwarteter Wert</div>
-                                    <div class="text-2xl font-bold text-green-800">
-                                        {{ number_format((float) $deal->billables_expected_total, 2, ',', '.') }} €
-                                    </div>
-                                    <div class="text-xs text-green-600 mt-1">
-                                        Gewichtete Wahrscheinlichkeit: {{ $deal->calculated_probability }}%
-                                    </div>
-                                </div>
-                            </div>
-                                        @else
-                                            <x-ui-input-number
-                                                name="deal.deal_value"
-                                                label=""
-                                                wire:model.live.debounce.500ms="deal.deal_value"
-                                                placeholder="0.00"
-                                                step="0.01"
-                                                min="0"
-                                                :errorKey="'deal.deal_value'"
-                                            />
-                                            @if($deal->billing_interval && $deal->billing_interval !== 'one_time' && $deal->monthly_recurring_value && $deal->billing_duration_months)
-                                                <div class="d-flex items-center justify-between mt-1">
-                                                    <div class="text-xs text-blue-600">
-                                                        💡 Automatisch berechnet aus MRR × Laufzeit
-                                                    </div>
-                                                    <x-ui-button 
-                                                        variant="primary-outline" 
-                                                        size="xs" 
-                                                        wire:click="recalculateDealValue"
-                                                        class="text-xs">
-                                                        Neu berechnen
-                                                    </x-ui-button>
-                                                </div>
-                                            @endif
-                                        @endif
-                                    </div>
-                                @else
-                                    <div>
-                                        <label class="font-semibold">
-                                            {{ $deal->hasBillables() ? 'Gesamtwert (aus Billables)' : ($deal->billing_interval === 'one_time' || !$deal->billing_interval ? 'Deal Wert:' : 'Gesamtwert über Laufzeit:') }}
-                                        </label>
-                                        <div class="p-2 bg-muted-5 rounded-lg">
-                                            {{ $deal->deal_value ? number_format((float) $deal->deal_value, 2, ',', '.') . ' €' : '–' }}
-                                            @if($deal->hasBillables())
-                                                <div class="text-xs text-blue-600 mt-1">
-                                                    Gesamtwert: {{ number_format((float) $deal->deal_value, 2, ',', '.') }} €
-                                                </div>
-                                                <div class="text-xs text-green-600 mt-1">
-                                                    Erwarteter Wert: {{ number_format((float) $deal->billables_expected_total, 2, ',', '.') }} €
-                                                </div>
-                                            @elseif($deal->billing_interval && $deal->billing_interval !== 'one_time' && $deal->monthly_recurring_value && $deal->billing_duration_months)
-                                                <div class="text-xs text-blue-600 mt-1">
-                                                    (berechnet aus {{ number_format((float) $deal->monthly_recurring_value, 2, ',', '.') }} € × {{ $deal->billing_duration_months }} Monate)
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                @endcan
-
-                                @can('update', $deal)
-                                    <div>
-                                        <x-ui-input-number
-                                            name="deal.probability_percent"
-                                            :label="$deal->hasBillables() ? 'Wahrscheinlichkeit (%) - Gewichtet' : 'Wahrscheinlichkeit (%)'"
-                                            wire:model.live.debounce.500ms="deal.probability_percent"
-                                            placeholder="0"
-                                            min="0"
-                                            max="100"
-                                            :errorKey="'deal.probability_percent'"
-                                        />
-                                        @if($deal->hasBillables())
-                                            <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                                <div class="flex items-center justify-between mb-2">
-                                                    <div class="text-sm font-medium text-blue-700">Automatische Berechnung</div>
-                                                    <x-ui-button 
-                                                        variant="primary-outline" 
-                                                        size="xs" 
-                                                        wire:click="recalculateDealProbability"
-                                                        class="text-xs">
-                                                        @svg('heroicon-o-arrow-path', 'w-3 h-3')
-                                                        Neu berechnen
-                                                    </x-ui-button>
-                                                </div>
-                                                <div class="text-xs text-blue-600">
-                                                    Gewichteter Durchschnitt aus {{ $deal->billables->count() }} Billable(s) basierend auf deren Werten
-                                                </div>
-                                            </div>
-                                        @endif
-                                    </div>
-                                @else
-                                    <div>
-                                        <label class="font-semibold">
-                                            {{ $deal->hasBillables() ? 'Wahrscheinlichkeit (gewichtet):' : 'Wahrscheinlichkeit:' }}
-                                        </label>
-                                        <div class="p-4 bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200 rounded-lg">
-                                            <div class="text-2xl font-bold text-gray-800">
-                                                {{ $deal->calculated_probability ? $deal->calculated_probability . '%' : '–' }}
-                                            </div>
-                                            @if($deal->hasBillables())
-                                                <div class="text-sm text-blue-600 mt-1">
-                                                    Berechnet aus {{ $deal->billables->count() }} Billable(s)
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                @endcan
-                            </div>
 
                             {{-- Deal Source & Type --}}
                             <div class="grid grid-cols-2 gap-4">
@@ -260,83 +124,50 @@
                                 @endcan
                             </div>
 
-                            {{-- Billing Interval & Duration --}}
-                            <div class="grid grid-cols-2 gap-4">
-                                @can('update', $deal)
-                                    <x-ui-input-select
-                                        name="deal.billing_interval"
-                                        label="Abrechnungsintervall"
-                                        :options="collect([
-                                            (object)['value' => 'one_time', 'label' => 'Einmalig'],
-                                            (object)['value' => 'monthly', 'label' => 'Monatlich'],
-                                            (object)['value' => 'quarterly', 'label' => 'Vierteljährlich'],
-                                            (object)['value' => 'yearly', 'label' => 'Jährlich']
-                                        ])"
-                                        optionValue="value"
-                                        optionLabel="label"
-                                        wire:model.live="deal.billing_interval"
-                                        :errorKey="'deal.billing_interval'"
-                                    />
-                                @else
-                                    <div>
-                                        <label class="font-semibold">Abrechnungsintervall:</label>
-                                        <div class="p-2 bg-muted-5 rounded-lg">
-                                            @switch($deal->billing_interval)
-                                                @case('one_time') Einmalig @break
-                                                @case('monthly') Monatlich @break
-                                                @case('quarterly') Vierteljährlich @break
-                                                @case('yearly') Jährlich @break
-                                                @default –
-                                            @endswitch
-                                        </div>
-                                    </div>
-                                @endcan
-
-                                @can('update', $deal)
-                                    <x-ui-input-number
-                                        name="deal.billing_duration_months"
-                                        label="Laufzeit (Monate)"
-                                        wire:model.live.debounce.500ms="deal.billing_duration_months"
-                                        placeholder="z.B. 12"
-                                        min="1"
-                                        :nullable="true"
-                                        :errorKey="'deal.billing_duration_months'"
-                                    />
-                                @else
-                                    <div>
-                                        <label class="font-semibold">Laufzeit:</label>
-                                        <div class="p-2 bg-muted-5 rounded-lg">
-                                            {{ $deal->billing_duration_months ? $deal->billing_duration_months . ' Monate' : '–' }}
-                                        </div>
-                                    </div>
-                                @endcan
-                            </div>
-
-                            {{-- Monthly Recurring Value (nur bei wiederkehrenden Deals) --}}
-                            @if($deal->billing_interval && $deal->billing_interval !== 'one_time')
-                                <div class="grid grid-cols-1 gap-4">
-                                    @can('update', $deal)
-                                        <x-ui-input-number
-                                            name="deal.monthly_recurring_value"
-                                            label="Monatlicher wiederkehrender Wert (MRR)"
-                                            wire:model.live.debounce.500ms="deal.monthly_recurring_value"
-                                            placeholder="0.00"
-                                            step="0.01"
-                                            min="0"
-                                            :nullable="true"
-                                            :errorKey="'deal.monthly_recurring_value'"
-                                        />
-                                    @else
+                            {{-- Billables Management --}}
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
+                                    <div class="flex items-center justify-between mb-3">
                                         <div>
-                                            <label class="font-semibold">Monatlicher wiederkehrender Wert:</label>
-                                            <div class="p-2 bg-muted-5 rounded-lg">
-                                                {{ $deal->monthly_recurring_value ? number_format((float) $deal->monthly_recurring_value, 2, ',', '.') . ' €' : '–' }}
+                                            <h4 class="text-lg font-semibold text-green-800 mb-1">Billables verwalten</h4>
+                                            <p class="text-sm text-green-600">Teile deinen Deal in einzelne Komponenten auf</p>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            @if($deal->hasBillables())
+                                                <x-ui-badge variant="green" size="sm">
+                                                    {{ $deal->billables->count() }} Billable(s)
+                                                </x-ui-badge>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    
+                                    <x-ui-button 
+                                        variant="success" 
+                                        size="lg" 
+                                        wire:click="openBillablesModal"
+                                        class="w-full flex items-center justify-center gap-2">
+                                        @svg('heroicon-o-calculator', 'w-5 h-5')
+                                        {{ $deal->hasBillables() ? 'Billables bearbeiten' : 'Billables hinzufügen' }}
+                                    </x-ui-button>
+                                    
+                                    @if($deal->hasBillables())
+                                        <div class="mt-3 grid grid-cols-2 gap-3">
+                                            <div class="p-2 bg-white rounded border border-green-100">
+                                                <div class="text-xs text-green-600 font-medium">Gesamtwert</div>
+                                                <div class="text-sm font-bold text-green-800">
+                                                    {{ number_format((float) $deal->deal_value, 2, ',', '.') }} €
+                                                </div>
+                                            </div>
+                                            <div class="p-2 bg-white rounded border border-green-100">
+                                                <div class="text-xs text-green-600 font-medium">Erwarteter Wert</div>
+                                                <div class="text-sm font-bold text-green-800">
+                                                    {{ number_format((float) $deal->billables_expected_total, 2, ',', '.') }} €
+                                                </div>
                                             </div>
                                         </div>
-                                    @endcan
-                                    
+                                    @endif
                                 </div>
-                            @endif
+                            </div>
 
                         {{-- Fälligkeitsdatum & Zugewiesener Benutzer --}}
                         <div class="grid grid-cols-2 gap-4">
