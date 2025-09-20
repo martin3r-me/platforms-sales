@@ -8,7 +8,7 @@ use Platform\Sales\Models\SalesDealBillable;
 
 class BillablesModal extends Component
 {
-    public $deal;
+    public $deal = null;
     public $billables = [];
     public $showBillablesModal = false;
 
@@ -17,8 +17,10 @@ class BillablesModal extends Component
     public function openModal($dealId)
     {
         $this->deal = SalesDeal::find($dealId);
-        $this->showBillablesModal = true;
-        $this->loadBillables();
+        if ($this->deal) {
+            $this->showBillablesModal = true;
+            $this->loadBillables();
+        }
     }
 
     public function closeModal()
@@ -91,6 +93,8 @@ class BillablesModal extends Component
 
     public function render()
     {
-        return view('sales::livewire.billables-modal');
+        return view('sales::livewire.billables-modal', [
+            'deal' => $this->deal
+        ]);
     }
 }
