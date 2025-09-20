@@ -10,7 +10,7 @@ class BillablesModal extends Component
 {
     public $deal = null;
     public $billables = [];
-    public $showBillablesModal = false;
+    public $modalShow = false;
 
     protected $listeners = ['openBillablesModal' => 'openModal'];
 
@@ -18,14 +18,14 @@ class BillablesModal extends Component
     {
         $this->deal = SalesDeal::find($dealId);
         if ($this->deal) {
-            $this->showBillablesModal = true;
+            $this->modalShow = true;
             $this->loadBillables();
         }
     }
 
     public function closeModal()
     {
-        $this->showBillablesModal = false;
+        $this->modalShow = false;
     }
 
     public function loadBillables()
@@ -85,7 +85,7 @@ class BillablesModal extends Component
         $this->deal->updateDealValueFromBillables();
         $this->deal->refresh();
 
-        $this->closeModal();
+        $this->modalShow = false;
         
         // Benachrichtige die Deal-Komponente
         $this->dispatch('billablesUpdated', $this->deal->id);

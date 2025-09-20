@@ -1,6 +1,6 @@
 <div>
-@if($showBillablesModal)
-<x-ui-modal size="lg" wire:model="showBillablesModal">
+@if($modalShow)
+<x-ui-modal size="lg" wire:model="modalShow">
     <x-slot name="header">
         Billables verwalten: {{ $deal?->title ?? 'Deal' }}
     </x-slot>

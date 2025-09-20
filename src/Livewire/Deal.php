@@ -17,7 +17,7 @@ class Deal extends Component
     public $dealTypes;
     public $priorities;
     public $billables = [];
-    public $showBillablesModal = false;
+    public $modalShow = false;
 
     protected $listeners = ['billablesUpdated' => 'refreshDeal'];
 
@@ -159,7 +159,7 @@ class Deal extends Component
 
     public function closeBillablesModal()
     {
-        $this->showBillablesModal = false;
+        $this->modalShow = false;
     }
 
     public function addBillable()
