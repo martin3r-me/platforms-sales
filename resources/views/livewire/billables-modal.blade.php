@@ -1,3 +1,4 @@
+<div>
 @if($showBillablesModal)
 <x-ui-modal size="lg" wire:model="showBillablesModal">
     <x-slot name="header">
@@ -176,3 +177,4 @@
     </x-slot>
 </x-ui-modal>
 @endif
+</div>
