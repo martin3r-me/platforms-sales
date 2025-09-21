@@ -8,6 +8,8 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Auth;
 use Platform\Core\Contracts\CrmCompanyResolverInterface;
 use Platform\Core\Contracts\CrmCompanyOptionsProviderInterface;
+use Platform\Core\Contracts\CrmContactResolverInterface;
+use Platform\Core\Contracts\CrmContactOptionsProviderInterface;
 
 class CustomerDealSettingsModal extends Component
 {
@@ -17,6 +19,11 @@ class CustomerDealSettingsModal extends Component
     public $companyDisplay = null;
     public $companyOptions = [];
     public $companySearch = '';
+    
+    public $contactId = null;
+    public $contactDisplay = null;
+    public $contactOptions = [];
+    public $contactSearch = '';
     
 
     #[On('open-modal-customer-deal')]
@@ -31,6 +38,12 @@ class CustomerDealSettingsModal extends Component
         $this->resolveCompanyDisplay();
         $this->loadCompanyOptions('');
         
+        // Load current contact (first one if multiple)
+        $currentContact = $this->deal->contacts()->first();
+        $this->contactId = $currentContact?->id;
+        $this->resolveContactDisplay();
+        $this->loadContactOptions('');
+        
         
         $this->modalShow = true;
     }
@@ -38,7 +51,7 @@ class CustomerDealSettingsModal extends Component
     public function closeModal()
     {
         $this->modalShow = false;
-        $this->reset(['deal', 'companyId', 'companyDisplay', 'companyOptions', 'companySearch']);
+        $this->reset(['deal', 'companyId', 'companyDisplay', 'companyOptions', 'companySearch', 'contactId', 'contactDisplay', 'contactOptions', 'contactSearch']);
     }
 
     public function render()
@@ -75,16 +88,54 @@ class CustomerDealSettingsModal extends Component
         $this->companyOptions = $optionsProvider->options($search);
     }
 
-    public function saveCompany()
+    // Contact Methods
+    public function updatedContactId($value)
     {
-        // Remove all existing company links
+        $this->resolveContactDisplay();
+    }
+
+    public function updatedContactSearch($value)
+    {
+        $this->loadContactOptions($this->contactSearch);
+    }
+
+    private function resolveContactDisplay()
+    {
+        if ($this->contactId) {
+            /** @var CrmContactResolverInterface $contactResolver */
+            $contactResolver = app(CrmContactResolverInterface::class);
+            $this->contactDisplay = $contactResolver->displayName($this->contactId);
+        } else {
+            $this->contactDisplay = null;
+        }
+    }
+
+    private function loadContactOptions($search = '')
+    {
+        /** @var CrmContactOptionsProviderInterface $optionsProvider */
+        $optionsProvider = app(CrmContactOptionsProviderInterface::class);
+        $this->contactOptions = $optionsProvider->options($search);
+    }
+
+    public function saveCompanyAndContact()
+    {
+        // Remove all existing links
         $this->deal->detachAllCompanies();
+        $this->deal->detachAllContacts();
 
         // Add new company if selected
         if ($this->companyId) {
             $company = \Platform\Crm\Models\CrmCompany::find($this->companyId);
             if ($company) {
                 $this->deal->attachCompany($company);
+            }
+        }
+
+        // Add new contact if selected
+        if ($this->contactId) {
+            $contact = \Platform\Crm\Models\CrmContact::find($this->contactId);
+            if ($contact) {
+                $this->deal->attachContact($contact);
             }
         }
 

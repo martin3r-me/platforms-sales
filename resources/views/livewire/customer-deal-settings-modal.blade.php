@@ -6,9 +6,9 @@
                 <p class="text-sm text-gray-600 mt-1">{{ $deal?->title ?? 'Deal' }}</p>
             </div>
             <div class="flex items-center gap-2">
-                @if($deal && $deal->companies()->count() > 0)
+                @if($deal && ($deal->companies()->count() > 0 || $deal->contacts()->count() > 0))
                     <x-ui-badge variant="green" size="sm">
-                        {{ $deal->companies()->count() }} Company(s)
+                        {{ $deal->companies()->count() + $deal->contacts()->count() }} Verknüpfung(en)
                     </x-ui-badge>
                 @endif
             </div>
@@ -26,12 +26,16 @@
                     <div>
                         <h4 class="text-sm font-semibold text-blue-900 mb-2">CRM Integration</h4>
                         <p class="text-sm text-blue-700 mb-2">
-                            Verknüpfe diesen Deal mit Companies aus dem CRM für bessere Übersicht und Reporting.
+                            Verknüpfe diesen Deal mit Companies und Contacts aus dem CRM für bessere Übersicht und Reporting.
                         </p>
-                        <div class="text-xs text-blue-600">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-blue-600">
                             <div class="flex items-center gap-1">
                                 <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
-                                <strong>Company:</strong> Firma/Unternehmen aus dem CRM
+                                <strong>Company:</strong> Firma/Unternehmen
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span class="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                                <strong>Contact:</strong> Ansprechpartner
                             </div>
                         </div>
                     </div>
@@ -71,9 +75,41 @@
                 </div>
             </div>
 
+            {{-- Contact Selection --}}
+            <div class="space-y-4">
+                <h4 class="text-lg font-medium text-gray-900 flex items-center gap-2">
+                    @svg('heroicon-o-user', 'w-5 h-5')
+                    Contact verknüpfen
+                </h4>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <x-ui-input-text 
+                            name="contactSearch"
+                            label="Contact suchen"
+                            wire:model.live.debounce.300ms="contactSearch"
+                            placeholder="Ansprechpartner suchen..."
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Contact auswählen</label>
+                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" wire:model.live="contactId">
+                            <option value="">– Kein Contact –</option>
+                            @foreach($contactOptions as $option)
+                                <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="p-3 bg-gray-50 rounded-lg">
+                    <div class="text-sm font-medium text-gray-700 mb-1">Aktuelle Auswahl:</div>
+                    <div class="text-sm text-gray-600">{{ $contactDisplay ?? 'Kein Contact ausgewählt' }}</div>
+                </div>
+            </div>
 
             {{-- Current Links Summary --}}
-            @if($deal->companies()->count() > 0)
+            @if($deal->companies()->count() > 0 || $deal->contacts()->count() > 0)
                 <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
                     <h5 class="text-sm font-semibold text-green-900 mb-3 flex items-center gap-2">
                         @svg('heroicon-o-check-circle', 'w-4 h-4')
@@ -89,6 +125,15 @@
                                 <x-ui-badge variant="green" size="sm">Company</x-ui-badge>
                             </div>
                         @endforeach
+                        @foreach($deal->contacts() as $contact)
+                            <div class="flex items-center justify-between p-2 bg-white rounded border border-green-100">
+                                <div class="flex items-center gap-2">
+                                    @svg('heroicon-o-user', 'w-4 h-4 text-green-600')
+                                    <span class="text-sm font-medium text-green-800">{{ $contact->display_name }}</span>
+                                </div>
+                                <x-ui-badge variant="blue" size="sm">Contact</x-ui-badge>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             @endif
@@ -100,9 +145,9 @@
             <x-ui-button variant="secondary-outline" wire:click="closeModal">
                 Abbrechen
             </x-ui-button>
-            <x-ui-button variant="primary" wire:click="saveCompany" class="flex items-center gap-2">
+            <x-ui-button variant="primary" wire:click="saveCompanyAndContact" class="flex items-center gap-2">
                 @svg('heroicon-o-link', 'w-4 h-4')
-                Company verknüpfen
+                Verknüpfungen speichern
             </x-ui-button>
         </div>
     </x-slot>
