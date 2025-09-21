@@ -175,12 +175,12 @@
                             <div class="flex items-center justify-between mb-3">
                                 <div>
                                     <h4 class="text-lg font-semibold text-blue-800 mb-1">CRM Verknüpfung</h4>
-                                    <p class="text-sm text-blue-600">Verknüpfe mit Companies und Contacts</p>
+                                    <p class="text-sm text-blue-600">Verknüpfe mit Companies</p>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    @if($deal->companies()->count() > 0 || $deal->contacts()->count() > 0)
+                                    @if($deal->companies()->count() > 0)
                                         <x-ui-badge variant="blue" size="sm">
-                                            {{ $deal->companies()->count() + $deal->contacts()->count() }} Verknüpfung(en)
+                                            {{ $deal->companies()->count() }} Company(s)
                                         </x-ui-badge>
                                     @endif
                                 </div>
@@ -195,20 +195,13 @@
                                 CRM verknüpfen
                             </x-ui-button>
                             
-                            @if($deal->companies()->count() > 0 || $deal->contacts()->count() > 0)
+                            @if($deal->companies()->count() > 0)
                                 <div class="mt-3 space-y-2">
                                     @foreach($deal->companies() as $company)
                                         <div class="p-2 bg-white rounded border border-blue-100 flex items-center gap-2">
                                             @svg('heroicon-o-building-office', 'w-4 h-4 text-blue-600')
                                             <span class="text-sm font-medium text-blue-800">{{ $company->name }}</span>
                                             <x-ui-badge variant="blue" size="xs">Company</x-ui-badge>
-                                        </div>
-                                    @endforeach
-                                    @foreach($deal->contacts() as $contact)
-                                        <div class="p-2 bg-white rounded border border-blue-100 flex items-center gap-2">
-                                            @svg('heroicon-o-user', 'w-4 h-4 text-blue-600')
-                                            <span class="text-sm font-medium text-blue-800">{{ $contact->display_name }}</span>
-                                            <x-ui-badge variant="indigo" size="xs">Contact</x-ui-badge>
                                         </div>
                                     @endforeach
                                 </div>
