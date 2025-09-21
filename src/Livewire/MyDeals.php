@@ -22,6 +22,12 @@ class MyDeals extends Component
         // Optional: neu rendern bei Event
     }
 
+    #[On('open-deal')]
+    public function openDeal($dealId)
+    {
+        return $this->redirect(route('sales.deals.show', $dealId), navigate: true);
+    }
+
     public function render()
     {
         $user = Auth::user();
@@ -171,6 +177,11 @@ class MyDeals extends Component
                 $deal = SalesDeal::find($item['value']);
 
                 if (! $deal) {
+                    continue;
+                }
+
+                // Nur aktualisieren wenn der Benutzer berechtigt ist
+                if ($deal->user_in_charge_id !== auth()->id()) {
                     continue;
                 }
 
