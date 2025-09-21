@@ -70,9 +70,12 @@
 
     <x-slot name="footer">
         <div class="d-flex justify-between">
-            <x-ui-button variant="danger" wire:click="delete">
-                Löschen
-            </x-ui-button>
+            <x-ui-confirm-button 
+                action="delete" 
+                text="Board löschen" 
+                confirmText="Wirklich löschen? Alle Deals in diesem Board werden in die INBOX verschoben." 
+                variant="danger-outline"
+            />
             <div class="d-flex gap-2">
                 <x-ui-button variant="secondary" wire:click="closeModal">
                     Abbrechen

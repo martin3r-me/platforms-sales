@@ -124,50 +124,97 @@
                                 @endcan
                             </div>
 
-                            {{-- Billables Management --}}
-                            <div class="grid grid-cols-1 gap-4">
-                                <div class="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
-                                    <div class="flex items-center justify-between mb-3">
-                                        <div>
-                                            <h4 class="text-lg font-semibold text-green-800 mb-1">Billables verwalten</h4>
-                                            <p class="text-sm text-green-600">Teile deinen Deal in einzelne Komponenten auf</p>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            @if($deal->hasBillables())
-                                                <x-ui-badge variant="green" size="sm">
-                                                    {{ $deal->billables->count() }} Billable(s)
-                                                </x-ui-badge>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    
-                                    <x-ui-button 
-                                        variant="success" 
-                                        size="lg" 
-                                        wire:click="openBillablesModal"
-                                        class="w-full flex items-center justify-center gap-2">
-                                        @svg('heroicon-o-calculator', 'w-5 h-5')
-                                        {{ $deal->hasBillables() ? 'Billables bearbeiten' : 'Billables hinzufügen' }}
-                                    </x-ui-button>
-                                    
+                    {{-- Billables Management --}}
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <h4 class="text-lg font-semibold text-green-800 mb-1">Billables verwalten</h4>
+                                    <p class="text-sm text-green-600">Teile deinen Deal in einzelne Komponenten auf</p>
+                                </div>
+                                <div class="flex items-center gap-2">
                                     @if($deal->hasBillables())
-                                        <div class="mt-3 grid grid-cols-2 gap-3">
-                                            <div class="p-2 bg-white rounded border border-green-100">
-                                                <div class="text-xs text-green-600 font-medium">Gesamtwert</div>
-                                                <div class="text-sm font-bold text-green-800">
-                                                    {{ number_format((float) $deal->deal_value, 2, ',', '.') }} €
-                                                </div>
-                                            </div>
-                                            <div class="p-2 bg-white rounded border border-green-100">
-                                                <div class="text-xs text-green-600 font-medium">Erwarteter Wert</div>
-                                                <div class="text-sm font-bold text-green-800">
-                                                    {{ number_format((float) $deal->billables_expected_total, 2, ',', '.') }} €
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <x-ui-badge variant="green" size="sm">
+                                            {{ $deal->billables->count() }} Billable(s)
+                                        </x-ui-badge>
                                     @endif
                                 </div>
                             </div>
+                            
+                            <x-ui-button 
+                                variant="success" 
+                                size="lg" 
+                                wire:click="openBillablesModal"
+                                class="w-full flex items-center justify-center gap-2">
+                                @svg('heroicon-o-calculator', 'w-5 h-5')
+                                {{ $deal->hasBillables() ? 'Billables bearbeiten' : 'Billables hinzufügen' }}
+                            </x-ui-button>
+                            
+                            @if($deal->hasBillables())
+                                <div class="mt-3 grid grid-cols-2 gap-3">
+                                    <div class="p-2 bg-white rounded border border-green-100">
+                                        <div class="text-xs text-green-600 font-medium">Gesamtwert</div>
+                                        <div class="text-sm font-bold text-green-800">
+                                            {{ number_format((float) $deal->deal_value, 2, ',', '.') }} €
+                                        </div>
+                                    </div>
+                                    <div class="p-2 bg-white rounded border border-green-100">
+                                        <div class="text-xs text-green-600 font-medium">Erwarteter Wert</div>
+                                        <div class="text-sm font-bold text-green-800">
+                                            {{ number_format((float) $deal->billables_expected_total, 2, ',', '.') }} €
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- CRM Integration --}}
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <h4 class="text-lg font-semibold text-blue-800 mb-1">CRM Verknüpfung</h4>
+                                    <p class="text-sm text-blue-600">Verknüpfe mit Companies und Contacts</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    @if($deal->companies()->count() > 0 || $deal->contacts()->count() > 0)
+                                        <x-ui-badge variant="blue" size="sm">
+                                            {{ $deal->companies()->count() + $deal->contacts()->count() }} Verknüpfung(en)
+                                        </x-ui-badge>
+                                    @endif
+                                </div>
+                            </div>
+                            
+                            <x-ui-button 
+                                variant="primary" 
+                                size="lg" 
+                                wire:click="$dispatch('open-modal-customer-deal', { dealId: {{ $deal->id }} })"
+                                class="w-full flex items-center justify-center gap-2">
+                                @svg('heroicon-o-link', 'w-5 h-5')
+                                CRM verknüpfen
+                            </x-ui-button>
+                            
+                            @if($deal->companies()->count() > 0 || $deal->contacts()->count() > 0)
+                                <div class="mt-3 space-y-2">
+                                    @foreach($deal->companies() as $company)
+                                        <div class="p-2 bg-white rounded border border-blue-100 flex items-center gap-2">
+                                            @svg('heroicon-o-building-office', 'w-4 h-4 text-blue-600')
+                                            <span class="text-sm font-medium text-blue-800">{{ $company->name }}</span>
+                                            <x-ui-badge variant="blue" size="xs">Company</x-ui-badge>
+                                        </div>
+                                    @endforeach
+                                    @foreach($deal->contacts() as $contact)
+                                        <div class="p-2 bg-white rounded border border-blue-100 flex items-center gap-2">
+                                            @svg('heroicon-o-user', 'w-4 h-4 text-blue-600')
+                                            <span class="text-sm font-medium text-blue-800">{{ $contact->display_name }}</span>
+                                            <x-ui-badge variant="indigo" size="xs">Contact</x-ui-badge>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    </div>
 
                         {{-- Fälligkeitsdatum & Zugewiesener Benutzer --}}
                         <div class="grid grid-cols-2 gap-4">
@@ -425,4 +472,7 @@
 
     <!-- Billables Modal -->
     <livewire:sales.billables-modal />
+    
+    <!-- Customer Deal Settings Modal -->
+    <livewire:sales.customer-deal-settings-modal />
 </div>

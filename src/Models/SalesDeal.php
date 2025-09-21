@@ -12,10 +12,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 use Platform\ActivityLog\Traits\LogsActivity;
+use Platform\Crm\Traits\HasCompanyLinksTrait;
+use Platform\Crm\Traits\HasContactLinksTrait;
 
 class SalesDeal extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, SoftDeletes, LogsActivity, HasCompanyLinksTrait, HasContactLinksTrait;
 
     protected $fillable = [
         'uuid',
@@ -192,6 +194,16 @@ class SalesDeal extends Model
     {
         return $this->hasMany(SalesDealBillable::class, 'sales_deal_id')->where('is_active', true)->orderBy('order');
     }
+
+    /**
+     * CRM Integration - Companies and Contacts are now available via traits:
+     * - $deal->companies() - Collection of linked companies
+     * - $deal->contacts() - Collection of linked contacts
+     * - $deal->attachCompany($company) - Link a company
+     * - $deal->attachContact($contact) - Link a contact
+     * - $deal->detachCompany($company) - Unlink a company
+     * - $deal->detachContact($contact) - Unlink a contact
+     */
 
     // Vertriebsspezifische Methoden
     public function getCalculatedExpectedValueAttribute(): float
