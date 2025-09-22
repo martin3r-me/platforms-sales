@@ -43,7 +43,7 @@ return [
             'group' => 'Vertriebsboards',
             'dynamic' => [
                 // Nur Model und Parameter, keine Closures
-                'model'     => Platform\Sales\Models\SalesBoard::class,
+                'model'     => \Platform\Sales\Models\SalesBoard::class,
                 'team_based' => true, // sagt der Sidebar, nach aktuellem Team filtern
                 'order_by'  => 'name',
                 'route'     => 'sales.boards.show', // Basisroute
