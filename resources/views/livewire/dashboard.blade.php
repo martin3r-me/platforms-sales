@@ -11,12 +11,16 @@
             </div>
             <div class="flex items-center gap-2">
                 <x-ui-button variant="secondary-outline" :href="route('sales.my-deals')" wire:navigate>
-                    @svg('heroicon-o-rectangle-stack', 'w-4 h-4')
-                    Meine Deals
+                    <div class="d-flex items-center gap-2">
+                        @svg('heroicon-o-rectangle-stack', 'w-4 h-4')
+                        <span>Meine Deals</span>
+                    </div>
                 </x-ui-button>
                 <x-ui-button variant="primary" :href="route('sales.my-deals')" wire:navigate>
-                    @svg('heroicon-o-plus', 'w-4 h-4')
-                    Neuer Deal
+                    <div class="d-flex items-center gap-2">
+                        @svg('heroicon-o-plus', 'w-4 h-4')
+                        <span>Neuer Deal</span>
+                    </div>
                 </x-ui-button>
             </div>
         </div>
@@ -60,7 +64,10 @@
                 <div class="p-6 border-b border-gray-200 d-flex items-center justify-between">
                     <h2 class="text-lg font-semibold text-gray-900">Neueste Deals</h2>
                     <x-ui-button variant="secondary-outline" size="sm" :href="route('sales.my-deals')" wire:navigate>
-                        Alle ansehen
+                        <div class="d-flex items-center gap-2">
+                            @svg('heroicon-o-eye', 'w-4 h-4')
+                            <span>Alle ansehen</span>
+                        </div>
                     </x-ui-button>
                 </div>
                 <div class="p-6">
@@ -85,7 +92,10 @@
                                             <x-ui-badge variant="blue" size="sm">{{ $deal->probability_percent }}%</x-ui-badge>
                                         @endif
                                         <x-ui-button variant="secondary-outline" size="sm" :href="route('sales.deals.show', $deal)" wire:navigate>
-                                            Ansehen
+                                            <div class="d-flex items-center gap-2">
+                                                @svg('heroicon-o-arrow-right', 'w-4 h-4')
+                                                <span>Ansehen</span>
+                                            </div>
                                         </x-ui-button>
                                     </div>
                                 </div>
@@ -99,8 +109,10 @@
                             <h3 class="text-lg font-medium text-gray-900 mb-2">Noch keine Deals</h3>
                             <p class="text-gray-500 mb-4">Erstelle deinen ersten Deal um loszulegen</p>
                             <x-ui-button variant="primary" :href="route('sales.my-deals')" wire:navigate>
-                                @svg('heroicon-o-plus', 'w-4 h-4')
-                                Deal erstellen
+                                <div class="d-flex items-center gap-2">
+                                    @svg('heroicon-o-plus', 'w-4 h-4')
+                                    <span>Deal erstellen</span>
+                                </div>
                             </x-ui-button>
                         </div>
                     @endif
@@ -113,12 +125,16 @@
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Aktionen</h3>
                     <div class="d-flex flex-col gap-2">
                         <x-ui-button variant="primary" :href="route('sales.my-deals')" wire:navigate class="w-full">
-                            @svg('heroicon-o-plus', 'w-4 h-4')
-                            Neuen Deal anlegen
+                            <div class="d-flex items-center gap-2 w-full justify-center">
+                                @svg('heroicon-o-plus', 'w-4 h-4')
+                                <span>Neuen Deal anlegen</span>
+                            </div>
                         </x-ui-button>
                         <x-ui-button variant="secondary-outline" :href="route('sales.my-deals')" wire:navigate class="w-full">
-                            @svg('heroicon-o-rectangle-stack', 'w-4 h-4')
-                            Meine Deals öffnen
+                            <div class="d-flex items-center gap-2 w-full justify-center">
+                                @svg('heroicon-o-rectangle-stack', 'w-4 h-4')
+                                <span>Meine Deals öffnen</span>
+                            </div>
                         </x-ui-button>
                     </div>
                 </div>
