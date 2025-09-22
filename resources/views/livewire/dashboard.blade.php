@@ -21,39 +21,43 @@
             </div>
         </div>
 
-        {{-- Tiles --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {{-- Haupt-Statistiken (4x2 Grid wie Planner) --}}
+        <div class="grid grid-cols-4 gap-4 mb-8">
             <x-ui-dashboard-tile
                 title="Offene Deals"
                 :count="$openDealsCount ?? 0"
                 icon="clipboard-document-list"
                 variant="info"
+                size="lg"
             />
             <x-ui-dashboard-tile
                 title="Gewonnene Deals"
                 :count="$wonDealsCount ?? 0"
                 icon="trophy"
                 variant="success"
+                size="lg"
             />
             <x-ui-dashboard-tile
                 title="Gesamtwert"
                 :count="(int) ($totalValue ?? 0)"
                 icon="currency-euro"
                 variant="warning"
+                size="lg"
             />
             <x-ui-dashboard-tile
                 title="Erwarteter Wert"
                 :count="(int) ($expectedValue ?? 0)"
                 icon="chart-bar"
                 variant="primary"
+                size="lg"
             />
         </div>
 
-        {{-- Two columns --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {{-- Detaillierte Bereiche (2 Spalten wie Planner) --}}
+        <div class="grid grid-cols-2 gap-6 mb-8">
             {{-- Left: Recent Deals --}}
-            <div class="lg:col-span-2 bg-white border border-gray-200 rounded-lg shadow-sm">
-                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+            <div class="col-span-2 lg:col-span-1 bg-white border border-gray-200 rounded-lg shadow-sm">
+                <div class="p-6 border-b border-gray-200 d-flex items-center justify-between">
                     <h2 class="text-lg font-semibold text-gray-900">Neueste Deals</h2>
                     <x-ui-button variant="secondary-outline" size="sm" :href="route('sales.my-deals')" wire:navigate>
                         Alle ansehen
@@ -103,11 +107,11 @@
                 </div>
             </div>
 
-            {{-- Right: Actions / Shortcuts --}}
-            <div class="space-y-4">
-                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-                    <div class="text-sm font-semibold text-gray-900 mb-3">Aktionen</div>
-                    <div class="flex flex-col gap-2">
+            {{-- Right: Aktionen / Hinweise --}}
+            <div class="col-span-2 lg:col-span-1 space-y-4">
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Aktionen</h3>
+                    <div class="d-flex flex-col gap-2">
                         <x-ui-button variant="primary" :href="route('sales.my-deals')" wire:navigate class="w-full">
                             @svg('heroicon-o-plus', 'w-4 h-4')
                             Neuen Deal anlegen
@@ -119,8 +123,8 @@
                     </div>
                 </div>
 
-                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-                    <div class="text-sm font-semibold text-gray-900 mb-3">Hinweis</div>
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Hinweis</h3>
                     <p class="text-sm text-gray-600">Passe Boards, Spalten und Templates in den Board-Einstellungen an.</p>
                 </div>
             </div>
