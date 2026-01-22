@@ -1,57 +1,57 @@
 {{-- Root auf x-ui-page umstellen, damit volle Höhe/Sidebars korrekt funktionieren --}}
     @php 
-        $openDeals = $groups->filter(fn($g) => !($g->isWonGroup ?? false))->flatMap(fn($g) => $g->deals);
-        $wonDeals = $groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->deals);
-        $allDeals = $groups->flatMap(fn($g) => $g->deals);
-        
-        $totalDealValue = $allDeals->reduce(fn($carry, $d) => $carry + (float) ($d->deal_value ?? 0), 0);
-        $totalExpectedValue = $allDeals->reduce(function($carry, $d) { 
-            $dealValue = (float) ($d->deal_value ?? 0);
-            $probability = (float) ($d->probability_percent ?? 0);
-            return $carry + ($dealValue * $probability / 100);
-        }, 0);
-        
-        $statsOpen = [
-            [
-                'title' => 'Offen',
-                'count' => $openDeals->count(),
-                'icon' => 'clock',
-                'variant' => 'warning'
-            ],
-            [
-                'title' => 'Deal Wert',
-                'count' => number_format($openDeals->sum(fn($d) => (float) ($d->deal_value ?? 0)), 0, ',', '.') . ' €',
-                'icon' => 'currency-euro',
-                'variant' => 'primary'
-            ],
-            [
-                'title' => 'Überfällig',
-                'count' => $openDeals->filter(fn($d) => $d->due_date && $d->due_date->isPast() && !$d->is_done)->count(),
-                'icon' => 'exclamation-circle',
-                'variant' => 'danger'
-            ],
-            [
-                'title' => 'Heute fällig',
-                'count' => $openDeals->filter(fn($d) => $d->due_date && $d->due_date->isToday())->count(),
-                'icon' => 'calendar',
-                'variant' => 'warning'
-            ],
-        ];
-        
-        $statsWon = [
-            [
-                'title' => 'Gewonnen',
-                'count' => $wonDeals->count(),
-                'icon' => 'check-circle',
-                'variant' => 'success'
-            ],
-            [
-                'title' => 'Deal Wert',
-                'count' => number_format($wonDeals->sum(fn($d) => (float) ($d->deal_value ?? 0)), 0, ',', '.') . ' €',
-                'icon' => 'currency-euro',
-                'variant' => 'success'
-            ],
-        ];
+    $openDeals = $groups->filter(fn($g) => !($g->isWonGroup ?? false))->flatMap(fn($g) => $g->deals);
+    $wonDeals = $groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->deals);
+    $allDeals = $groups->flatMap(fn($g) => $g->deals);
+    
+    $totalDealValue = $allDeals->reduce(fn($carry, $d) => $carry + (float) ($d->deal_value ?? 0), 0);
+    $totalExpectedValue = $allDeals->reduce(function($carry, $d) { 
+        $dealValue = (float) ($d->deal_value ?? 0);
+        $probability = (float) ($d->probability_percent ?? 0);
+        return $carry + ($dealValue * $probability / 100);
+    }, 0);
+    
+    $statsOpen = [
+        [
+            'title' => 'Offen',
+            'count' => $openDeals->count(),
+            'icon' => 'clock',
+            'variant' => 'warning'
+        ],
+        [
+            'title' => 'Deal Wert',
+            'count' => number_format($openDeals->sum(fn($d) => (float) ($d->deal_value ?? 0)), 0, ',', '.') . ' €',
+            'icon' => 'currency-euro',
+            'variant' => 'primary'
+        ],
+        [
+            'title' => 'Überfällig',
+            'count' => $openDeals->filter(fn($d) => $d->due_date && $d->due_date->isPast() && !$d->is_done)->count(),
+            'icon' => 'exclamation-circle',
+            'variant' => 'danger'
+        ],
+        [
+            'title' => 'Heute fällig',
+            'count' => $openDeals->filter(fn($d) => $d->due_date && $d->due_date->isToday())->count(),
+            'icon' => 'calendar',
+            'variant' => 'warning'
+        ],
+    ];
+    
+    $statsWon = [
+        [
+            'title' => 'Gewonnen',
+            'count' => $wonDeals->count(),
+            'icon' => 'check-circle',
+            'variant' => 'success'
+        ],
+        [
+            'title' => 'Deal Wert',
+            'count' => number_format($wonDeals->sum(fn($d) => (float) ($d->deal_value ?? 0)), 0, ',', '.') . ' €',
+            'icon' => 'currency-euro',
+            'variant' => 'success'
+        ],
+    ];
     @endphp
 
     {{-- Neues Layout via x-ui-page --}}
@@ -90,7 +90,7 @@
                                 </x-ui-button>
                             @endcan
                         </div>
-                    </div>
+                        </div>
                     <!-- Board-Statistiken: Offen -->
                     <div>
                         <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Offen</h3>
