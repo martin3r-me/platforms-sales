@@ -1,3 +1,4 @@
+{{-- Root auf x-ui-page umstellen, damit volle Höhe/Sidebars korrekt funktionieren --}}
 @php 
     $openDeals = $groups->filter(fn($g) => !($g->isWonGroup ?? false))->flatMap(fn($g) => $g->deals);
     $wonDeals = $groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->deals);
@@ -53,6 +54,7 @@
     ];
 @endphp
 
+{{-- Neues Layout via x-ui-page --}}
 <x-ui-page>
     <x-slot name="navbar">
         <x-ui-page-navbar :title="$salesBoard->name" icon="heroicon-o-folder" />
@@ -61,26 +63,17 @@
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="Board-Übersicht" width="w-80" :defaultOpen="true">
             <div class="p-4 space-y-6">
-                {{-- Beschreibung --}}
-                @if($salesBoard->description)
-                    <div class="p-3 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
-                        <div class="text-sm text-[var(--ui-secondary)]">{{ $salesBoard->description }}</div>
-                    </div>
-                @endif
-
                 {{-- Aktionen --}}
                 <div>
                     <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Aktionen</h3>
                     <div class="flex flex-col gap-2">
                         @can('update', $salesBoard)
-                            <x-ui-button variant="secondary" size="sm" wire:click="createDeal">
+                            <x-ui-button variant="secondary" size="sm" wire:click="createDeal()">
                                 <span class="inline-flex items-center gap-2">
                                     @svg('heroicon-o-plus','w-4 h-4')
                                     <span>Deal</span>
                                 </span>
                             </x-ui-button>
-                        @endcan
-                        @can('update', $salesBoard)
                             <x-ui-button variant="secondary" size="sm" wire:click="createBoardSlot">
                                 <span class="inline-flex items-center gap-2">
                                     @svg('heroicon-o-square-2-stack','w-4 h-4')
@@ -98,8 +91,7 @@
                         @endcan
                     </div>
                 </div>
-
-                {{-- Board-Statistiken: Offen --}}
+                <!-- Board-Statistiken: Offen -->
                 <div>
                     <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Offen</h3>
                     <div class="space-y-2">
@@ -117,7 +109,7 @@
                     </div>
                 </div>
 
-                {{-- Board-Statistiken: Gewonnen --}}
+                <!-- Board-Statistiken: Gewonnen -->
                 <div>
                     <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Gewonnen</h3>
                     <div class="space-y-2">
@@ -135,7 +127,7 @@
                     </div>
                 </div>
 
-                {{-- Board-Details --}}
+                <!-- Board-Details -->
                 <div>
                     <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Details</h3>
                     <div class="space-y-2">
@@ -187,7 +179,7 @@
     </x-slot>
 
     <x-slot name="activity">
-        <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
+        <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="true" storeKey="activityOpen" side="right">
             <div class="p-4 space-y-4">
                 <div class="text-sm text-[var(--ui-muted)]">Letzte Aktivitäten</div>
                 <div class="space-y-3 text-sm">
@@ -202,9 +194,9 @@
 
     <!-- Board-Container: füllt restliche Breite, Spalten scrollen intern -->
         <x-ui-kanban-container sortable="updateDealGroupOrder" sortable-group="updateDealOrder">
-        {{-- Mittlere Spalten --}}
+        {{-- Mittlere Spalten (sortierbar) --}}
         @foreach($groups->filter(fn ($g) => !($g->isWonGroup ?? false)) as $column)
-            <x-ui-kanban-column :title="$column->label" :sortable-id="$column->id" :scrollable="true">
+            <x-ui-kanban-column :title="($column->label ?? $column->name ?? 'Spalte')" :sortable-id="$column->id" :scrollable="true">
                 <x-slot name="headerActions">
                     @can('update', $salesBoard)
                         <button 
