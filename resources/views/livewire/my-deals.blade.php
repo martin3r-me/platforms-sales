@@ -60,7 +60,7 @@
 
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="Deal-Übersicht" width="w-80" :defaultOpen="true">
-            <div class="p-6 space-y-6">
+            <div class="p-4 space-y-6">
                 {{-- Aktionen --}}
                 <div>
                     <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Aktionen</h3>
@@ -131,7 +131,7 @@
 
     <x-slot name="activity">
         <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
-            <div class="p-6 space-y-4">
+            <div class="p-4 space-y-4">
                 <div class="text-sm text-[var(--ui-muted)]">Letzte Aktivitäten</div>
                 <div class="space-y-3 text-sm">
                     <div class="p-2 rounded border border-[var(--ui-border)]/60 bg-[var(--ui-muted-5)]">

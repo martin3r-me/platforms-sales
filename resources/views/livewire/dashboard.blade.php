@@ -103,7 +103,7 @@
 
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="Schnellzugriff" width="w-80" :defaultOpen="true">
-            <div class="p-6 space-y-6">
+            <div class="p-4 space-y-6">
                 {{-- Quick Actions --}}
                 <div>
                     <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Aktionen</h3>
