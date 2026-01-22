@@ -1,149 +1,176 @@
-<div class="h-full overflow-y-auto p-6">
-    <div class="space-y-6">
-        {{-- Header --}}
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                @svg('heroicon-o-chart-bar', 'w-6 h-6 text-gray-700')
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Sales Dashboard</h1>
-                    <p class="text-gray-600 mt-1">Übersicht über Deals, Pipeline und Performance</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <x-ui-button variant="secondary-outline" :href="route('sales.my-deals')" wire:navigate>
-                    <div class="d-flex items-center gap-2">
-                        @svg('heroicon-o-rectangle-stack', 'w-4 h-4')
-                        <span>Meine Deals</span>
-                    </div>
-                </x-ui-button>
-                <x-ui-button variant="primary" :href="route('sales.my-deals')" wire:navigate>
-                    <div class="d-flex items-center gap-2">
-                        @svg('heroicon-o-plus', 'w-4 h-4')
-                        <span>Neuer Deal</span>
-                    </div>
-                </x-ui-button>
-            </div>
-        </div>
+<x-ui-page>
+    <x-slot name="navbar">
+        <x-ui-page-navbar title="Dashboard" icon="heroicon-o-chart-bar" />
+    </x-slot>
 
-        {{-- Haupt-Statistiken (4x2 Grid wie Planner) --}}
-        <div class="grid grid-cols-4 gap-4 mb-8">
+    <x-ui-page-container>
+        {{-- Main Stats Grid --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <x-ui-dashboard-tile
                 title="Offene Deals"
                 :count="$openDealsCount ?? 0"
                 icon="clipboard-document-list"
-                variant="info"
+                variant="secondary"
                 size="lg"
             />
             <x-ui-dashboard-tile
                 title="Gewonnene Deals"
                 :count="$wonDealsCount ?? 0"
                 icon="trophy"
-                variant="success"
+                variant="secondary"
                 size="lg"
             />
             <x-ui-dashboard-tile
                 title="Gesamtwert"
                 :count="(int) ($totalValue ?? 0)"
+                subtitle="{{ number_format((float) ($totalValue ?? 0), 2, ',', '.') }} €"
                 icon="currency-euro"
-                variant="warning"
+                variant="secondary"
                 size="lg"
             />
             <x-ui-dashboard-tile
                 title="Erwarteter Wert"
                 :count="(int) ($expectedValue ?? 0)"
+                subtitle="{{ number_format((float) ($expectedValue ?? 0), 2, ',', '.') }} €"
                 icon="chart-bar"
-                variant="primary"
+                variant="secondary"
                 size="lg"
             />
         </div>
 
-        {{-- Detaillierte Bereiche (2 Spalten wie Planner) --}}
-        <div class="grid grid-cols-2 gap-6 mb-8">
-            {{-- Left: Recent Deals --}}
-            <div class="col-span-2 lg:col-span-1 bg-white border border-gray-200 rounded-lg shadow-sm">
-                <div class="p-6 border-b border-gray-200 d-flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-gray-900">Neueste Deals</h2>
-                    <x-ui-button variant="secondary-outline" size="sm" :href="route('sales.my-deals')" wire:navigate>
-                        <div class="d-flex items-center gap-2">
-                            @svg('heroicon-o-eye', 'w-4 h-4')
-                            <span>Alle ansehen</span>
-                        </div>
-                    </x-ui-button>
-                </div>
-                <div class="p-6">
-                    @if(isset($recentDeals) && $recentDeals->count() > 0)
-                        <div class="space-y-3">
-                            @foreach($recentDeals as $deal)
-                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-2 h-2 rounded-full {{ $deal->is_done ? 'bg-green-500' : 'bg-blue-500' }}"></div>
-                                        <div>
-                                            <div class="font-medium text-gray-900">{{ $deal->title }}</div>
-                                            <div class="text-xs text-gray-600">
-                                                {{ $deal->salesBoard?->name ?? 'INBOX' }}
-                                                @if($deal->deal_value)
-                                                    • {{ number_format((float) $deal->deal_value, 0, ',', '.') }} €
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        @if($deal->probability_percent)
-                                            <x-ui-badge variant="blue" size="sm">{{ $deal->probability_percent }}%</x-ui-badge>
+        {{-- Detail Stats --}}
+        <x-ui-detail-stats-grid cols="2" gap="6">
+            <x-slot:left>
+                <x-ui-panel title="Neueste Deals" subtitle="Die 5 zuletzt erstellten Deals">
+                    <div class="space-y-3">
+                        @forelse($recentDeals ?? [] as $deal)
+                            <a href="{{ route('sales.deals.show', $deal) }}" wire:navigate class="flex items-center gap-3 p-3 rounded-md border border-[var(--ui-border)] bg-white hover:bg-[var(--ui-muted-5)] transition">
+                                <div class="w-2 h-2 rounded-full {{ $deal->is_done ? 'bg-[var(--ui-success)]' : 'bg-[var(--ui-primary)]' }}"></div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-medium text-[var(--ui-secondary)] truncate">{{ $deal->title }}</div>
+                                    <div class="text-xs text-[var(--ui-muted)] truncate">
+                                        {{ $deal->salesBoard?->name ?? 'INBOX' }}
+                                        @if($deal->deal_value)
+                                            • {{ number_format((float) $deal->deal_value, 0, ',', '.') }} €
                                         @endif
-                                        <x-ui-button variant="secondary-outline" size="sm" :href="route('sales.deals.show', $deal)" wire:navigate>
-                                            <div class="d-flex items-center gap-2">
-                                                @svg('heroicon-o-arrow-right', 'w-4 h-4')
-                                                <span>Ansehen</span>
-                                            </div>
-                                        </x-ui-button>
                                     </div>
                                 </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-8">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                @svg('heroicon-o-clipboard-document-list', 'w-8 h-8 text-gray-400')
-                            </div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">Noch keine Deals</h3>
-                            <p class="text-gray-500 mb-4">Erstelle deinen ersten Deal um loszulegen</p>
-                            <x-ui-button variant="primary" :href="route('sales.my-deals')" wire:navigate>
-                                <div class="d-flex items-center gap-2">
-                                    @svg('heroicon-o-plus', 'w-4 h-4')
-                                    <span>Deal erstellen</span>
+                                <div class="flex items-center gap-2">
+                                    @if($deal->probability_percent)
+                                        <x-ui-badge variant="primary" size="sm">{{ $deal->probability_percent }}%</x-ui-badge>
+                                    @endif
+                                    @svg('heroicon-o-arrow-right', 'w-4 h-4 text-[var(--ui-muted)]')
                                 </div>
-                            </x-ui-button>
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Right: Aktionen / Hinweise --}}
-            <div class="col-span-2 lg:col-span-1 space-y-4">
-                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Aktionen</h3>
-                    <div class="d-flex flex-col gap-2">
+                            </a>
+                        @empty
+                            <div class="text-center py-8">
+                                <div class="w-16 h-16 bg-[var(--ui-muted-5)] rounded-full flex items-center justify-center mx-auto mb-4">
+                                    @svg('heroicon-o-clipboard-document-list', 'w-8 h-8 text-[var(--ui-muted)]')
+                                </div>
+                                <h3 class="text-lg font-medium text-[var(--ui-secondary)] mb-2">Noch keine Deals</h3>
+                                <p class="text-sm text-[var(--ui-muted)] mb-4">Erstelle deinen ersten Deal um loszulegen</p>
+                                <x-ui-button variant="primary" :href="route('sales.my-deals')" wire:navigate>
+                                    <span class="flex items-center gap-2">
+                                        @svg('heroicon-o-plus', 'w-4 h-4')
+                                        <span>Deal erstellen</span>
+                                    </span>
+                                </x-ui-button>
+                            </div>
+                        @endforelse
+                    </div>
+                </x-ui-panel>
+            </x-slot:left>
+            <x-slot:right>
+                <x-ui-panel title="Aktionen" subtitle="Schnellzugriff auf wichtige Funktionen">
+                    <div class="space-y-2">
                         <x-ui-button variant="primary" :href="route('sales.my-deals')" wire:navigate class="w-full">
-                            <div class="d-flex items-center gap-2 w-full justify-center">
+                            <span class="flex items-center gap-2 justify-center">
                                 @svg('heroicon-o-plus', 'w-4 h-4')
                                 <span>Neuen Deal anlegen</span>
-                            </div>
+                            </span>
                         </x-ui-button>
                         <x-ui-button variant="secondary-outline" :href="route('sales.my-deals')" wire:navigate class="w-full">
-                            <div class="d-flex items-center gap-2 w-full justify-center">
+                            <span class="flex items-center gap-2 justify-center">
                                 @svg('heroicon-o-rectangle-stack', 'w-4 h-4')
                                 <span>Meine Deals öffnen</span>
-                            </div>
+                            </span>
+                        </x-ui-button>
+                    </div>
+                </x-ui-panel>
+            </x-slot:right>
+        </x-ui-detail-stats-grid>
+    </x-ui-page-container>
+
+    <x-slot name="sidebar">
+        <x-ui-page-sidebar title="Schnellzugriff" width="w-80" :defaultOpen="true">
+            <div class="p-6 space-y-6">
+                {{-- Quick Actions --}}
+                <div>
+                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Aktionen</h3>
+                    <div class="space-y-2">
+                        <x-ui-button variant="secondary-outline" size="sm" :href="route('sales.my-deals')" wire:navigate class="w-full">
+                            <span class="flex items-center gap-2">
+                                @svg('heroicon-o-rectangle-stack', 'w-4 h-4')
+                                <span>Meine Deals</span>
+                            </span>
+                        </x-ui-button>
+                        <x-ui-button variant="primary" size="sm" :href="route('sales.my-deals')" wire:navigate class="w-full">
+                            <span class="flex items-center gap-2">
+                                @svg('heroicon-o-plus', 'w-4 h-4')
+                                <span>Neuer Deal</span>
+                            </span>
                         </x-ui-button>
                     </div>
                 </div>
 
-                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Hinweis</h3>
-                    <p class="text-sm text-gray-600">Passe Boards, Spalten und Templates in den Board-Einstellungen an.</p>
+                {{-- Quick Stats --}}
+                <div>
+                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Schnellstatistiken</h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                            <div class="text-xs text-[var(--ui-muted)]">Offene Deals</div>
+                            <div class="text-lg font-bold text-[var(--ui-secondary)]">{{ $openDealsCount ?? 0 }} Deals</div>
+                        </div>
+                        <div class="p-3 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                            <div class="text-xs text-[var(--ui-muted)]">Gewonnene Deals</div>
+                            <div class="text-lg font-bold text-[var(--ui-secondary)]">{{ $wonDealsCount ?? 0 }} Deals</div>
+                        </div>
+                        <div class="p-3 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                            <div class="text-xs text-[var(--ui-muted)]">Gesamtwert</div>
+                            <div class="text-lg font-bold text-[var(--ui-secondary)]">{{ number_format((float) ($totalValue ?? 0), 2, ',', '.') }} €</div>
+                        </div>
+                        <div class="p-3 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                            <div class="text-xs text-[var(--ui-muted)]">Erwarteter Wert</div>
+                            <div class="text-lg font-bold text-[var(--ui-secondary)]">{{ number_format((float) ($expectedValue ?? 0), 2, ',', '.') }} €</div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Recent Activity --}}
+                <div>
+                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Letzte Aktivitäten</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="p-2 rounded border border-[var(--ui-border)]/60 bg-[var(--ui-muted-5)]">
+                            <div class="font-medium text-[var(--ui-secondary)] truncate">Dashboard geladen</div>
+                            <div class="text-[var(--ui-muted)] text-xs">vor 1 Minute</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
+        </x-ui-page-sidebar>
+    </x-slot>
+
+    <x-slot name="activity">
+        <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
+            <div class="p-4 space-y-4">
+                <div class="text-sm text-[var(--ui-muted)]">Letzte Aktivitäten</div>
+                <div class="space-y-3 text-sm">
+                    <div class="p-2 rounded border border-[var(--ui-border)]/60 bg-[var(--ui-muted-5)]">
+                        <div class="font-medium text-[var(--ui-secondary)] truncate">Dashboard geladen</div>
+                        <div class="text-[var(--ui-muted)]">vor 1 Minute</div>
+                    </div>
+                </div>
+            </div>
+        </x-ui-page-sidebar>
+    </x-slot>
+</x-ui-page>

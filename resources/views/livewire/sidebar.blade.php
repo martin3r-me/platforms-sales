@@ -1,75 +1,66 @@
 {{-- resources/views/vendor/sales/livewire/sidebar-content.blade.php --}}
 <div>
     {{-- Modul Header --}}
-    <x-sidebar-module-header module-name="Sales" />
+    <div x-show="!collapsed" class="p-3 text-sm italic text-[var(--ui-secondary)] uppercase border-b border-[var(--ui-border)] mb-2">
+        Sales
+    </div>
     
-    {{-- Abschnitt: Allgemein --}}
-    <div>
-        <h4 x-show="!collapsed" class="p-3 text-sm italic text-secondary uppercase">Allgemein</h4>
+    {{-- Abschnitt: Allgemein (über UI-Komponenten) --}}
+    <x-ui-sidebar-list label="Allgemein">
+        <x-ui-sidebar-item :href="route('sales.dashboard')">
+            @svg('heroicon-o-chart-bar', 'w-4 h-4 text-[var(--ui-secondary)]')
+            <span class="ml-2 text-sm">Dashboard</span>
+        </x-ui-sidebar-item>
+        <x-ui-sidebar-item :href="route('sales.my-deals')">
+            @svg('heroicon-o-rectangle-stack', 'w-4 h-4 text-[var(--ui-secondary)]')
+            <span class="ml-2 text-sm">Meine Deals</span>
+        </x-ui-sidebar-item>
+    </x-ui-sidebar-list>
 
-        {{-- Dashboard --}}
-        <a href="{{ route('sales.dashboard') }}"
-           class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition"
-           :class="[
-               window.location.pathname === '/' || 
-               window.location.pathname.endsWith('/sales') || 
-               window.location.pathname.endsWith('/sales/') ||
-               (window.location.pathname.split('/').length === 1 && window.location.pathname === '/')
-                   ? 'bg-primary text-on-primary shadow-md'
-                   : 'text-black hover:bg-primary-10 hover:text-primary hover:shadow-md',
-               collapsed ? 'justify-center' : 'gap-3'
-           ]"
-           wire:navigate>
-            <x-heroicon-o-chart-bar class="w-6 h-6 flex-shrink-0"/>
-            <span x-show="!collapsed" class="truncate">Dashboard</span>
-        </a>
+    {{-- Neues Sales Board --}}
+    <x-ui-sidebar-list>
+        <x-ui-sidebar-item wire:click="createSalesBoard">
+            @svg('heroicon-o-plus-circle', 'w-4 h-4 text-[var(--ui-secondary)]')
+            <span class="ml-2 text-sm">Sales Board anlegen</span>
+        </x-ui-sidebar-item>
+    </x-ui-sidebar-list>
 
-        {{-- Meine Deals --}}
-        <a href="{{ route('sales.my-deals') }}"
-           class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition"
-           :class="[
-               window.location.pathname.includes('/my-deals') || 
-               window.location.pathname.endsWith('/my-deals')
-                   ? 'bg-primary text-on-primary shadow-md'
-                   : 'text-black hover:bg-primary-10 hover:text-primary hover:shadow-md',
-               collapsed ? 'justify-center' : 'gap-3'
-           ]"
-           wire:navigate>
-            <x-heroicon-o-home class="w-6 h-6 flex-shrink-0"/>
-            <span x-show="!collapsed" class="truncate">Meine Deals</span>
-        </a>
-
-        {{-- Sales Board anlegen --}}
-        <a href="#"
-           class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition"
-           :class="collapsed ? 'justify-center' : 'gap-3'"
-           wire:click="createSalesBoard">
-            <x-heroicon-o-plus class="w-6 h-6 flex-shrink-0"/>
-            <span x-show="!collapsed" class="truncate">Sales Board anlegen</span>
-        </a>
+    {{-- Collapsed: Icons-only für Allgemein --}}
+    <div x-show="collapsed" class="px-2 py-2 border-b border-[var(--ui-border)]">
+        <div class="flex flex-col gap-2">
+            <a href="{{ route('sales.dashboard') }}" wire:navigate class="flex items-center justify-center p-2 rounded-md text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]">
+                @svg('heroicon-o-chart-bar', 'w-5 h-5')
+            </a>
+            <a href="{{ route('sales.my-deals') }}" wire:navigate class="flex items-center justify-center p-2 rounded-md text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]">
+                @svg('heroicon-o-rectangle-stack', 'w-5 h-5')
+            </a>
+        </div>
+    </div>
+    <div x-show="collapsed" class="px-2 py-2 border-b border-[var(--ui-border)]">
+        <button type="button" wire:click="createSalesBoard" class="flex items-center justify-center p-2 rounded-md text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]">
+            @svg('heroicon-o-plus-circle', 'w-5 h-5')
+        </button>
     </div>
 
     {{-- Abschnitt: Sales Boards --}}
-    <div x-show="!collapsed">
-        <h4 class="p-3 text-sm italic text-secondary uppercase">Sales Boards</h4>
-
-        @foreach($salesBoards as $board)
-            <a href="{{ route('sales.boards.show', ['salesBoard' => $board]) }}"
-               class="relative d-flex items-center p-2 my-1 rounded-md font-medium transition gap-3"
-               :class="[
-                   window.location.pathname.includes('/boards/{{ $board->id }}/') || 
-                   window.location.pathname.includes('/boards/{{ $board->uuid }}/') ||
-                   window.location.pathname.endsWith('/boards/{{ $board->id }}') ||
-                   window.location.pathname.endsWith('/boards/{{ $board->uuid }}') ||
-                   (window.location.pathname.split('/').length === 2 && window.location.pathname.endsWith('/{{ $board->id }}')) ||
-                   (window.location.pathname.split('/').length === 2 && window.location.pathname.endsWith('/{{ $board->uuid }}'))
-                       ? 'bg-primary text-on-primary shadow-md'
-                       : 'text-black hover:bg-primary-10 hover:text-primary hover:shadow-md'
-               ]"
-               wire:navigate>
-                <x-heroicon-o-folder class="w-6 h-6 flex-shrink-0"/>
-                <span class="truncate">{{ $board->name }}</span>
-            </a>
-        @endforeach
+    <div>
+        <div class="mt-2" x-show="!collapsed">
+            @if($salesBoards->isNotEmpty())
+                <x-ui-sidebar-list label="Sales Boards">
+                    @foreach($salesBoards as $board)
+                        <x-ui-sidebar-item :href="route('sales.boards.show', ['salesBoard' => $board])">
+                            @svg('heroicon-o-folder', 'w-5 h-5 flex-shrink-0 text-[var(--ui-secondary)]')
+                            <div class="flex-1 min-w-0 ml-2">
+                                <div class="truncate text-sm font-medium">{{ $board->name }}</div>
+                            </div>
+                        </x-ui-sidebar-item>
+                    @endforeach
+                </x-ui-sidebar-list>
+            @else
+                <div class="px-3 py-1 text-xs text-[var(--ui-muted)]">
+                    Keine Sales Boards
+                </div>
+            @endif
+        </div>
     </div>
 </div>

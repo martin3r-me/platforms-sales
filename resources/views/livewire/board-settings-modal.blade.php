@@ -8,7 +8,7 @@
 
             {{-- Board Grunddaten --}}
             <div class="space-y-4">
-                <h3 class="text-lg font-medium text-gray-900">Grunddaten</h3>
+                <h3 class="text-lg font-medium text-[var(--ui-secondary)]">Grunddaten</h3>
                 
                 <div class="space-y-3">
                     <div>
@@ -52,16 +52,16 @@
 
             {{-- Board Statistiken --}}
             <div class="space-y-4">
-                <h3 class="text-lg font-medium text-gray-900">Statistiken</h3>
+                <h3 class="text-lg font-medium text-[var(--ui-secondary)]">Statistiken</h3>
                 
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div class="text-sm text-blue-600">Gesamt Deals</div>
-                        <div class="text-2xl font-bold text-blue-800">{{ $board->deals->count() }}</div>
+                    <div class="p-4 bg-[var(--ui-primary-5)] border border-[var(--ui-primary)]/30 rounded-lg">
+                        <div class="text-sm text-[var(--ui-primary)]">Gesamt Deals</div>
+                        <div class="text-2xl font-bold text-[var(--ui-primary)]">{{ $board->deals->count() }}</div>
                     </div>
-                    <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <div class="text-sm text-green-600">Gewonnene Deals</div>
-                        <div class="text-2xl font-bold text-green-800">{{ $board->deals->where('is_done', true)->count() }}</div>
+                    <div class="p-4 bg-[var(--ui-success-5)] border border-[var(--ui-success)]/30 rounded-lg">
+                        <div class="text-sm text-[var(--ui-success)]">Gewonnene Deals</div>
+                        <div class="text-2xl font-bold text-[var(--ui-success)]">{{ $board->deals->where('is_done', true)->count() }}</div>
                     </div>
                 </div>
             </div>
@@ -69,14 +69,14 @@
     @endif
 
     <x-slot name="footer">
-        <div class="d-flex justify-between">
+        <div class="flex justify-between">
             <x-ui-confirm-button 
                 action="delete" 
                 text="Board löschen" 
                 confirmText="Wirklich löschen? Alle Deals in diesem Board werden in die INBOX verschoben." 
                 variant="danger-outline"
             />
-            <div class="d-flex gap-2">
+            <div class="flex gap-2">
                 <x-ui-button variant="secondary" wire:click="closeModal">
                     Abbrechen
                 </x-ui-button>
