@@ -182,7 +182,7 @@
 
     <x-slot name="activity">
         <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="true" storeKey="activityOpen" side="right">
-            <div class="p-4">
+            <div class="p-4 h-full overflow-y-auto">
                 <livewire:activity-log.index
                     :model="$deal"
                     :key="get_class($deal) . '_' . $deal->id"
@@ -280,47 +280,52 @@
 
                     {{-- Billables Management --}}
                     <div class="grid grid-cols-1 gap-4">
-                        <div class="p-4 bg-gradient-to-r from-[var(--ui-success-5)] to-[var(--ui-success-10)] border border-[var(--ui-success)]/30 rounded-lg">
-                            <div class="flex items-center justify-between mb-3">
-                                <div>
-                                    <h4 class="text-lg font-semibold text-[var(--ui-success)] mb-1">Billables verwalten</h4>
-                                    <p class="text-sm text-[var(--ui-success)]/80">Teile deinen Deal in einzelne Komponenten auf</p>
+                        <x-ui-panel 
+                            title="Billables verwalten" 
+                            subtitle="Teile deinen Deal in einzelne Komponenten auf"
+                            variant="success"
+                        >
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        @if($deal->hasBillables())
+                                            <x-ui-badge variant="success" size="sm">
+                                                {{ $deal->billables->count() }} Komponente(n)
+                                            </x-ui-badge>
+                                        @endif
+                                    </div>
+                                    <x-ui-button 
+                                        variant="success" 
+                                        size="md" 
+                                        wire:click="openBillablesModal"
+                                        class="flex items-center gap-2">
+                                        @svg('heroicon-o-calculator', 'w-4 h-4')
+                                        {{ $deal->hasBillables() ? 'Bearbeiten' : 'Hinzufügen' }}
+                                    </x-ui-button>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    @if($deal->hasBillables())
-                                        <x-ui-badge variant="success" size="sm">
-                                            {{ $deal->billables->count() }} Billable(s)
-                                        </x-ui-badge>
-                                    @endif
-                                </div>
+                                
+                                @if($deal->hasBillables())
+                                    <div class="grid grid-cols-2 gap-3 pt-3 border-t border-[var(--ui-border)]/40">
+                                        <div class="p-3 bg-[var(--ui-success-5)] rounded-lg border border-[var(--ui-success)]/30">
+                                            <div class="text-xs text-[var(--ui-success)] font-medium mb-1">Gesamtwert</div>
+                                            <div class="text-lg font-bold text-[var(--ui-success)]">
+                                                {{ number_format((float) $deal->deal_value, 2, ',', '.') }} €
+                                            </div>
+                                        </div>
+                                        <div class="p-3 bg-[var(--ui-primary-5)] rounded-lg border border-[var(--ui-primary)]/30">
+                                            <div class="text-xs text-[var(--ui-primary)] font-medium mb-1">Erwarteter Wert</div>
+                                            <div class="text-lg font-bold text-[var(--ui-primary)]">
+                                                {{ number_format((float) $deal->billables_expected_total, 2, ',', '.') }} €
+                                            </div>
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="text-center py-4 text-sm text-[var(--ui-muted)]">
+                                        Noch keine Billables vorhanden
+                                    </div>
+                                @endif
                             </div>
-                            
-                            <x-ui-button 
-                                variant="success" 
-                                size="lg" 
-                                wire:click="openBillablesModal"
-                                class="w-full flex items-center justify-center gap-2">
-                                @svg('heroicon-o-calculator', 'w-5 h-5')
-                                {{ $deal->hasBillables() ? 'Billables bearbeiten' : 'Billables hinzufügen' }}
-                            </x-ui-button>
-                            
-                            @if($deal->hasBillables())
-                                <div class="mt-3 grid grid-cols-2 gap-3">
-                                    <div class="p-2 bg-white rounded border border-[var(--ui-success)]/20">
-                                        <div class="text-xs text-[var(--ui-success)] font-medium">Gesamtwert</div>
-                                        <div class="text-sm font-bold text-[var(--ui-success)]">
-                                            {{ number_format((float) $deal->deal_value, 2, ',', '.') }} €
-                                        </div>
-                                    </div>
-                                    <div class="p-2 bg-white rounded border border-[var(--ui-success)]/20">
-                                        <div class="text-xs text-[var(--ui-success)] font-medium">Erwarteter Wert</div>
-                                        <div class="text-sm font-bold text-[var(--ui-success)]">
-                                            {{ number_format((float) $deal->billables_expected_total, 2, ',', '.') }} €
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
+                        </x-ui-panel>
                     </div>
 
                     {{-- CRM Integration --}}
@@ -420,3 +425,13 @@
     <!-- Customer Deal Settings Modal -->
     <livewire:sales.customer-deal-settings-modal />
 </x-ui-page>
+
+@push('scripts')
+<script>
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('openBillablesModal', (dealId) => {
+            @this.call('openBillablesModal');
+        });
+    });
+</script>
+@endpush

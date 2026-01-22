@@ -44,20 +44,29 @@
             {{-- Billables Liste --}}
             <div class="space-y-4">
                 @forelse($billables as $index => $billable)
-                    <div class="p-5 border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
+                    <div class="p-5 border border-[var(--ui-border)] rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
                         {{-- Header --}}
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <span class="text-sm font-semibold text-blue-600">{{ $index + 1 }}</span>
+                                <div class="w-8 h-8 bg-[var(--ui-primary-5)] rounded-full flex items-center justify-center border border-[var(--ui-primary)]/30">
+                                    <span class="text-sm font-semibold text-[var(--ui-primary)]">{{ $index + 1 }}</span>
                                 </div>
-                                <h4 class="font-medium text-gray-900">Billable #{{ $index + 1 }}</h4>
+                                <h4 class="font-medium text-[var(--ui-secondary)]">Billable #{{ $index + 1 }}</h4>
+                                @if(($billable['billing_type'] ?? 'one_time') === 'recurring')
+                                    <x-ui-badge variant="success" size="xs">
+                                        Wiederkehrend
+                                    </x-ui-badge>
+                                @else
+                                    <x-ui-badge variant="neutral" size="xs">
+                                        Einmalig
+                                    </x-ui-badge>
+                                @endif
                             </div>
                             <x-ui-button 
                                 variant="danger-outline" 
                                 size="sm" 
                                 wire:click="removeBillable({{ $index }})"
-                                class="text-red-600 hover:text-red-700">
+                            >
                                 @svg('heroicon-o-trash', 'w-4 h-4')
                             </x-ui-button>
                         </div>
@@ -130,15 +139,15 @@
                                     />
                                 @else
                                     <div class="pt-6">
-                                        <label class="block text-sm font-medium text-gray-500 mb-1">Intervall</label>
-                                        <div class="text-sm text-gray-400 italic">Nicht verfügbar</div>
+                                        <label class="block text-sm font-medium text-[var(--ui-muted)] mb-1">Intervall</label>
+                                        <div class="text-sm text-[var(--ui-muted)] italic">Nur bei wiederkehrend</div>
                                     </div>
                                 @endif
                             </div>
 
                             {{-- Laufzeit (nur bei wiederkehrend) --}}
                             <div>
-                                @if($billable['billing_type'] === 'recurring')
+                                @if(($billable['billing_type'] ?? 'one_time') === 'recurring')
                                     <x-ui-input-number
                                         :name="'billables.' . $index . '.duration_months'"
                                         label="Laufzeit (Monate)"
@@ -146,10 +155,13 @@
                                         placeholder="12"
                                         min="1"
                                     />
+                                    <p class="text-xs text-[var(--ui-muted)] mt-1">
+                                        Gesamtwert = Betrag × Laufzeit (z.B. 100€ × 12 = 1.200€)
+                                    </p>
                                 @else
                                     <div class="pt-6">
-                                        <label class="block text-sm font-medium text-gray-500 mb-1">Laufzeit</label>
-                                        <div class="text-sm text-gray-400 italic">Nicht verfügbar</div>
+                                        <label class="block text-sm font-medium text-[var(--ui-muted)] mb-1">Laufzeit</label>
+                                        <div class="text-sm text-[var(--ui-muted)] italic">Nur bei wiederkehrend</div>
                                     </div>
                                 @endif
                             </div>
@@ -167,39 +179,39 @@
                         </div>
 
                         {{-- Berechnete Werte --}}
-                        @if($billable['amount'] > 0)
-                            <div class="mt-4 p-4 bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg">
-                                <h5 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        @if(($billable['amount'] ?? 0) > 0)
+                            <div class="mt-4 p-4 bg-gradient-to-r from-[var(--ui-primary-5)] to-[var(--ui-success-5)] border border-[var(--ui-primary)]/30 rounded-lg">
+                                <h5 class="text-sm font-semibold text-[var(--ui-secondary)] mb-3 flex items-center gap-2">
                                     @svg('heroicon-o-calculator', 'w-4 h-4')
                                     Berechnete Werte
                                 </h5>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div class="p-3 bg-white rounded-lg border border-blue-100">
-                                        <div class="text-xs text-blue-600 font-medium mb-1">Gesamtwert</div>
-                                        <div class="text-lg font-bold text-blue-800">
+                                    <div class="p-3 bg-white rounded-lg border border-[var(--ui-primary)]/20 shadow-sm">
+                                        <div class="text-xs text-[var(--ui-primary)] font-medium mb-1">Gesamtwert</div>
+                                        <div class="text-lg font-bold text-[var(--ui-primary)]">
                                             @php
-                                                $totalValue = $billable['billing_type'] === 'recurring' && $billable['duration_months'] 
+                                                $totalValue = ($billable['billing_type'] ?? 'one_time') === 'recurring' && isset($billable['duration_months']) && $billable['duration_months'] > 0
                                                     ? (float) $billable['amount'] * (int) $billable['duration_months']
                                                     : (float) $billable['amount'];
                                             @endphp
                                             {{ number_format($totalValue, 2, ',', '.') }} €
                                         </div>
-                                        @if($billable['billing_type'] === 'recurring' && $billable['duration_months'])
-                                            <div class="text-xs text-gray-500 mt-1">
+                                        @if(($billable['billing_type'] ?? 'one_time') === 'recurring' && isset($billable['duration_months']) && $billable['duration_months'] > 0)
+                                            <div class="text-xs text-[var(--ui-muted)] mt-1">
                                                 {{ number_format((float) $billable['amount'], 2, ',', '.') }} € × {{ $billable['duration_months'] }} Monate
                                             </div>
                                         @endif
                                     </div>
-                                    <div class="p-3 bg-white rounded-lg border border-green-100">
-                                        <div class="text-xs text-green-600 font-medium mb-1">Erwarteter Wert</div>
-                                        <div class="text-lg font-bold text-green-800">
+                                    <div class="p-3 bg-white rounded-lg border border-[var(--ui-success)]/20 shadow-sm">
+                                        <div class="text-xs text-[var(--ui-success)] font-medium mb-1">Erwarteter Wert</div>
+                                        <div class="text-lg font-bold text-[var(--ui-success)]">
                                             @php
                                                 $probability = (int) ($billable['probability_percent'] ?? 100);
                                                 $expectedValue = $totalValue * $probability / 100;
                                             @endphp
                                             {{ number_format($expectedValue, 2, ',', '.') }} €
                                         </div>
-                                        <div class="text-xs text-gray-500 mt-1">
+                                        <div class="text-xs text-[var(--ui-muted)] mt-1">
                                             {{ $probability }}% Wahrscheinlichkeit
                                         </div>
                                     </div>
@@ -209,14 +221,16 @@
                 </div>
                 @empty
                     <div class="text-center py-12">
-                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            @svg('heroicon-o-calculator', 'w-8 h-8 text-gray-400')
+                        <div class="w-16 h-16 bg-[var(--ui-muted-5)] rounded-full flex items-center justify-center mx-auto mb-4">
+                            @svg('heroicon-o-calculator', 'w-8 h-8 text-[var(--ui-muted)]')
                         </div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-2">Noch keine Billables</h3>
-                        <p class="text-gray-500 mb-4">Teile deinen Deal in einzelne Komponenten auf für präzise Wertberechnung</p>
+                        <h3 class="text-lg font-medium text-[var(--ui-secondary)] mb-2">Noch keine Billables</h3>
+                        <p class="text-sm text-[var(--ui-muted)] mb-4">Teile deinen Deal in einzelne Komponenten auf für präzise Wertberechnung</p>
                         <x-ui-button variant="primary" wire:click="addBillable">
-                            @svg('heroicon-o-plus', 'w-4 h-4')
-                            Ersten Billable hinzufügen
+                            <span class="flex items-center gap-2">
+                                @svg('heroicon-o-plus', 'w-4 h-4')
+                                <span>Ersten Billable hinzufügen</span>
+                            </span>
                         </x-ui-button>
                     </div>
                 @endforelse
@@ -224,20 +238,20 @@
 
             {{-- Gesamtwerte --}}
             @if(count($billables) > 0)
-                <div class="p-6 bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200 rounded-xl">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div class="p-6 bg-gradient-to-r from-[var(--ui-muted-5)] to-[var(--ui-primary-5)] border border-[var(--ui-border)] rounded-xl">
+                    <h4 class="text-lg font-semibold text-[var(--ui-secondary)] mb-4 flex items-center gap-2">
                         @svg('heroicon-o-chart-bar', 'w-5 h-5')
                         Deal-Zusammenfassung
                     </h4>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="p-4 bg-white rounded-lg border border-blue-100 shadow-sm">
-                            <div class="text-sm text-blue-600 font-medium mb-1">Gesamtwert</div>
-                            <div class="text-2xl font-bold text-blue-800">
+                        <div class="p-4 bg-white rounded-lg border border-[var(--ui-primary)]/20 shadow-sm">
+                            <div class="text-sm text-[var(--ui-primary)] font-medium mb-1">Gesamtwert</div>
+                            <div class="text-2xl font-bold text-[var(--ui-primary)]">
                                 @php
                                     $totalValue = 0;
                                     foreach($billables as $billable) {
-                                        if ($billable['amount'] > 0) {
-                                            if ($billable['billing_type'] === 'recurring' && $billable['duration_months']) {
+                                        if (($billable['amount'] ?? 0) > 0) {
+                                            if (($billable['billing_type'] ?? 'one_time') === 'recurring' && isset($billable['duration_months']) && $billable['duration_months'] > 0) {
                                                 $totalValue += (float) $billable['amount'] * (int) $billable['duration_months'];
                                             } else {
                                                 $totalValue += (float) $billable['amount'];
@@ -247,20 +261,20 @@
                                 @endphp
                                 {{ number_format($totalValue, 2, ',', '.') }} €
                             </div>
-                            <div class="text-xs text-gray-500 mt-1">Alle Billables zusammen</div>
+                            <div class="text-xs text-[var(--ui-muted)] mt-1">Alle Billables zusammen</div>
                         </div>
                         
-                        <div class="p-4 bg-white rounded-lg border border-green-100 shadow-sm">
-                            <div class="text-sm text-green-600 font-medium mb-1">Erwarteter Wert</div>
-                            <div class="text-2xl font-bold text-green-800">
+                        <div class="p-4 bg-white rounded-lg border border-[var(--ui-success)]/20 shadow-sm">
+                            <div class="text-sm text-[var(--ui-success)] font-medium mb-1">Erwarteter Wert</div>
+                            <div class="text-2xl font-bold text-[var(--ui-success)]">
                                 @php
                                     $expectedTotalValue = 0;
                                     $weightedProbabilitySum = 0;
                                     $totalValue = 0;
                                     
                                     foreach($billables as $billable) {
-                                        if ($billable['amount'] > 0) {
-                                            $billableTotal = $billable['billing_type'] === 'recurring' && $billable['duration_months'] 
+                                        if (($billable['amount'] ?? 0) > 0) {
+                                            $billableTotal = (($billable['billing_type'] ?? 'one_time') === 'recurring' && isset($billable['duration_months']) && $billable['duration_months'] > 0)
                                                 ? (float) $billable['amount'] * (int) $billable['duration_months']
                                                 : (float) $billable['amount'];
                                             
@@ -277,15 +291,15 @@
                                 @endphp
                                 {{ number_format($expectedTotalValue, 2, ',', '.') }} €
                             </div>
-                            <div class="text-xs text-gray-500 mt-1">Realistischer Erwartungswert</div>
+                            <div class="text-xs text-[var(--ui-muted)] mt-1">Realistischer Erwartungswert</div>
                         </div>
 
-                        <div class="p-4 bg-white rounded-lg border border-purple-100 shadow-sm">
-                            <div class="text-sm text-purple-600 font-medium mb-1">Gewichtete Wahrscheinlichkeit</div>
-                            <div class="text-2xl font-bold text-purple-800">
+                        <div class="p-4 bg-white rounded-lg border border-[var(--ui-primary)]/20 shadow-sm">
+                            <div class="text-sm text-[var(--ui-primary)] font-medium mb-1">Gewichtete Wahrscheinlichkeit</div>
+                            <div class="text-2xl font-bold text-[var(--ui-primary)]">
                                 {{ $weightedAverage }}%
                             </div>
-                            <div class="text-xs text-gray-500 mt-1">Durchschnitt aller Billables</div>
+                            <div class="text-xs text-[var(--ui-muted)] mt-1">Durchschnitt aller Billables</div>
                         </div>
                     </div>
                 </div>
