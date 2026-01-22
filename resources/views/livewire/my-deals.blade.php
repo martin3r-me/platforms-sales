@@ -60,10 +60,10 @@
 
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="Deal-Übersicht" width="w-80" :defaultOpen="true">
-            <div class="p-4 space-y-6">
+            <div class="p-6 space-y-6">
                 {{-- Aktionen --}}
                 <div>
-                    <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Aktionen</h3>
+                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Aktionen</h3>
                     <div class="flex flex-col gap-2">
                         <x-ui-button variant="secondary" size="sm" wire:click="createDeal()">
                             <span class="inline-flex items-center gap-2">
@@ -76,7 +76,7 @@
 
                 {{-- Deal-Statistiken: Offen --}}
                 <div>
-                    <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Offen</h3>
+                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Offen</h3>
                     <div class="space-y-2">
                         @foreach($statsOpen as $stat)
                             <div class="flex items-center justify-between py-2 px-3 bg-[var(--ui-muted-5)] border border-[var(--ui-border)]/40">
@@ -94,7 +94,7 @@
 
                 {{-- Deal-Statistiken: Gewonnen --}}
                 <div>
-                    <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Gewonnen</h3>
+                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Gewonnen</h3>
                     <div class="space-y-2">
                         @foreach($statsWon as $stat)
                             <div class="flex items-center justify-between py-2 px-3 bg-[var(--ui-muted-5)] border border-[var(--ui-border)]/40">
@@ -113,7 +113,7 @@
                 {{-- Performance-Score --}}
                 @if($monthlyPerformanceScore ?? null)
                     <div>
-                        <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Performance</h3>
+                        <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Performance</h3>
                         <div class="p-3 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
                             <div class="text-xs text-[var(--ui-muted)] mb-1">Monatliche Performance</div>
                             <div class="text-lg font-semibold text-[var(--ui-secondary)]">
@@ -131,7 +131,7 @@
 
     <x-slot name="activity">
         <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
-            <div class="p-4 space-y-4">
+            <div class="p-6 space-y-4">
                 <div class="text-sm text-[var(--ui-muted)]">Letzte Aktivitäten</div>
                 <div class="space-y-3 text-sm">
                     <div class="p-2 rounded border border-[var(--ui-border)]/60 bg-[var(--ui-muted-5)]">

@@ -12,10 +12,10 @@
 
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="Deal-Übersicht" width="w-80" :defaultOpen="true">
-            <div class="p-4 space-y-6">
+            <div class="p-6 space-y-6">
                 {{-- Quick Stats --}}
                 <div>
-                    <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Schnellübersicht</h3>
+                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Schnellübersicht</h3>
                     <div class="space-y-3">
                         <div class="p-3 bg-[var(--ui-primary-5)] border border-[var(--ui-primary)]/30 rounded-lg">
                             <div class="text-xs text-[var(--ui-primary)] font-medium">Deal Wert</div>
@@ -42,7 +42,7 @@
 
                 {{-- Navigation Buttons --}}
                 <div>
-                    <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Navigation</h3>
+                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Navigation</h3>
                     <div class="flex flex-col gap-2">
                     @if($deal->salesBoard)
                         @can('view', $deal->salesBoard)
@@ -90,7 +90,7 @@
 
                 {{-- Deal Status --}}
                 <div>
-                    <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Deal Status</h3>
+                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Deal Status</h3>
                     @can('update', $deal)
                         <div class="p-3 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
                             <x-ui-input-checkbox
@@ -124,7 +124,7 @@
 
                 {{-- Deal Info --}}
                 <div>
-                    <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Deal Info</h3>
+                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Deal Info</h3>
                     <div class="space-y-2 text-sm">
                         <div class="flex justify-between items-center py-2 px-3 bg-[var(--ui-muted-5)] border border-[var(--ui-border)]/40 rounded">
                             <span class="text-[var(--ui-muted)]">Erstellt:</span>
@@ -154,7 +154,7 @@
                 {{-- Löschen-Buttons --}}
                 @can('delete', $deal)
                     <div>
-                        <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Aktionen</h3>
+                        <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Aktionen</h3>
                         <div class="flex flex-col gap-2">
                             <x-ui-confirm-button 
                                 action="deleteDealAndReturnToDashboard" 
@@ -182,7 +182,7 @@
 
     <x-slot name="activity">
         <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="true" storeKey="activityOpen" side="right">
-            <div class="p-4 h-full overflow-y-auto">
+            <div class="p-6 h-full overflow-y-auto">
                 <livewire:activity-log.index
                     :model="$deal"
                     :key="get_class($deal) . '_' . $deal->id"
