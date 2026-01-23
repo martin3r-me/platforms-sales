@@ -192,8 +192,7 @@
             </x-ui-page-sidebar>
         </x-slot>
 
-        <x-ui-page-container padding="p-0" spacing="space-y-0">
-            <!-- Board-Container: füllt restliche Breite, Spalten scrollen intern -->
+        <!-- Board-Container: füllt restliche Breite, Spalten scrollen intern -->
             <x-ui-kanban-container sortable="updateDealGroupOrder" sortable-group="updateDealOrder">
             {{-- Mittlere Spalten (sortierbar) --}}
             @foreach($groups->filter(fn ($g) => !($g->isWonGroup ?? false)) as $column)
@@ -228,7 +227,6 @@
                 </x-ui-kanban-column>
             @endforeach
             </x-ui-kanban-container>
-        </x-ui-page-container>
         {{-- Modals innerhalb des Page-Roots halten (ein Root-Element) --}}
         <livewire:sales.board-settings-modal />
         <livewire:sales.board-slot-settings-modal />
