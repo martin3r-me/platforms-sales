@@ -36,14 +36,15 @@ class Board extends Component
         // Lade alle Slots des Boards
         $slots = $this->salesBoard->slots()->orderBy('order')->get();
         
-        // Erstelle Gruppen für jedes Slot
+        // Erstelle Gruppen für jedes Slot (nur nicht-gewonnene Deals)
         $groups = $slots->map(function ($slot) {
             $slot->label = $slot->name;
             $deals = $slot->deals()
+                ->where('is_done', false)
                 ->orderBy('slot_order')
                 ->orderBy('order')
                 ->get();
-            $slot->deals = $deals; // Direkt die Eloquent Collection verwenden
+            $slot->deals = $deals;
             return $slot;
         });
 

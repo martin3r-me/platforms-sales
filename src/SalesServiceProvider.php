@@ -118,7 +118,11 @@ class SalesServiceProvider extends ServiceProvider
             $aliasPath = str_replace(['\\', '/'], '.', Str::kebab(str_replace('.php', '', $relativePath)));
             $alias = $prefix . '.' . $aliasPath;
 
-            Livewire::component($alias, $class);
+            try {
+                Livewire::component($alias, $class);
+            } catch (\Exception $e) {
+                // Komponente bereits registriert - überspringen
+            }
         }
     }
 }
