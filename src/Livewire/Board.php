@@ -3,6 +3,7 @@
 namespace Platform\Sales\Livewire;
 
 use Livewire\Component;
+use Livewire\Attributes\On;
 use Platform\Sales\Models\SalesBoard;
 use Platform\Sales\Models\SalesDeal;
 use Platform\Sales\Models\SalesBoardSlot;
@@ -12,10 +13,21 @@ class Board extends Component
 {
     public SalesBoard $salesBoard;
     public $groups;
+    public bool $showWonColumn = false;
 
     public function mount(SalesBoard $salesBoard)
     {
         $this->salesBoard = $salesBoard;
+        $this->loadGroups();
+    }
+
+    #[On('board-updated')]
+    #[On('slot-updated')]
+    #[On('slot-deleted')]
+    #[On('deal-updated')]
+    public function refreshBoard()
+    {
+        $this->salesBoard->refresh();
         $this->loadGroups();
     }
 
@@ -139,6 +151,14 @@ class Board extends Component
         $this->loadGroups();
     }
 
+
+    /**
+     * Toggle für die Anzeige der Gewonnen-Spalte
+     */
+    public function toggleShowWonColumn()
+    {
+        $this->showWonColumn = !$this->showWonColumn;
+    }
 
     public function render()
     {
