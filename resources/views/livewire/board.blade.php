@@ -71,12 +71,7 @@
                                 <span>Spalte</span>
                             </span>
                         </x-ui-button>
-                        <x-ui-button variant="secondary-outline" size="sm" x-data @click="$dispatch('open-modal-board-settings', { boardId: '{{ $salesBoard->id }}' })">
-                            <span class="inline-flex items-center gap-2">
-                                @svg('heroicon-o-cog-6-tooth','w-4 h-4')
-                                <span>Einstellungen</span>
-                            </span>
-                        </x-ui-button>
+                        {{-- TODO: Board-Einstellungen Modal neu implementieren --}}
                     </div>
                 </div>
 
@@ -192,13 +187,7 @@
                     >
                         @svg('heroicon-o-plus-circle', 'w-4 h-4')
                     </button>
-                    <button
-                        @click="$dispatch('open-modal-board-slot-settings', { boardSlotId: '{{ $column->id }}' })"
-                        class="text-[var(--ui-muted)] hover:text-[var(--ui-secondary)] transition-colors"
-                        title="Einstellungen"
-                    >
-                        @svg('heroicon-o-cog-6-tooth', 'w-4 h-4')
-                    </button>
+                    {{-- TODO: Slot-Einstellungen Modal neu implementieren --}}
                 </x-slot>
 
                 @foreach($column->deals as $deal)
@@ -225,7 +214,5 @@
         @endif
     </x-ui-kanban-container>
 
-    {{-- Modals --}}
-    <livewire:sales.board-settings-modal />
-    <livewire:sales.board-slot-settings-modal />
+    {{-- TODO: Settings Modals neu implementieren --}}
 </x-ui-page>
