@@ -12,13 +12,11 @@ use Illuminate\Support\Facades\Auth;
 class Board extends Component
 {
     public SalesBoard $salesBoard;
-    public $groups;
     public bool $showWonColumn = false;
 
     public function mount(SalesBoard $salesBoard)
     {
         $this->salesBoard = $salesBoard;
-        $this->loadGroups();
     }
 
     #[On('board-updated')]
@@ -28,40 +26,6 @@ class Board extends Component
     public function refreshBoard()
     {
         $this->salesBoard->refresh();
-        $this->loadGroups();
-    }
-
-    public function loadGroups()
-    {
-        // Lade alle Slots des Boards
-        $slots = $this->salesBoard->slots()->orderBy('order')->get();
-        
-        // Erstelle Gruppen für jedes Slot (nur nicht-gewonnene Deals)
-        $groups = $slots->map(function ($slot) {
-            $slot->label = $slot->name;
-            $deals = $slot->deals()
-                ->where('is_done', false)
-                ->orderBy('slot_order')
-                ->orderBy('order')
-                ->get();
-            $slot->deals = $deals;
-            return $slot;
-        });
-
-        // Füge eine "Gewonnen" Gruppe hinzu
-        $wonGroup = new SalesBoardSlot();
-        $wonGroup->id = 'won';
-        $wonGroup->name = 'GEWONNEN';
-        $wonGroup->label = 'GEWONNEN';
-        $wonGroup->isWonGroup = true;
-        $wonDeals = $this->salesBoard->deals()
-            ->where('is_done', true)
-            ->orderBy('done_at', 'desc')
-            ->get();
-        $wonGroup->deals = $wonDeals; // Direkt die Eloquent Collection verwenden
-        
-        // Stelle sicher, dass $this->groups eine Collection ist
-        $this->groups = $groups->push($wonGroup);
     }
 
     public function createDeal($slotId = null)
@@ -76,13 +40,11 @@ class Board extends Component
         $deal->probability_percent = null;
         $deal->deal_source = null;
         $deal->deal_type = null;
-        
         $deal->is_done = false;
         $deal->order = 0;
         $deal->slot_order = 0;
         $deal->save();
 
-        $this->loadGroups();
         $this->dispatch('deal-created', dealId: $deal->id);
     }
 
@@ -94,16 +56,13 @@ class Board extends Component
         $slot->order = $this->salesBoard->slots()->count();
         $slot->save();
 
-        $this->loadGroups();
         $this->dispatch('slot-created', slotId: $slot->id);
     }
 
     public function updateDealOrder($groups)
     {
         foreach ($groups as $group) {
-            $slotId = ($group['value'] === 'null' || (int) $group['value'] === 0)
-                ? null
-                : (int) $group['value'];
+            $slotId = $group['value'];
 
             foreach ($group['items'] as $item) {
                 $deal = SalesDeal::find($item['value']);
@@ -114,25 +73,25 @@ class Board extends Component
 
                 // Bestimme das neue Slot basierend auf der Gruppe
                 $newSlotId = null;
-                if ($slotId !== 'won') {
+                $isDone = false;
+
+                if ($slotId === 'won') {
+                    $isDone = true;
+                } else {
                     $slot = $this->salesBoard->slots()->find($slotId);
                     if ($slot) {
                         $newSlotId = $slot->id;
                     }
                 }
 
-                // Update Deal
                 $deal->sales_board_slot_id = $newSlotId;
                 $deal->slot_order = $item['order'];
                 $deal->order = $item['order'];
-                $deal->is_done = ($slotId === 'won');
-                $deal->done_at = ($slotId === 'won') ? now() : null;
+                $deal->is_done = $isDone;
+                $deal->done_at = $isDone ? now() : null;
                 $deal->save();
             }
         }
-
-        // Nach Update State refresh
-        $this->loadGroups();
     }
 
     /**
@@ -147,11 +106,7 @@ class Board extends Component
                 $slotDb->save();
             }
         }
-
-        // Nach Update State refresh
-        $this->loadGroups();
     }
-
 
     /**
      * Toggle für die Anzeige der Gewonnen-Spalte
@@ -163,6 +118,42 @@ class Board extends Component
 
     public function render()
     {
-        return view('sales::livewire.board')->layout('platform::layouts.app');
+        // === 1. PIPELINE-SPALTEN ===
+        $slots = $this->salesBoard->slots()
+            ->with(['deals' => function ($q) {
+                $q->where('is_done', false)
+                  ->orderBy('slot_order')
+                  ->orderBy('order');
+            }])
+            ->orderBy('order')
+            ->get()
+            ->map(function ($slot) {
+                return (object) [
+                    'id' => $slot->id,
+                    'label' => $slot->name,
+                    'isWonGroup' => false,
+                    'deals' => $slot->deals,
+                ];
+            });
+
+        // === 2. GEWONNENE DEALS ===
+        $wonDeals = $this->salesBoard->deals()
+            ->where('is_done', true)
+            ->orderByDesc('done_at')
+            ->get();
+
+        $wonGroup = (object) [
+            'id' => 'won',
+            'label' => 'GEWONNEN',
+            'isWonGroup' => true,
+            'deals' => $wonDeals,
+        ];
+
+        // === GRUPPEN ZUSAMMENSTELLEN ===
+        $groups = $slots->push($wonGroup);
+
+        return view('sales::livewire.board', [
+            'groups' => $groups,
+        ])->layout('platform::layouts.app');
     }
 }

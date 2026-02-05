@@ -16,7 +16,7 @@ class BoardSlotSettingsModal extends Component
         return [
             'slot.name' => 'required|string|max:255',
             'slot.description' => 'nullable|string',
-            'slot.color' => 'required|string|in:blue,green,yellow,red,purple,orange,pink,indigo',
+            'slot.color' => 'nullable|string|in:blue,green,yellow,red,purple,orange,pink,indigo',
         ];
     }
 

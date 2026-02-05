@@ -1,4 +1,4 @@
-<x-ui-modal size="lg" wire:model="modalShow">
+<x-ui-modal size="lg" model="modalShow">
     <x-slot name="header">
         Board-Einstellungen: {{ $board->name ?? '' }}
     </x-slot>
