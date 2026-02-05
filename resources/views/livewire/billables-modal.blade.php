@@ -156,7 +156,13 @@
                                         min="1"
                                     />
                                     <p class="text-xs text-[var(--ui-muted)] mt-1">
-                                        Gesamtwert = Betrag × Laufzeit (z.B. 100€ × 12 = 1.200€)
+                                        @if(($billable['billing_interval'] ?? 'monthly') === 'quarterly')
+                                            Gesamtwert = Betrag × Quartale (Monate ÷ 3)
+                                        @elseif(($billable['billing_interval'] ?? 'monthly') === 'yearly')
+                                            Gesamtwert = Betrag × Jahre (Monate ÷ 12)
+                                        @else
+                                            Gesamtwert = Betrag × Monate (z.B. 100€ × 12 = 1.200€)
+                                        @endif
                                     </p>
                                 @else
                                     <div class="pt-6">
@@ -190,15 +196,29 @@
                                         <div class="text-xs text-[var(--ui-primary)] font-medium mb-1">Gesamtwert</div>
                                         <div class="text-lg font-bold text-[var(--ui-primary)]">
                                             @php
+                                                $intervalMonths = match($billable['billing_interval'] ?? 'monthly') {
+                                                    'quarterly' => 3,
+                                                    'yearly' => 12,
+                                                    default => 1,
+                                                };
                                                 $totalValue = ($billable['billing_type'] ?? 'one_time') === 'recurring' && isset($billable['duration_months']) && $billable['duration_months'] > 0
-                                                    ? (float) $billable['amount'] * (int) $billable['duration_months']
+                                                    ? (float) $billable['amount'] * (int) $billable['duration_months'] / $intervalMonths
                                                     : (float) $billable['amount'];
                                             @endphp
                                             {{ number_format($totalValue, 2, ',', '.') }} €
                                         </div>
                                         @if(($billable['billing_type'] ?? 'one_time') === 'recurring' && isset($billable['duration_months']) && $billable['duration_months'] > 0)
+                                            @php
+                                                $periods = (int) $billable['duration_months'] / $intervalMonths;
+                                                $periodsFormatted = $periods == floor($periods) ? (int) $periods : number_format($periods, 1, ',', '.');
+                                                $periodLabel = match($billable['billing_interval'] ?? 'monthly') {
+                                                    'quarterly' => 'Quartale',
+                                                    'yearly' => ($periods == 1 ? 'Jahr' : 'Jahre'),
+                                                    default => 'Monate',
+                                                };
+                                            @endphp
                                             <div class="text-xs text-[var(--ui-muted)] mt-1">
-                                                {{ number_format((float) $billable['amount'], 2, ',', '.') }} € × {{ $billable['duration_months'] }} Monate
+                                                {{ number_format((float) $billable['amount'], 2, ',', '.') }} € × {{ $periodsFormatted }} {{ $periodLabel }}
                                             </div>
                                         @endif
                                     </div>
@@ -252,7 +272,12 @@
                                     foreach($billables as $billable) {
                                         if (($billable['amount'] ?? 0) > 0) {
                                             if (($billable['billing_type'] ?? 'one_time') === 'recurring' && isset($billable['duration_months']) && $billable['duration_months'] > 0) {
-                                                $totalValue += (float) $billable['amount'] * (int) $billable['duration_months'];
+                                                $ivlMonths = match($billable['billing_interval'] ?? 'monthly') {
+                                                    'quarterly' => 3,
+                                                    'yearly' => 12,
+                                                    default => 1,
+                                                };
+                                                $totalValue += (float) $billable['amount'] * (int) $billable['duration_months'] / $ivlMonths;
                                             } else {
                                                 $totalValue += (float) $billable['amount'];
                                             }
@@ -271,22 +296,27 @@
                                     $expectedTotalValue = 0;
                                     $weightedProbabilitySum = 0;
                                     $totalValue = 0;
-                                    
+
                                     foreach($billables as $billable) {
                                         if (($billable['amount'] ?? 0) > 0) {
+                                            $ivlMonths = match($billable['billing_interval'] ?? 'monthly') {
+                                                'quarterly' => 3,
+                                                'yearly' => 12,
+                                                default => 1,
+                                            };
                                             $billableTotal = (($billable['billing_type'] ?? 'one_time') === 'recurring' && isset($billable['duration_months']) && $billable['duration_months'] > 0)
-                                                ? (float) $billable['amount'] * (int) $billable['duration_months']
+                                                ? (float) $billable['amount'] * (int) $billable['duration_months'] / $ivlMonths
                                                 : (float) $billable['amount'];
-                                            
+
                                             $probability = (int) ($billable['probability_percent'] ?? 100);
                                             $expectedTotalValue += $billableTotal * $probability / 100;
-                                            
+
                                             // Für gewichteten Durchschnitt
                                             $weightedProbabilitySum += $probability * $billableTotal;
                                             $totalValue += $billableTotal;
                                         }
                                     }
-                                    
+
                                     $weightedAverage = $totalValue > 0 ? round($weightedProbabilitySum / $totalValue, 1) : 0;
                                 @endphp
                                 {{ number_format($expectedTotalValue, 2, ',', '.') }} €

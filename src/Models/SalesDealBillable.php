@@ -54,11 +54,16 @@ class SalesDealBillable extends Model
         static::saving(function (self $model) {
             // Berechne total_value automatisch
             if ($model->billing_type === 'recurring' && $model->duration_months) {
-                $model->total_value = (float) $model->amount * (int) $model->duration_months;
+                $intervalMonths = match($model->billing_interval) {
+                    'quarterly' => 3,
+                    'yearly' => 12,
+                    default => 1, // monthly
+                };
+                $model->total_value = (float) $model->amount * (int) $model->duration_months / $intervalMonths;
             } else {
                 $model->total_value = (float) $model->amount;
             }
-            
+
             // Berechne expected_value automatisch
             $probability = (int) ($model->probability_percent ?? 100);
             $model->expected_value = (float) $model->total_value * $probability / 100;
@@ -109,10 +114,24 @@ class SalesDealBillable extends Model
                 'yearly' => 'jährlich',
                 default => $this->billing_interval
             };
-            
-            return "{$this->formatted_amount} {$interval} × {$this->duration_months} Monate = {$this->formatted_total_value}";
+
+            $intervalMonths = match($this->billing_interval) {
+                'quarterly' => 3,
+                'yearly' => 12,
+                default => 1,
+            };
+            $periods = $this->duration_months / $intervalMonths;
+            $periodsFormatted = $periods == floor($periods) ? (int) $periods : number_format($periods, 1, ',', '.');
+
+            $periodLabel = match($this->billing_interval) {
+                'quarterly' => 'Quartale',
+                'yearly' => ($periods == 1 ? 'Jahr' : 'Jahre'),
+                default => 'Monate',
+            };
+
+            return "{$this->formatted_amount} {$interval} × {$periodsFormatted} {$periodLabel} = {$this->formatted_total_value}";
         }
-        
+
         return $this->formatted_amount . ' (einmalig)';
     }
 
