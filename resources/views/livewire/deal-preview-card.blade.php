@@ -1,3 +1,4 @@
+@props(['deal'])
 @php
     $isDone = $deal->is_done ?? false;
     $isHot = $deal->isHot();

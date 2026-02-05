@@ -236,10 +236,7 @@ $statsWon = [
                 </x-slot>
 
                 @foreach($column->deals as $deal)
-                    <livewire:sales.deal-preview-card
-                        :deal="$deal"
-                        wire:key="deal-preview-{{ $deal->id }}"
-                    />
+                    @include('sales::livewire.deal-preview-card', ['deal' => $deal])
                 @endforeach
             </x-ui-kanban-column>
         @endforeach
@@ -255,10 +252,7 @@ $statsWon = [
                         </span>
                     </x-slot>
                     @foreach($wonGroup->deals as $deal)
-                        <livewire:sales.deal-preview-card
-                            :deal="$deal"
-                            wire:key="deal-preview-won-{{ $deal->id }}"
-                        />
+                        @include('sales::livewire.deal-preview-card', ['deal' => $deal])
                     @endforeach
                 </x-ui-kanban-column>
             @endif
