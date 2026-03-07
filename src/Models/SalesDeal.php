@@ -14,10 +14,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Platform\ActivityLog\Traits\LogsActivity;
 use Platform\Crm\Traits\HasCompanyLinksTrait;
 use Platform\Crm\Traits\HasContactLinksTrait;
+use Platform\Integrations\Traits\HasLexwareQuotationLinksTrait;
+use Platform\Integrations\Contracts\LexwareQuotationLinkableInterface;
 
-class SalesDeal extends Model
+class SalesDeal extends Model implements LexwareQuotationLinkableInterface
 {
-    use HasFactory, SoftDeletes, LogsActivity, HasCompanyLinksTrait, HasContactLinksTrait;
+    use HasFactory, SoftDeletes, LogsActivity, HasCompanyLinksTrait, HasContactLinksTrait, HasLexwareQuotationLinksTrait;
 
     protected $fillable = [
         'uuid',
@@ -143,6 +145,22 @@ class SalesDeal extends Model
     public function setMonthlyRecurringValueAttribute($value)
     {
         $this->attributes['monthly_recurring_value'] = empty($value) || $value === '' || $value === 'null' ? null : $value;
+    }
+
+    // LexwareQuotationLinkableInterface
+    public function getLexwareQuotationLinkableId(): int
+    {
+        return $this->id;
+    }
+
+    public function getLexwareQuotationLinkableType(): string
+    {
+        return static::class;
+    }
+
+    public function getTeamId(): int
+    {
+        return $this->team_id;
     }
 
     public function user()

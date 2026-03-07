@@ -72,6 +72,7 @@ class SalesServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'sales');
         $this->registerLivewireComponents();
+        $this->registerTools();
 
         // Policies nur registrieren, wenn Klassen vorhanden sind
         if (class_exists(SalesDeal::class) && class_exists(SalesDealPolicy::class)) {
@@ -84,6 +85,50 @@ class SalesServiceProvider extends ServiceProvider
 
         if (class_exists(SalesBoardTemplate::class) && class_exists(SalesBoardTemplatePolicy::class)) {
             Gate::policy(SalesBoardTemplate::class, SalesBoardTemplatePolicy::class);
+        }
+    }
+
+    /**
+     * Registriert Sales-Tools für die AI/Chat-Funktionalität
+     */
+    protected function registerTools(): void
+    {
+        try {
+            $registry = resolve(\Platform\Core\Tools\ToolRegistry::class);
+
+            // Board-Tools
+            $registry->register(new \Platform\Sales\Tools\ListBoardsTool());
+            $registry->register(new \Platform\Sales\Tools\CreateBoardTool());
+            $registry->register(new \Platform\Sales\Tools\UpdateBoardTool());
+            $registry->register(new \Platform\Sales\Tools\DeleteBoardTool());
+
+            // Deal-Tools
+            $registry->register(new \Platform\Sales\Tools\ListDealsTool());
+            $registry->register(new \Platform\Sales\Tools\CreateDealTool());
+            $registry->register(new \Platform\Sales\Tools\UpdateDealTool());
+            $registry->register(new \Platform\Sales\Tools\DeleteDealTool());
+            $registry->register(new \Platform\Sales\Tools\MoveDealTool());
+
+            // Board-Slot-Tools
+            $registry->register(new \Platform\Sales\Tools\ListBoardSlotsTool());
+            $registry->register(new \Platform\Sales\Tools\CreateBoardSlotTool());
+            $registry->register(new \Platform\Sales\Tools\UpdateBoardSlotTool());
+
+            // Billable-Tools
+            $registry->register(new \Platform\Sales\Tools\ListDealBillablesTool());
+            $registry->register(new \Platform\Sales\Tools\CreateDealBillableTool());
+
+            // Stats & Lookups
+            $registry->register(new \Platform\Sales\Tools\GetStatsTool());
+            $registry->register(new \Platform\Sales\Tools\ListTemplatesTool());
+            $registry->register(new \Platform\Sales\Tools\ListLookupsTool());
+
+            // Lexware Quotation-Verknüpfung
+            $registry->register(new \Platform\Sales\Tools\LinkQuotationTool());
+            $registry->register(new \Platform\Sales\Tools\UnlinkQuotationTool());
+            $registry->register(new \Platform\Sales\Tools\ListDealQuotationsTool());
+        } catch (\Throwable $e) {
+            \Log::warning('Sales: Tool-Registrierung fehlgeschlagen', ['error' => $e->getMessage()]);
         }
     }
 
