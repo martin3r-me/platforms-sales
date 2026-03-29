@@ -59,13 +59,16 @@
                         />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">Company auswählen</label>
-                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" wire:model.live="companyId">
-                            <option value="">– Keine Company –</option>
-                            @foreach($companyOptions as $option)
-                                <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
-                            @endforeach
-                        </select>
+                        <x-ui-input-select
+                            name="companyId"
+                            label="Company auswählen"
+                            :options="collect($companyOptions)->map(fn($o) => (object) $o)"
+                            optionValue="value"
+                            optionLabel="label"
+                            :nullable="true"
+                            nullLabel="– Keine Company –"
+                            wire:model.live="companyId"
+                        />
                     </div>
                 </div>
                 
@@ -92,13 +95,16 @@
                         />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">Contact auswählen</label>
-                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" wire:model.live="contactId">
-                            <option value="">– Kein Contact –</option>
-                            @foreach($contactOptions as $option)
-                                <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
-                            @endforeach
-                        </select>
+                        <x-ui-input-select
+                            name="contactId"
+                            label="Contact auswählen"
+                            :options="collect($contactOptions)->map(fn($o) => (object) $o)"
+                            optionValue="value"
+                            optionLabel="label"
+                            :nullable="true"
+                            nullLabel="– Kein Contact –"
+                            wire:model.live="contactId"
+                        />
                     </div>
                 </div>
                 

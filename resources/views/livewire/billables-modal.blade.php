@@ -4,8 +4,8 @@
         <x-slot name="header">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Billables verwalten</h3>
-                    <p class="text-sm text-gray-600 mt-1">{{ $deal?->title ?? 'Deal' }}</p>
+                    <h3 class="text-lg font-semibold text-[var(--ui-secondary)]">Billables verwalten</h3>
+                    <p class="text-sm text-[var(--ui-muted)] mt-1">{{ $deal?->title ?? 'Deal' }}</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <x-ui-badge variant="blue" size="sm">
@@ -17,23 +17,23 @@
 
         <div class="space-y-6">
             {{-- Info --}}
-            <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+            <div class="p-4 bg-gradient-to-r from-[var(--ui-primary-5)] to-[var(--ui-primary-10)] border border-[var(--ui-primary)]/30 rounded-lg">
                 <div class="flex items-start gap-3">
                     <div class="flex-shrink-0">
-                        @svg('heroicon-o-light-bulb', 'w-5 h-5 text-blue-600')
+                        @svg('heroicon-o-light-bulb', 'w-5 h-5 text-[var(--ui-primary)]')
                     </div>
                     <div>
-                        <h4 class="text-sm font-semibold text-blue-900 mb-2">Billables verstehen</h4>
-                        <p class="text-sm text-blue-700 mb-2">
+                        <h4 class="text-sm font-semibold text-[var(--ui-primary)] mb-2">Billables verstehen</h4>
+                        <p class="text-sm text-[var(--ui-secondary)] mb-2">
                             Teile komplexe Deals in einzelne Komponenten auf für präzise Wertberechnung:
                         </p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-blue-600">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-[var(--ui-muted)]">
                             <div class="flex items-center gap-1">
-                                <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                <span class="w-2 h-2 bg-[var(--ui-primary)] rounded-full"></span>
                                 <strong>Einmalig:</strong> Setup, Abschluss-Bonus, Hardware
                             </div>
                             <div class="flex items-center gap-1">
-                                <span class="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                                <span class="w-2 h-2 bg-[var(--ui-success)] rounded-full"></span>
                                 <strong>Wiederkehrend:</strong> Lizenzen, Support, Beratung
                             </div>
                         </div>

@@ -2,14 +2,14 @@
     $openDeals = $groups->filter(fn($g) => !($g->isWonGroup ?? false))->flatMap(fn($g) => $g->tasks);
     $wonDeals = $groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->tasks);
     $allDeals = $groups->flatMap(fn($g) => $g->tasks);
-    
+
     $openValue = $openDeals->sum(fn($t) => (float) ($t->deal_value ?? 0));
     $wonValue = $wonDeals->sum(fn($t) => (float) ($t->deal_value ?? 0));
     $openCount = $openDeals->count();
     $wonCount = $wonDeals->count();
     $highValueCount = $allDeals->filter(fn($t) => $t->deal_value && $t->deal_value > 10000)->count();
     $overdueCount = $allDeals->filter(fn($t) => $t->due_date && $t->due_date->isPast() && !$t->is_done)->count();
-    
+
     $statsOpen = [
         [
             'title' => 'Offen',
@@ -36,7 +36,7 @@
             'variant' => 'danger'
         ],
     ];
-    
+
     $statsWon = [
         [
             'title' => 'Gewonnen',
@@ -56,6 +56,20 @@
 <x-ui-page>
     <x-slot name="navbar">
         <x-ui-page-navbar title="Meine Deals" icon="heroicon-o-rectangle-stack" />
+    </x-slot>
+
+    <x-slot name="actionbar">
+        <x-ui-page-actionbar :breadcrumbs="[
+            ['label' => 'Sales', 'href' => route('sales.dashboard'), 'icon' => 'currency-euro'],
+            ['label' => 'Meine Deals'],
+        ]">
+            <x-ui-button variant="primary" size="sm" wire:click="createDeal()">
+                <span class="flex items-center gap-2">
+                    @svg('heroicon-o-plus', 'w-4 h-4')
+                    <span>Neuer Deal</span>
+                </span>
+            </x-ui-button>
+        </x-ui-page-actionbar>
     </x-slot>
 
     <x-slot name="sidebar">
@@ -133,11 +147,11 @@
         <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
             <div class="p-4 space-y-4">
                 <div class="text-sm text-[var(--ui-muted)]">Letzte Aktivitäten</div>
-                <div class="space-y-3 text-sm">
-                    <div class="p-2 rounded border border-[var(--ui-border)]/60 bg-[var(--ui-muted-5)]">
-                        <div class="font-medium text-[var(--ui-secondary)] truncate">Meine Deals geladen</div>
-                        <div class="text-[var(--ui-muted)]">vor 1 Minute</div>
+                <div class="text-center py-8">
+                    <div class="w-12 h-12 bg-[var(--ui-muted-5)] rounded-full flex items-center justify-center mx-auto mb-3">
+                        @svg('heroicon-o-clock', 'w-6 h-6 text-[var(--ui-muted)]')
                     </div>
+                    <p class="text-sm text-[var(--ui-muted)]">Keine aktuellen Aktivitäten</p>
                 </div>
             </div>
         </x-ui-page-sidebar>
@@ -153,8 +167,8 @@
                 :muted="$group->isWonGroup ?? false">
                 <x-slot name="headerActions">
                     @if(!($group->isWonGroup ?? false))
-                        <button 
-                            wire:click="createDeal('{{ $group->id ?? null }}')" 
+                        <button
+                            wire:click="createDeal('{{ $group->id ?? null }}')"
                             class="text-[var(--ui-muted)] hover:text-[var(--ui-secondary)] transition-colors"
                             title="Neuer Deal"
                         >
@@ -164,35 +178,7 @@
                 </x-slot>
 
                 @foreach($group->tasks as $deal)
-                    <div class="bg-white border border-[var(--ui-border)] rounded-lg p-3 mb-2 hover:shadow-md transition-shadow cursor-pointer"
-                         wire:sortable.item="{{ $deal->id }}"
-                         wire:click="$dispatch('open-deal', { dealId: {{ $deal->id }} })">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-medium text-[var(--ui-secondary)] text-sm">{{ $deal->title }}</h4>
-                            @if($deal->deal_value)
-                                <span class="text-xs font-semibold text-[var(--ui-success)]">
-                                    {{ number_format((float) $deal->deal_value, 0, ',', '.') }} €
-                                </span>
-                            @endif
-                        </div>
-                        
-                        @if($deal->probability_percent)
-                            <div class="mb-2">
-                                <x-ui-badge variant="primary" size="sm">
-                                    {{ $deal->probability_percent }}%
-                                </x-ui-badge>
-                            </div>
-                        @endif
-                        
-                        @if($deal->due_date)
-                            <div class="text-xs text-[var(--ui-muted)]">
-                                Fällig: {{ $deal->due_date->format('d.m.Y') }}
-                                @if($deal->due_date->isPast() && !$deal->is_done)
-                                    <span class="text-[var(--ui-danger)] font-medium">(überfällig)</span>
-                                @endif
-                            </div>
-                        @endif
-                    </div>
+                    @include('sales::livewire.deal-preview-card', ['deal' => $deal])
                 @endforeach
             </x-ui-kanban-column>
         @endforeach

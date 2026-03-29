@@ -4,7 +4,7 @@
     </x-slot>
 
     @if($board)
-        <div class="flex-grow-1 overflow-y-auto p-4 space-y-6">
+        <div class="flex-1 overflow-y-auto p-4 space-y-6">
 
             {{-- Board Grunddaten --}}
             <div class="space-y-4">

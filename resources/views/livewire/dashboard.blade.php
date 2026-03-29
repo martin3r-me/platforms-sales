@@ -3,6 +3,20 @@
         <x-ui-page-navbar title="Dashboard" icon="heroicon-o-chart-bar" />
     </x-slot>
 
+    <x-slot name="actionbar">
+        <x-ui-page-actionbar :breadcrumbs="[
+            ['label' => 'Sales', 'href' => route('sales.dashboard'), 'icon' => 'currency-euro'],
+            ['label' => 'Dashboard'],
+        ]">
+            <x-ui-button variant="primary" size="sm" :href="route('sales.my-deals')" wire:navigate>
+                <span class="flex items-center gap-2">
+                    @svg('heroicon-o-plus', 'w-4 h-4')
+                    <span>Neuer Deal</span>
+                </span>
+            </x-ui-button>
+        </x-ui-page-actionbar>
+    </x-slot>
+
     <x-ui-page-container>
         {{-- Main Stats Grid --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -10,14 +24,14 @@
                 title="Offene Deals"
                 :count="$openDealsCount ?? 0"
                 icon="clipboard-document-list"
-                variant="secondary"
+                variant="warning"
                 size="lg"
             />
             <x-ui-dashboard-tile
                 title="Gewonnene Deals"
                 :count="$wonDealsCount ?? 0"
                 icon="trophy"
-                variant="secondary"
+                variant="success"
                 size="lg"
             />
             <x-ui-dashboard-tile
@@ -25,7 +39,7 @@
                 :count="(int) ($totalValue ?? 0)"
                 subtitle="{{ number_format((float) ($totalValue ?? 0), 2, ',', '.') }} €"
                 icon="currency-euro"
-                variant="secondary"
+                variant="primary"
                 size="lg"
             />
             <x-ui-dashboard-tile
@@ -33,7 +47,7 @@
                 :count="(int) ($expectedValue ?? 0)"
                 subtitle="{{ number_format((float) ($expectedValue ?? 0), 2, ',', '.') }} €"
                 icon="chart-bar"
-                variant="secondary"
+                variant="info"
                 size="lg"
             />
         </div>
@@ -122,40 +136,6 @@
                         </x-ui-button>
                     </div>
                 </div>
-
-                {{-- Quick Stats --}}
-                <div>
-                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Schnellstatistiken</h3>
-                    <div class="space-y-3">
-                        <div class="p-3 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
-                            <div class="text-xs text-[var(--ui-muted)]">Offene Deals</div>
-                            <div class="text-lg font-bold text-[var(--ui-secondary)]">{{ $openDealsCount ?? 0 }} Deals</div>
-                        </div>
-                        <div class="p-3 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
-                            <div class="text-xs text-[var(--ui-muted)]">Gewonnene Deals</div>
-                            <div class="text-lg font-bold text-[var(--ui-secondary)]">{{ $wonDealsCount ?? 0 }} Deals</div>
-                        </div>
-                        <div class="p-3 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
-                            <div class="text-xs text-[var(--ui-muted)]">Gesamtwert</div>
-                            <div class="text-lg font-bold text-[var(--ui-secondary)]">{{ number_format((float) ($totalValue ?? 0), 2, ',', '.') }} €</div>
-                        </div>
-                        <div class="p-3 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
-                            <div class="text-xs text-[var(--ui-muted)]">Erwarteter Wert</div>
-                            <div class="text-lg font-bold text-[var(--ui-secondary)]">{{ number_format((float) ($expectedValue ?? 0), 2, ',', '.') }} €</div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Recent Activity --}}
-                <div>
-                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Letzte Aktivitäten</h3>
-                    <div class="space-y-2 text-sm">
-                        <div class="p-2 rounded border border-[var(--ui-border)]/60 bg-[var(--ui-muted-5)]">
-                            <div class="font-medium text-[var(--ui-secondary)] truncate">Dashboard geladen</div>
-                            <div class="text-[var(--ui-muted)] text-xs">vor 1 Minute</div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </x-ui-page-sidebar>
     </x-slot>
@@ -164,11 +144,11 @@
         <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
             <div class="p-4 space-y-4">
                 <div class="text-sm text-[var(--ui-muted)]">Letzte Aktivitäten</div>
-                <div class="space-y-3 text-sm">
-                    <div class="p-2 rounded border border-[var(--ui-border)]/60 bg-[var(--ui-muted-5)]">
-                        <div class="font-medium text-[var(--ui-secondary)] truncate">Dashboard geladen</div>
-                        <div class="text-[var(--ui-muted)]">vor 1 Minute</div>
+                <div class="text-center py-8">
+                    <div class="w-12 h-12 bg-[var(--ui-muted-5)] rounded-full flex items-center justify-center mx-auto mb-3">
+                        @svg('heroicon-o-clock', 'w-6 h-6 text-[var(--ui-muted)]')
                     </div>
+                    <p class="text-sm text-[var(--ui-muted)]">Keine aktuellen Aktivitäten</p>
                 </div>
             </div>
         </x-ui-page-sidebar>

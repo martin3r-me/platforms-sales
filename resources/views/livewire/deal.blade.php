@@ -3,6 +3,17 @@
         <x-ui-page-navbar title="" />
     </x-slot>
 
+    <x-slot name="actionbar">
+        <x-ui-page-actionbar :breadcrumbs="[
+            ['label' => 'Sales', 'href' => route('sales.dashboard'), 'icon' => 'currency-euro'],
+            $deal->salesBoard
+                ? ['label' => $deal->salesBoard->name, 'href' => route('sales.boards.show', $deal->salesBoard)]
+                : ['label' => 'Meine Deals', 'href' => route('sales.my-deals')],
+            ['label' => $deal->title],
+        ]">
+        </x-ui-page-actionbar>
+    </x-slot>
+
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="Übersicht" width="w-80" :defaultOpen="true">
             <div class="p-6 space-y-6">
@@ -147,91 +158,106 @@
                     <div class="flex-1 min-w-0">
                         <h1 class="text-3xl font-bold text-[var(--ui-secondary)] mb-4 tracking-tight leading-tight">{{ $deal->title }}</h1>
 
-                        <div class="space-y-2">
-                            {{-- Row 1: Board & Klassifizierung --}}
-                            <div class="flex flex-wrap items-center gap-6 text-sm text-[var(--ui-muted)]">
-                                @if($deal->salesBoard)
-                                    <span class="flex items-center gap-2">
-                                        @svg('heroicon-o-rectangle-stack', 'w-4 h-4')
-                                        <span>Board: <span class="text-[var(--ui-secondary)]">{{ $deal->salesBoard->name }}</span></span>
-                                    </span>
-                                @endif
-                                @if($deal->salesBoardSlot)
-                                    <span class="flex items-center gap-2">
-                                        @svg('heroicon-o-view-columns', 'w-4 h-4')
-                                        <span>Spalte: <span class="text-[var(--ui-secondary)]">{{ $deal->salesBoardSlot->name }}</span></span>
-                                    </span>
-                                @endif
-                                @if($deal->dealSource)
-                                    <span class="flex items-center gap-2">
-                                        @svg('heroicon-o-signal', 'w-4 h-4')
-                                        <span>Quelle: <span class="text-[var(--ui-secondary)]">{{ $deal->dealSource->label }}</span></span>
-                                    </span>
-                                @endif
-                                @if($deal->dealType)
-                                    <span class="flex items-center gap-2">
-                                        @svg('heroicon-o-tag', 'w-4 h-4')
-                                        <span>Typ: <span class="text-[var(--ui-secondary)]">{{ $deal->dealType->label }}</span></span>
-                                    </span>
-                                @endif
-                            </div>
-
-                            {{-- Row 2: Personen & Datum --}}
-                            <div class="flex flex-wrap items-center gap-6 text-sm text-[var(--ui-muted)]">
-                                @if($deal->user)
-                                    <span class="flex items-center gap-2">
-                                        @svg('heroicon-o-user-circle', 'w-4 h-4')
-                                        <span>Erstellt von: <span class="text-[var(--ui-secondary)]">{{ $deal->user->name }}</span></span>
-                                    </span>
-                                @endif
-                                @if($deal->userInCharge)
-                                    <span class="flex items-center gap-2">
-                                        @svg('heroicon-o-user', 'w-4 h-4')
-                                        <span>Verantwortlich: <span class="text-[var(--ui-secondary)]">{{ $deal->userInCharge->name }}</span></span>
-                                    </span>
-                                @endif
-                                @if($deal->due_date)
-                                    @php
-                                        $isOverdue = $deal->due_date->isPast() && !$deal->is_done;
-                                        $isToday = $deal->due_date->isToday();
-                                        $dueDateColor = $isOverdue ? 'text-[var(--ui-danger)]' : ($isToday ? 'text-[var(--ui-warning)]' : 'text-[var(--ui-muted)]');
-                                        $dueDateTextColor = $isOverdue ? 'text-[var(--ui-danger)]' : ($isToday ? 'text-[var(--ui-warning)]' : 'text-[var(--ui-secondary)]');
-                                    @endphp
-                                    <span class="flex items-center gap-2">
-                                        @svg('heroicon-o-calendar', 'w-4 h-4 ' . $dueDateColor)
-                                        <span>Fällig: <span class="{{ $dueDateTextColor }}">{{ $deal->due_date->format('d.m.Y') }}</span></span>
-                                    </span>
-                                @endif
-                            </div>
-
-                            {{-- Row 3: Werte --}}
-                            <div class="flex flex-wrap items-center gap-6 text-sm text-[var(--ui-muted)]">
-                                @if($deal->deal_value)
-                                    <span class="flex items-center gap-2">
-                                        @svg('heroicon-o-currency-euro', 'w-4 h-4 text-[var(--ui-success)]')
-                                        <span>Deal Wert: <span class="text-[var(--ui-success)] font-medium">{{ number_format((float) $deal->deal_value, 0, ',', '.') }} €</span></span>
-                                    </span>
-                                @endif
-                                @if($deal->probability_percent)
-                                    <span class="flex items-center gap-2">
-                                        @svg('heroicon-o-chart-bar', 'w-4 h-4')
-                                        <span>Wahrscheinlichkeit: <span class="text-[var(--ui-secondary)] font-medium">{{ $deal->probability_percent }}%</span></span>
-                                    </span>
-                                @endif
-                                @if($deal->hasBillables())
-                                    <span class="flex items-center gap-2">
-                                        @svg('heroicon-o-calculator', 'w-4 h-4')
-                                        <span>Billables: <span class="text-[var(--ui-secondary)] font-medium">{{ $deal->billables->count() }} Komponente(n)</span></span>
-                                    </span>
-                                @endif
-                                @if($deal->companies()->count() > 0 || $deal->contacts()->count() > 0)
-                                    <span class="flex items-center gap-2">
-                                        @svg('heroicon-o-link', 'w-4 h-4')
-                                        <span>CRM: <span class="text-[var(--ui-secondary)] font-medium">{{ $deal->companies()->count() + $deal->contacts()->count() }} Verknüpfung(en)</span></span>
-                                    </span>
-                                @endif
-                            </div>
+                        {{-- Prominente Metriken: Wert, Wahrscheinlichkeit, Fällig --}}
+                        <div class="flex flex-wrap items-center gap-6 text-sm">
+                            @if($deal->deal_value)
+                                <span class="flex items-center gap-2">
+                                    @svg('heroicon-o-currency-euro', 'w-4 h-4 text-[var(--ui-success)]')
+                                    <span class="text-[var(--ui-muted)]">Deal Wert:</span>
+                                    <span class="text-[var(--ui-success)] font-semibold">{{ number_format((float) $deal->deal_value, 0, ',', '.') }} €</span>
+                                </span>
+                            @endif
+                            @if($deal->probability_percent)
+                                <span class="flex items-center gap-2">
+                                    @svg('heroicon-o-chart-bar', 'w-4 h-4 text-[var(--ui-primary)]')
+                                    <span class="text-[var(--ui-muted)]">Wahrscheinlichkeit:</span>
+                                    <span class="text-[var(--ui-secondary)] font-semibold">{{ $deal->probability_percent }}%</span>
+                                </span>
+                            @endif
+                            @if($deal->due_date)
+                                @php
+                                    $isOverdue = $deal->due_date->isPast() && !$deal->is_done;
+                                    $isToday = $deal->due_date->isToday();
+                                    $dueDateColor = $isOverdue ? 'text-[var(--ui-danger)]' : ($isToday ? 'text-[var(--ui-warning)]' : 'text-[var(--ui-muted)]');
+                                    $dueDateTextColor = $isOverdue ? 'text-[var(--ui-danger)]' : ($isToday ? 'text-[var(--ui-warning)]' : 'text-[var(--ui-secondary)]');
+                                @endphp
+                                <span class="flex items-center gap-2">
+                                    @svg('heroicon-o-calendar', 'w-4 h-4 ' . $dueDateColor)
+                                    <span class="text-[var(--ui-muted)]">Fällig:</span>
+                                    <span class="{{ $dueDateTextColor }} font-semibold">{{ $deal->due_date->format('d.m.Y') }}</span>
+                                </span>
+                            @endif
                         </div>
+
+                        {{-- Aufklappbare Metadaten --}}
+                        @if($deal->salesBoard || $deal->salesBoardSlot || $deal->dealSource || $deal->dealType || $deal->user || $deal->userInCharge || $deal->hasBillables() || $deal->companies()->count() > 0 || $deal->contacts()->count() > 0)
+                            <details class="mt-4">
+                                <summary class="text-sm text-[var(--ui-muted)] cursor-pointer hover:text-[var(--ui-secondary)] transition-colors select-none">
+                                    Weitere Details anzeigen
+                                </summary>
+                                <div class="mt-3 space-y-2">
+                                    {{-- Board & Klassifizierung --}}
+                                    <div class="flex flex-wrap items-center gap-6 text-sm text-[var(--ui-muted)]">
+                                        @if($deal->salesBoard)
+                                            <span class="flex items-center gap-2">
+                                                @svg('heroicon-o-rectangle-stack', 'w-4 h-4')
+                                                <span>Board: <span class="text-[var(--ui-secondary)]">{{ $deal->salesBoard->name }}</span></span>
+                                            </span>
+                                        @endif
+                                        @if($deal->salesBoardSlot)
+                                            <span class="flex items-center gap-2">
+                                                @svg('heroicon-o-view-columns', 'w-4 h-4')
+                                                <span>Spalte: <span class="text-[var(--ui-secondary)]">{{ $deal->salesBoardSlot->name }}</span></span>
+                                            </span>
+                                        @endif
+                                        @if($deal->dealSource)
+                                            <span class="flex items-center gap-2">
+                                                @svg('heroicon-o-signal', 'w-4 h-4')
+                                                <span>Quelle: <span class="text-[var(--ui-secondary)]">{{ $deal->dealSource->label }}</span></span>
+                                            </span>
+                                        @endif
+                                        @if($deal->dealType)
+                                            <span class="flex items-center gap-2">
+                                                @svg('heroicon-o-tag', 'w-4 h-4')
+                                                <span>Typ: <span class="text-[var(--ui-secondary)]">{{ $deal->dealType->label }}</span></span>
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    {{-- Personen --}}
+                                    <div class="flex flex-wrap items-center gap-6 text-sm text-[var(--ui-muted)]">
+                                        @if($deal->user)
+                                            <span class="flex items-center gap-2">
+                                                @svg('heroicon-o-user-circle', 'w-4 h-4')
+                                                <span>Erstellt von: <span class="text-[var(--ui-secondary)]">{{ $deal->user->name }}</span></span>
+                                            </span>
+                                        @endif
+                                        @if($deal->userInCharge)
+                                            <span class="flex items-center gap-2">
+                                                @svg('heroicon-o-user', 'w-4 h-4')
+                                                <span>Verantwortlich: <span class="text-[var(--ui-secondary)]">{{ $deal->userInCharge->name }}</span></span>
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    {{-- Billables & CRM --}}
+                                    <div class="flex flex-wrap items-center gap-6 text-sm text-[var(--ui-muted)]">
+                                        @if($deal->hasBillables())
+                                            <span class="flex items-center gap-2">
+                                                @svg('heroicon-o-calculator', 'w-4 h-4')
+                                                <span>Billables: <span class="text-[var(--ui-secondary)] font-medium">{{ $deal->billables->count() }} Komponente(n)</span></span>
+                                            </span>
+                                        @endif
+                                        @if($deal->companies()->count() > 0 || $deal->contacts()->count() > 0)
+                                            <span class="flex items-center gap-2">
+                                                @svg('heroicon-o-link', 'w-4 h-4')
+                                                <span>CRM: <span class="text-[var(--ui-secondary)] font-medium">{{ $deal->companies()->count() + $deal->contacts()->count() }} Verknüpfung(en)</span></span>
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </details>
+                        @endif
                     </div>
 
                     {{-- Status Badges --}}

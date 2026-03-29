@@ -58,38 +58,38 @@ $statsWon = [
         <x-ui-page-navbar :title="$salesBoard->name" icon="heroicon-o-rectangle-stack" />
     </x-slot>
 
+    <x-slot name="actionbar">
+        <x-ui-page-actionbar :breadcrumbs="[
+            ['label' => 'Sales', 'href' => route('sales.dashboard'), 'icon' => 'currency-euro'],
+            ['label' => 'Boards'],
+            ['label' => $salesBoard->name],
+        ]">
+            @can('update', $salesBoard)
+                <x-ui-button variant="primary" size="sm" wire:click="createDeal()">
+                    <span class="flex items-center gap-2">
+                        @svg('heroicon-o-plus', 'w-4 h-4')
+                        <span>Deal</span>
+                    </span>
+                </x-ui-button>
+                <x-ui-button variant="secondary" size="sm" wire:click="createBoardSlot">
+                    <span class="flex items-center gap-2">
+                        @svg('heroicon-o-square-2-stack', 'w-4 h-4')
+                        <span>Spalte</span>
+                    </span>
+                </x-ui-button>
+                <x-ui-button variant="secondary-outline" size="sm" x-data @click="$dispatch('open-modal-board-settings', { boardId: {{ $salesBoard->id }} })">
+                    <span class="flex items-center gap-2">
+                        @svg('heroicon-o-cog-6-tooth', 'w-4 h-4')
+                        <span>Einstellungen</span>
+                    </span>
+                </x-ui-button>
+            @endcan
+        </x-ui-page-actionbar>
+    </x-slot>
+
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="Board-Übersicht" width="w-80" :defaultOpen="true">
             <div class="p-4 space-y-6">
-                {{-- Aktionen --}}
-                <div>
-                    <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Aktionen</h3>
-                    <div class="flex flex-col gap-2">
-                        @can('update', $salesBoard)
-                            <x-ui-button variant="secondary" size="sm" wire:click="createDeal()">
-                                <span class="inline-flex items-center gap-2">
-                                    @svg('heroicon-o-plus','w-4 h-4')
-                                    <span>Deal</span>
-                                </span>
-                            </x-ui-button>
-                            <x-ui-button variant="secondary" size="sm" wire:click="createBoardSlot">
-                                <span class="inline-flex items-center gap-2">
-                                    @svg('heroicon-o-square-2-stack','w-4 h-4')
-                                    <span>Spalte</span>
-                                </span>
-                            </x-ui-button>
-                        @endcan
-                        @can('update', $salesBoard)
-                            <x-ui-button variant="secondary-outline" size="sm" x-data @click="$dispatch('open-modal-board-settings', { boardId: {{ $salesBoard->id }} })">
-                                <span class="inline-flex items-center gap-2">
-                                    @svg('heroicon-o-cog-6-tooth','w-4 h-4')
-                                    <span>Einstellungen</span>
-                                </span>
-                            </x-ui-button>
-                        @endcan
-                    </div>
-                </div>
-
                 <!-- Board-Statistiken: Offen -->
                 <div>
                     <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Offen</h3>
@@ -200,11 +200,11 @@ $statsWon = [
         <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="true" storeKey="salesActivityOpen" side="right">
             <div class="p-4 space-y-4">
                 <div class="text-sm text-[var(--ui-muted)]">Letzte Aktivitäten</div>
-                <div class="space-y-3 text-sm">
-                    <div class="p-2 rounded border border-[var(--ui-border)]/60 bg-[var(--ui-muted-5)]">
-                        <div class="font-medium text-[var(--ui-secondary)] truncate">Board geladen</div>
-                        <div class="text-[var(--ui-muted)]">vor 1 Minute</div>
+                <div class="text-center py-8">
+                    <div class="w-12 h-12 bg-[var(--ui-muted-5)] rounded-full flex items-center justify-center mx-auto mb-3">
+                        @svg('heroicon-o-clock', 'w-6 h-6 text-[var(--ui-muted)]')
                     </div>
+                    <p class="text-sm text-[var(--ui-muted)]">Keine aktuellen Aktivitäten</p>
                 </div>
             </div>
         </x-ui-page-sidebar>
