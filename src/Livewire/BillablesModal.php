@@ -45,6 +45,7 @@ class BillablesModal extends Component
             'billing_type' => 'one_time',
             'billing_interval' => null,
             'duration_months' => null,
+            'start_date' => null,
             'order' => count($this->billables) + 1,
             'is_active' => true,
         ];
@@ -68,6 +69,12 @@ class BillablesModal extends Component
         // Erstelle neue Billables
         foreach ($this->billables as $billableData) {
             if (!empty($billableData['name']) && $billableData['amount'] > 0) {
+                $startDate = !empty($billableData['start_date']) ? $billableData['start_date'] : null;
+                $endDate = null;
+                if ($startDate && ($billableData['billing_type'] ?? 'one_time') === 'recurring' && !empty($billableData['duration_months'])) {
+                    $endDate = \Carbon\Carbon::parse($startDate)->addMonths((int) $billableData['duration_months'])->format('Y-m-d');
+                }
+
                 SalesDealBillable::create([
                     'sales_deal_id' => $this->deal->id,
                     'name' => $billableData['name'],
@@ -77,6 +84,8 @@ class BillablesModal extends Component
                     'billing_type' => $billableData['billing_type'],
                     'billing_interval' => $billableData['billing_interval'],
                     'duration_months' => $billableData['duration_months'],
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
                     'order' => $billableData['order'],
                     'is_active' => $billableData['is_active'],
                 ]);

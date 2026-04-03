@@ -428,19 +428,34 @@
                     </div>
 
                     @if($deal->hasBillables())
+                        @php
+                            $oneTimeBillables = $deal->billables->filter(fn($b) => $b->isOneTime());
+                            $recurringBillables = $deal->billables->filter(fn($b) => $b->isRecurring());
+                            $oneTimeTotal = $oneTimeBillables->sum('total_value');
+                            $recurringTotal = $recurringBillables->sum('total_value');
+                        @endphp
+
                         {{-- Summary Stats --}}
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                             <div class="p-4 bg-[var(--ui-success-5)] rounded-lg border border-[var(--ui-success)]/30">
                                 <div class="text-xs text-[var(--ui-success)] font-medium mb-1">Gesamtwert</div>
                                 <div class="text-xl font-bold text-[var(--ui-success)]">
                                     {{ number_format((float) $deal->deal_value, 2, ',', '.') }} €
                                 </div>
                             </div>
-                            <div class="p-4 bg-[var(--ui-primary-5)] rounded-lg border border-[var(--ui-primary)]/30">
-                                <div class="text-xs text-[var(--ui-primary)] font-medium mb-1">Erwarteter Wert</div>
-                                <div class="text-xl font-bold text-[var(--ui-primary)]">
-                                    {{ number_format((float) $deal->billables_expected_total, 2, ',', '.') }} €
+                            <div class="p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                                <div class="text-xs text-[var(--ui-muted)] font-medium mb-1">Einmalig</div>
+                                <div class="text-xl font-bold text-[var(--ui-secondary)]">
+                                    {{ number_format((float) $oneTimeTotal, 2, ',', '.') }} €
                                 </div>
+                                <div class="text-xs text-[var(--ui-muted)] mt-1">{{ $oneTimeBillables->count() }} Position(en)</div>
+                            </div>
+                            <div class="p-4 bg-[var(--ui-primary-5)] rounded-lg border border-[var(--ui-primary)]/30">
+                                <div class="text-xs text-[var(--ui-primary)] font-medium mb-1">Wiederkehrend</div>
+                                <div class="text-xl font-bold text-[var(--ui-primary)]">
+                                    {{ number_format((float) $recurringTotal, 2, ',', '.') }} €
+                                </div>
+                                <div class="text-xs text-[var(--ui-muted)] mt-1">{{ $recurringBillables->count() }} Position(en)</div>
                             </div>
                             <div class="p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
                                 <div class="text-xs text-[var(--ui-muted)] font-medium mb-1">Gewichtete Wahrscheinlichkeit</div>
@@ -450,22 +465,67 @@
                             </div>
                         </div>
 
-                        {{-- Billable List --}}
-                        <div class="space-y-2">
-                            @foreach($deal->billables as $billable)
-                                <div class="flex items-center justify-between py-2.5 px-3 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <span class="text-sm font-medium text-[var(--ui-secondary)] truncate">{{ $billable->name }}</span>
-                                        @if($billable->isRecurring())
-                                            <x-ui-badge variant="success" size="xs">Wiederkehrend</x-ui-badge>
-                                        @else
-                                            <x-ui-badge variant="neutral" size="xs">Einmalig</x-ui-badge>
-                                        @endif
-                                    </div>
-                                    <span class="text-sm text-[var(--ui-muted)] flex-shrink-0 ml-3">{{ $billable->billing_description }}</span>
+                        {{-- Einmalige Billables --}}
+                        @if($oneTimeBillables->count() > 0)
+                            <div class="mb-4">
+                                <h3 class="text-sm font-semibold text-[var(--ui-secondary)] mb-2 flex items-center gap-2">
+                                    @svg('heroicon-o-banknotes', 'w-4 h-4 text-[var(--ui-muted)]')
+                                    Einmalig
+                                </h3>
+                                <div class="space-y-2">
+                                    @foreach($oneTimeBillables as $billable)
+                                        <div class="flex items-center justify-between py-2.5 px-3 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                <span class="text-sm font-medium text-[var(--ui-secondary)] truncate">{{ $billable->name }}</span>
+                                                <x-ui-badge variant="neutral" size="xs">Einmalig</x-ui-badge>
+                                                @if($billable->start_date)
+                                                    <span class="text-xs text-[var(--ui-muted)]">{{ $billable->start_date->format('d.m.Y') }}</span>
+                                                @endif
+                                            </div>
+                                            <span class="text-sm font-semibold text-[var(--ui-secondary)] flex-shrink-0 ml-3">{{ $billable->formatted_total_value }}</span>
+                                        </div>
+                                    @endforeach
                                 </div>
-                            @endforeach
-                        </div>
+                            </div>
+                        @endif
+
+                        {{-- Wiederkehrende Billables --}}
+                        @if($recurringBillables->count() > 0)
+                            <div>
+                                <h3 class="text-sm font-semibold text-[var(--ui-secondary)] mb-2 flex items-center gap-2">
+                                    @svg('heroicon-o-arrow-path', 'w-4 h-4 text-[var(--ui-primary)]')
+                                    Wiederkehrend
+                                </h3>
+                                <div class="space-y-2">
+                                    @foreach($recurringBillables as $billable)
+                                        <div class="py-2.5 px-3 bg-[var(--ui-primary-5)] rounded-lg border border-[var(--ui-primary)]/20">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-3 min-w-0">
+                                                    <span class="text-sm font-medium text-[var(--ui-secondary)] truncate">{{ $billable->name }}</span>
+                                                    <x-ui-badge variant="success" size="xs">Wiederkehrend</x-ui-badge>
+                                                </div>
+                                                <span class="text-sm font-semibold text-[var(--ui-primary)] flex-shrink-0 ml-3">{{ $billable->formatted_total_value }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-4 mt-1.5 text-xs text-[var(--ui-muted)]">
+                                                <span>{{ $billable->formatted_amount }} {{ match($billable->billing_interval) { 'quarterly' => '/ Quartal', 'yearly' => '/ Jahr', default => '/ Monat' } }}</span>
+                                                @if($billable->start_date)
+                                                    <span class="flex items-center gap-1">
+                                                        @svg('heroicon-o-calendar', 'w-3 h-3')
+                                                        {{ $billable->start_date->format('d.m.Y') }}
+                                                        @if($billable->end_date)
+                                                            – {{ $billable->end_date->format('d.m.Y') }}
+                                                        @endif
+                                                    </span>
+                                                @endif
+                                                @if($billable->duration_months)
+                                                    <span>{{ $billable->duration_months }} Monate</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                     @else
                         <div class="text-center py-8 text-[var(--ui-muted)]">
                             <div class="flex justify-center mb-2">

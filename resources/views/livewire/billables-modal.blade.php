@@ -171,6 +171,23 @@
                                     </div>
                                 @endif
                             </div>
+
+                            {{-- Startdatum / Zahlungsdatum --}}
+                            <div>
+                                <x-ui-input-date
+                                    :name="'billables.' . $index . '.start_date'"
+                                    :label="($billable['billing_type'] ?? 'one_time') === 'recurring' ? 'Startdatum' : 'Zahlungsdatum'"
+                                    wire:model.live="billables.{{ $index }}.start_date"
+                                    :nullable="true"
+                                />
+                                <p class="text-xs text-[var(--ui-muted)] mt-1">
+                                    @if(($billable['billing_type'] ?? 'one_time') === 'recurring')
+                                        Ab wann laufen die Zahlungen?
+                                    @else
+                                        Wann wird der Betrag fällig?
+                                    @endif
+                                </p>
+                            </div>
                         </div>
 
                         {{-- Beschreibung --}}
