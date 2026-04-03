@@ -214,8 +214,23 @@ $statsWon = [
     <x-ui-kanban-container sortable="updateDealGroupOrder" sortable-group="updateDealOrder">
         {{-- Pipeline-Spalten (sortierbar) --}}
         @foreach($groups->filter(fn ($g) => !($g->isWonGroup ?? false)) as $column)
+            @php
+                $colDeals = $column->deals;
+                $colTotal = $colDeals->sum(fn($d) => (float) ($d->deal_value ?? 0));
+                $colOneTime = 0;
+                $colRecurring = 0;
+                foreach ($colDeals as $d) {
+                    if ($d->hasBillables()) {
+                        $colOneTime += $d->billables->filter(fn($b) => $b->isOneTime())->sum('total_value');
+                        $colRecurring += $d->billables->filter(fn($b) => $b->isRecurring())->sum('total_value');
+                    } else {
+                        $colOneTime += (float) ($d->deal_value ?? 0);
+                    }
+                }
+            @endphp
             <x-ui-kanban-column :title="($column->label ?? $column->name ?? 'Spalte')" :sortable-id="$column->id" :scrollable="true">
                 <x-slot name="headerActions">
+                    <span class="text-[10px] font-semibold text-[var(--ui-success)]">{{ number_format($colTotal, 0, ',', '.') }} €</span>
                     @can('update', $salesBoard)
                         <button
                             wire:click="createDeal('{{ $column->id }}')"
@@ -235,6 +250,20 @@ $statsWon = [
                     @endcan
                 </x-slot>
 
+                <x-slot name="footer">
+                    <div class="flex items-center justify-between text-[10px]">
+                        <span class="text-[var(--ui-muted)]">{{ $colDeals->count() }} Deal(s)</span>
+                        <div class="flex items-center gap-2">
+                            @if($colOneTime > 0)
+                                <span class="text-[var(--ui-secondary)] font-medium">{{ number_format($colOneTime, 0, ',', '.') }} € einm.</span>
+                            @endif
+                            @if($colRecurring > 0)
+                                <span class="text-[var(--ui-primary)] font-medium">{{ number_format($colRecurring, 0, ',', '.') }} € wdk.</span>
+                            @endif
+                        </div>
+                    </div>
+                </x-slot>
+
                 @foreach($column->deals as $deal)
                     @include('sales::livewire.deal-preview-card', ['deal' => $deal])
                 @endforeach
@@ -243,14 +272,26 @@ $statsWon = [
 
         {{-- Gewonnen-Spalte (nicht sortierbar) --}}
         @if($showWonColumn)
-            @php $wonGroup = $groups->firstWhere('isWonGroup', true); @endphp
+            @php
+                $wonGroup = $groups->firstWhere('isWonGroup', true);
+                $wonTotal = $wonGroup ? $wonGroup->deals->sum(fn($d) => (float) ($d->deal_value ?? 0)) : 0;
+            @endphp
             @if($wonGroup)
                 <x-ui-kanban-column title="GEWONNEN" :sortable-id="null" :scrollable="true" :muted="true">
                     <x-slot name="headerActions">
+                        <span class="text-[10px] font-semibold text-[var(--ui-success)]">{{ number_format($wonTotal, 0, ',', '.') }} €</span>
                         <span class="text-xs text-[var(--ui-muted)] font-medium">
                             {{ $wonGroup->deals->count() }}
                         </span>
                     </x-slot>
+
+                    <x-slot name="footer">
+                        <div class="flex items-center justify-between text-[10px]">
+                            <span class="text-[var(--ui-muted)]">{{ $wonGroup->deals->count() }} Deal(s)</span>
+                            <span class="text-[var(--ui-success)] font-medium">{{ number_format($wonTotal, 0, ',', '.') }} €</span>
+                        </div>
+                    </x-slot>
+
                     @foreach($wonGroup->deals as $deal)
                         @include('sales::livewire.deal-preview-card', ['deal' => $deal])
                     @endforeach

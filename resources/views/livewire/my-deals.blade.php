@@ -160,12 +160,27 @@
     {{-- Kanban-Board --}}
     <x-ui-kanban-container sortable="updateDealOrder" sortable-group="updateDealOrder">
         @foreach($groups as $group)
+            @php
+                $grpDeals = $group->tasks;
+                $grpTotal = $grpDeals->sum(fn($d) => (float) ($d->deal_value ?? 0));
+                $grpOneTime = 0;
+                $grpRecurring = 0;
+                foreach ($grpDeals as $d) {
+                    if ($d->hasBillables()) {
+                        $grpOneTime += $d->billables->filter(fn($b) => $b->isOneTime())->sum('total_value');
+                        $grpRecurring += $d->billables->filter(fn($b) => $b->isRecurring())->sum('total_value');
+                    } else {
+                        $grpOneTime += (float) ($d->deal_value ?? 0);
+                    }
+                }
+            @endphp
             <x-ui-kanban-column
                 :title="$group->label"
                 :sortable-id="$group->id ?? null"
                 :scrollable="true"
                 :muted="$group->isWonGroup ?? false">
                 <x-slot name="headerActions">
+                    <span class="text-[10px] font-semibold text-[var(--ui-success)]">{{ number_format($grpTotal, 0, ',', '.') }} €</span>
                     @if(!($group->isWonGroup ?? false))
                         <button
                             wire:click="createDeal('{{ $group->id ?? null }}')"
@@ -175,6 +190,20 @@
                             @svg('heroicon-o-plus-circle', 'w-4 h-4')
                         </button>
                     @endif
+                </x-slot>
+
+                <x-slot name="footer">
+                    <div class="flex items-center justify-between text-[10px]">
+                        <span class="text-[var(--ui-muted)]">{{ $grpDeals->count() }} Deal(s)</span>
+                        <div class="flex items-center gap-2">
+                            @if($grpOneTime > 0)
+                                <span class="text-[var(--ui-secondary)] font-medium">{{ number_format($grpOneTime, 0, ',', '.') }} € einm.</span>
+                            @endif
+                            @if($grpRecurring > 0)
+                                <span class="text-[var(--ui-primary)] font-medium">{{ number_format($grpRecurring, 0, ',', '.') }} € wdk.</span>
+                            @endif
+                        </div>
+                    </div>
                 </x-slot>
 
                 @foreach($group->tasks as $deal)
