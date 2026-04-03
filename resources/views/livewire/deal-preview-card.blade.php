@@ -32,23 +32,47 @@
 
     <!-- Deal-Wert und Wahrscheinlichkeit -->
     @if($deal->deal_value || $deal->probability_percent)
-        <div class="mb-3 flex items-start justify-between gap-2">
-            @if($deal->deal_value)
-                <span class="inline-flex items-start gap-1 text-xs font-semibold text-[var(--ui-success)]">
-                    @svg('heroicon-o-currency-euro', 'w-3 h-3 mt-0.5')
-                    <span>{{ number_format((float) $deal->deal_value, 0, ',', '.') }} €</span>
-                </span>
-            @else
-                <span></span>
-            @endif
-            @if($deal->probability_percent)
+        <div class="mb-3">
+            <div class="flex items-start justify-between gap-2">
+                @if($deal->deal_value)
+                    <span class="inline-flex items-start gap-1 text-xs font-semibold text-[var(--ui-success)]">
+                        @svg('heroicon-o-currency-euro', 'w-3 h-3 mt-0.5')
+                        <span>{{ number_format((float) $deal->deal_value, 0, ',', '.') }} €</span>
+                    </span>
+                @else
+                    <span></span>
+                @endif
+                @if($deal->probability_percent)
+                    @php
+                        $probVariant = $deal->probability_percent <= 30 ? 'danger' : ($deal->probability_percent <= 70 ? 'warning' : 'success');
+                    @endphp
+                    <span class="inline-flex items-center gap-1 text-xs text-[var(--ui-{{ $probVariant }})]">
+                        <span class="w-2 h-2 bg-[var(--ui-{{ $probVariant }})] rounded-full"></span>
+                        <span>{{ $deal->probability_percent }}%</span>
+                    </span>
+                @endif
+            </div>
+            @if($deal->hasBillables())
                 @php
-                    $probVariant = $deal->probability_percent <= 30 ? 'danger' : ($deal->probability_percent <= 70 ? 'warning' : 'success');
+                    $otBillables = $deal->billables->filter(fn($b) => $b->isOneTime());
+                    $rcBillables = $deal->billables->filter(fn($b) => $b->isRecurring());
+                    $otTotal = $otBillables->sum('total_value');
+                    $rcTotal = $rcBillables->sum('total_value');
                 @endphp
-                <span class="inline-flex items-center gap-1 text-xs text-[var(--ui-{{ $probVariant }})]">
-                    <span class="w-2 h-2 bg-[var(--ui-{{ $probVariant }})] rounded-full"></span>
-                    <span>{{ $deal->probability_percent }}%</span>
-                </span>
+                <div class="flex items-center gap-3 mt-1.5 text-[10px] text-[var(--ui-muted)]">
+                    @if($otTotal > 0)
+                        <span class="inline-flex items-center gap-1">
+                            @svg('heroicon-o-banknotes', 'w-2.5 h-2.5')
+                            {{ number_format((float) $otTotal, 0, ',', '.') }} € einm.
+                        </span>
+                    @endif
+                    @if($rcTotal > 0)
+                        <span class="inline-flex items-center gap-1 text-[var(--ui-primary)]">
+                            @svg('heroicon-o-arrow-path', 'w-2.5 h-2.5')
+                            {{ number_format((float) $rcTotal, 0, ',', '.') }} € wdk.
+                        </span>
+                    @endif
+                </div>
             @endif
         </div>
     @endif
