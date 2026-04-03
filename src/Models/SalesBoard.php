@@ -7,9 +7,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Symfony\Component\Uid\UuidV7;
 use Illuminate\Support\Facades\Log;
+use Platform\ActivityLog\Traits\LogsActivity;
 
 class SalesBoard extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'uuid',
         'name',
