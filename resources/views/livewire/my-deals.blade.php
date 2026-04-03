@@ -164,11 +164,18 @@
                 $grpDeals = $group->tasks;
                 $grpTotal = $grpDeals->sum(fn($d) => (float) ($d->deal_value ?? 0));
                 $grpOneTime = 0;
-                $grpRecurring = 0;
+                $grpArr = 0;
                 foreach ($grpDeals as $d) {
                     if ($d->hasBillables()) {
                         $grpOneTime += $d->billables->filter(fn($b) => $b->isOneTime())->sum('total_value');
-                        $grpRecurring += $d->billables->filter(fn($b) => $b->isRecurring())->sum('total_value');
+                        $grpArr += $d->billables->filter(fn($b) => $b->isRecurring())->sum(function($b) {
+                            return match($b->billing_interval) {
+                                'monthly' => (float) $b->amount * 12,
+                                'quarterly' => (float) $b->amount * 4,
+                                'yearly' => (float) $b->amount,
+                                default => (float) $b->amount * 12,
+                            };
+                        });
                     } else {
                         $grpOneTime += (float) ($d->deal_value ?? 0);
                     }
@@ -197,10 +204,16 @@
                         <span class="text-[var(--ui-muted)]">{{ $grpDeals->count() }} Deal(s)</span>
                         <div class="flex items-center gap-2">
                             @if($grpOneTime > 0)
-                                <span class="text-[var(--ui-secondary)] font-medium">{{ number_format($grpOneTime, 0, ',', '.') }} € einm.</span>
+                                <span class="inline-flex items-center gap-1 text-[var(--ui-secondary)] font-medium" title="Einmalig">
+                                    @svg('heroicon-o-banknotes', 'w-3 h-3')
+                                    {{ number_format($grpOneTime, 0, ',', '.') }} €
+                                </span>
                             @endif
-                            @if($grpRecurring > 0)
-                                <span class="text-[var(--ui-primary)] font-medium">{{ number_format($grpRecurring, 0, ',', '.') }} € wdk.</span>
+                            @if($grpArr > 0)
+                                <span class="inline-flex items-center gap-1 text-[var(--ui-primary)] font-medium" title="Wiederkehrend pro Jahr">
+                                    @svg('heroicon-o-arrow-path', 'w-3 h-3')
+                                    {{ number_format($grpArr, 0, ',', '.') }} €/J
+                                </span>
                             @endif
                         </div>
                     </div>

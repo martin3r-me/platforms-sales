@@ -9,7 +9,15 @@
         $otBillables = $deal->billables->filter(fn($b) => $b->isOneTime());
         $rcBillables = $deal->billables->filter(fn($b) => $b->isRecurring());
         $otTotal = $otBillables->sum('total_value');
-        $rcTotal = $rcBillables->sum('total_value');
+        // ARR: auf Jahreswert normalisieren
+        $rcArr = $rcBillables->sum(function($b) {
+            return match($b->billing_interval) {
+                'monthly' => (float) $b->amount * 12,
+                'quarterly' => (float) $b->amount * 4,
+                'yearly' => (float) $b->amount,
+                default => (float) $b->amount * 12,
+            };
+        });
     }
 @endphp
 <x-ui-kanban-card
@@ -86,18 +94,24 @@
     @endif
 
     <!-- Einmalig / Wiederkehrend Aufspaltung -->
-    @if($hasBillables && ($otTotal > 0 || $rcTotal > 0))
+    @if($hasBillables && ($otTotal > 0 || $rcArr > 0))
         <div class="grid grid-cols-2 gap-1.5 mb-2">
             @if($otTotal > 0)
                 <div class="px-2 py-1.5 rounded bg-[var(--ui-muted-5)] border border-[var(--ui-border)]/30">
-                    <div class="text-[10px] text-[var(--ui-muted)] leading-tight">Einmalig</div>
+                    <div class="flex items-center gap-1 text-[10px] text-[var(--ui-muted)] leading-tight">
+                        @svg('heroicon-o-banknotes', 'w-2.5 h-2.5')
+                        <span>Einmalig</span>
+                    </div>
                     <div class="text-xs font-bold text-[var(--ui-secondary)]">{{ number_format((float) $otTotal, 0, ',', '.') }} €</div>
                 </div>
             @endif
-            @if($rcTotal > 0)
+            @if($rcArr > 0)
                 <div class="px-2 py-1.5 rounded bg-[var(--ui-primary-5)] border border-[var(--ui-primary)]/20">
-                    <div class="text-[10px] text-[var(--ui-primary)] leading-tight">Wiederkehrend</div>
-                    <div class="text-xs font-bold text-[var(--ui-primary)]">{{ number_format((float) $rcTotal, 0, ',', '.') }} €</div>
+                    <div class="flex items-center gap-1 text-[10px] text-[var(--ui-primary)] leading-tight">
+                        @svg('heroicon-o-arrow-path', 'w-2.5 h-2.5')
+                        <span>/Jahr</span>
+                    </div>
+                    <div class="text-xs font-bold text-[var(--ui-primary)]">{{ number_format((float) $rcArr, 0, ',', '.') }} €</div>
                 </div>
             @endif
         </div>

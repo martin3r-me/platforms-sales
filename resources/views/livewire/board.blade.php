@@ -218,11 +218,18 @@ $statsWon = [
                 $colDeals = $column->deals;
                 $colTotal = $colDeals->sum(fn($d) => (float) ($d->deal_value ?? 0));
                 $colOneTime = 0;
-                $colRecurring = 0;
+                $colArr = 0;
                 foreach ($colDeals as $d) {
                     if ($d->hasBillables()) {
                         $colOneTime += $d->billables->filter(fn($b) => $b->isOneTime())->sum('total_value');
-                        $colRecurring += $d->billables->filter(fn($b) => $b->isRecurring())->sum('total_value');
+                        $colArr += $d->billables->filter(fn($b) => $b->isRecurring())->sum(function($b) {
+                            return match($b->billing_interval) {
+                                'monthly' => (float) $b->amount * 12,
+                                'quarterly' => (float) $b->amount * 4,
+                                'yearly' => (float) $b->amount,
+                                default => (float) $b->amount * 12,
+                            };
+                        });
                     } else {
                         $colOneTime += (float) ($d->deal_value ?? 0);
                     }
@@ -253,12 +260,18 @@ $statsWon = [
                 <x-slot name="footer">
                     <div class="flex items-center justify-between text-[10px]">
                         <span class="text-[var(--ui-muted)]">{{ $colDeals->count() }} Deal(s)</span>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-3">
                             @if($colOneTime > 0)
-                                <span class="text-[var(--ui-secondary)] font-medium">{{ number_format($colOneTime, 0, ',', '.') }} € einm.</span>
+                                <span class="inline-flex items-center gap-1 text-[var(--ui-secondary)] font-medium" title="Einmalig">
+                                    @svg('heroicon-o-banknotes', 'w-3 h-3')
+                                    {{ number_format($colOneTime, 0, ',', '.') }} €
+                                </span>
                             @endif
-                            @if($colRecurring > 0)
-                                <span class="text-[var(--ui-primary)] font-medium">{{ number_format($colRecurring, 0, ',', '.') }} € wdk.</span>
+                            @if($colArr > 0)
+                                <span class="inline-flex items-center gap-1 text-[var(--ui-primary)] font-medium" title="Wiederkehrend pro Jahr">
+                                    @svg('heroicon-o-arrow-path', 'w-3 h-3')
+                                    {{ number_format($colArr, 0, ',', '.') }} €/J
+                                </span>
                             @endif
                         </div>
                     </div>
@@ -275,6 +288,25 @@ $statsWon = [
             @php
                 $wonGroup = $groups->firstWhere('isWonGroup', true);
                 $wonTotal = $wonGroup ? $wonGroup->deals->sum(fn($d) => (float) ($d->deal_value ?? 0)) : 0;
+                $wonOneTime = 0;
+                $wonArr = 0;
+                if ($wonGroup) {
+                    foreach ($wonGroup->deals as $d) {
+                        if ($d->hasBillables()) {
+                            $wonOneTime += $d->billables->filter(fn($b) => $b->isOneTime())->sum('total_value');
+                            $wonArr += $d->billables->filter(fn($b) => $b->isRecurring())->sum(function($b) {
+                                return match($b->billing_interval) {
+                                    'monthly' => (float) $b->amount * 12,
+                                    'quarterly' => (float) $b->amount * 4,
+                                    'yearly' => (float) $b->amount,
+                                    default => (float) $b->amount * 12,
+                                };
+                            });
+                        } else {
+                            $wonOneTime += (float) ($d->deal_value ?? 0);
+                        }
+                    }
+                }
             @endphp
             @if($wonGroup)
                 <x-ui-kanban-column title="GEWONNEN" :sortable-id="null" :scrollable="true" :muted="true">
@@ -288,7 +320,20 @@ $statsWon = [
                     <x-slot name="footer">
                         <div class="flex items-center justify-between text-[10px]">
                             <span class="text-[var(--ui-muted)]">{{ $wonGroup->deals->count() }} Deal(s)</span>
-                            <span class="text-[var(--ui-success)] font-medium">{{ number_format($wonTotal, 0, ',', '.') }} €</span>
+                            <div class="flex items-center gap-3">
+                                @if($wonOneTime > 0)
+                                    <span class="inline-flex items-center gap-1 text-[var(--ui-success)] font-medium" title="Einmalig">
+                                        @svg('heroicon-o-banknotes', 'w-3 h-3')
+                                        {{ number_format($wonOneTime, 0, ',', '.') }} €
+                                    </span>
+                                @endif
+                                @if($wonArr > 0)
+                                    <span class="inline-flex items-center gap-1 text-[var(--ui-primary)] font-medium" title="Wiederkehrend pro Jahr">
+                                        @svg('heroicon-o-arrow-path', 'w-3 h-3')
+                                        {{ number_format($wonArr, 0, ',', '.') }} €/J
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </x-slot>
 
