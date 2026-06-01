@@ -1,6 +1,7 @@
 @php
-$openDeals = $groups->filter(fn($g) => !($g->isWonGroup ?? false))->flatMap(fn($g) => $g->deals);
+$openDeals = $groups->filter(fn($g) => !($g->isWonGroup ?? false) && !($g->isLostGroup ?? false))->flatMap(fn($g) => $g->deals);
 $wonDeals = $groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->deals);
+$lostDeals = $groups->filter(fn($g) => $g->isLostGroup ?? false)->flatMap(fn($g) => $g->deals);
 $allDeals = $groups->flatMap(fn($g) => $g->deals);
 
 $totalDealValue = $allDeals->reduce(fn($carry, $d) => $carry + (float) ($d->deal_value ?? 0), 0);
@@ -49,6 +50,21 @@ $statsWon = [
         'count' => number_format($wonDeals->sum(fn($d) => (float) ($d->deal_value ?? 0)), 0, ',', '.') . ' €',
         'icon' => 'currency-euro',
         'variant' => 'success'
+    ],
+];
+
+$statsLost = [
+    [
+        'title' => 'Verloren',
+        'count' => $lostDeals->count(),
+        'icon' => 'x-circle',
+        'variant' => 'danger'
+    ],
+    [
+        'title' => 'Deal Wert',
+        'count' => number_format($lostDeals->sum(fn($d) => (float) ($d->deal_value ?? 0)), 0, ',', '.') . ' €',
+        'icon' => 'currency-euro',
+        'variant' => 'danger'
     ],
 ];
 @endphp
@@ -145,6 +161,43 @@ $statsWon = [
                     </div>
                 </div>
 
+                <!-- Board-Statistiken: Verloren -->
+                <div>
+                    <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Verloren</h3>
+                    <button
+                        wire:click="toggleShowLostColumn"
+                        class="w-full flex items-center justify-between py-2.5 px-4 mb-3 bg-[var(--ui-danger-5)] hover:bg-[var(--ui-danger-10)] border border-[var(--ui-danger)]/30 transition-colors group"
+                    >
+                        <span class="inline-flex items-center gap-2 text-sm font-medium text-[var(--ui-danger)]">
+                            @if($showLostColumn)
+                                @svg('heroicon-o-eye-slash', 'w-4 h-4')
+                                <span>Verlorene ausblenden</span>
+                            @else
+                                @svg('heroicon-o-eye', 'w-4 h-4')
+                                <span>Verlorene anzeigen</span>
+                            @endif
+                        </span>
+                        @if($lostDeals->count() > 0)
+                            <span class="text-xs font-semibold text-[var(--ui-danger)] bg-[var(--ui-danger)]/20 px-2 py-0.5 rounded">
+                                {{ $lostDeals->count() }}
+                            </span>
+                        @endif
+                    </button>
+                    <div class="space-y-2">
+                        @foreach($statsLost as $stat)
+                            <div class="flex items-center justify-between py-2 px-3 bg-[var(--ui-muted-5)] border border-[var(--ui-border)]/40">
+                                <div class="flex items-center gap-2">
+                                    @svg('heroicon-o-' . $stat['icon'], 'w-4 h-4 text-[var(--ui-' . $stat['variant'] . ')]')
+                                    <span class="text-sm text-[var(--ui-secondary)]">{{ $stat['title'] }}</span>
+                                </div>
+                                <span class="text-sm font-semibold text-[var(--ui-{{ $stat['variant'] }})]">
+                                    {{ $stat['count'] }}
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
                 <!-- Board-Details -->
                 <div>
                     <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Details</h3>
@@ -213,7 +266,7 @@ $statsWon = [
     {{-- Kanban Board --}}
     <x-ui-kanban-container sortable="updateDealGroupOrder" sortable-group="updateDealOrder">
         {{-- Pipeline-Spalten (sortierbar) --}}
-        @foreach($groups->filter(fn ($g) => !($g->isWonGroup ?? false)) as $column)
+        @foreach($groups->filter(fn ($g) => !($g->isWonGroup ?? false) && !($g->isLostGroup ?? false)) as $column)
             @php
                 $colDeals = $column->deals;
                 $colTotal = $colDeals->sum(fn($d) => (float) ($d->deal_value ?? 0));
@@ -338,6 +391,33 @@ $statsWon = [
                     </x-slot>
 
                     @foreach($wonGroup->deals as $deal)
+                        @include('sales::livewire.deal-preview-card', ['deal' => $deal])
+                    @endforeach
+                </x-ui-kanban-column>
+            @endif
+        @endif
+        {{-- Verloren-Spalte (nicht sortierbar) --}}
+        @if($showLostColumn)
+            @php
+                $lostGroup = $groups->firstWhere('isLostGroup', true);
+                $lostTotal = $lostGroup ? $lostGroup->deals->sum(fn($d) => (float) ($d->deal_value ?? 0)) : 0;
+            @endphp
+            @if($lostGroup)
+                <x-ui-kanban-column title="VERLOREN" :sortable-id="null" :scrollable="true" :muted="true">
+                    <x-slot name="headerActions">
+                        <span class="text-[10px] font-semibold text-[var(--ui-danger)]">{{ number_format($lostTotal, 0, ',', '.') }} €</span>
+                        <span class="text-xs text-[var(--ui-muted)] font-medium">
+                            {{ $lostGroup->deals->count() }}
+                        </span>
+                    </x-slot>
+
+                    <x-slot name="footer">
+                        <div class="flex items-center justify-between text-[10px]">
+                            <span class="text-[var(--ui-muted)]">{{ $lostGroup->deals->count() }} Deal(s)</span>
+                        </div>
+                    </x-slot>
+
+                    @foreach($lostGroup->deals as $deal)
                         @include('sales::livewire.deal-preview-card', ['deal' => $deal])
                     @endforeach
                 </x-ui-kanban-column>

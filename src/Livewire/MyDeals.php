@@ -37,7 +37,7 @@ class MyDeals extends Component
         // === 1. INBOX (Deals ohne Board) ===
         $inboxDeals = SalesDeal::query()
             ->whereNull('sales_board_id')
-            ->where('is_done', false)
+            ->open()
             ->where('user_in_charge_id', $userId)
             ->orderBy('order')
             ->get();
@@ -58,7 +58,7 @@ class MyDeals extends Component
         // === 2. BOARD-DEALS ===
         $boardDeals = SalesDeal::query()
             ->whereNotNull('sales_board_id')
-            ->where('is_done', false)
+            ->open()
             ->where('user_in_charge_id', $userId)
             ->with(['salesBoard', 'salesBoardSlot'])
             ->orderBy('order')
@@ -84,7 +84,7 @@ class MyDeals extends Component
 
         // === 3. GEWONNENE DEALS ===
         $wonDeals = SalesDeal::query()
-            ->where('is_done', true)
+            ->won()
             ->where('user_in_charge_id', $userId)
             ->orderByDesc('done_at')
             ->get();

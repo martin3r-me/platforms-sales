@@ -46,6 +46,14 @@ class MoveDealTool implements ToolContract, ToolMetadataContract
                     'type' => 'boolean',
                     'description' => 'Optional: true = Deal als gewonnen markieren und aus dem Slot entfernen.',
                 ],
+                'mark_as_lost' => [
+                    'type' => 'boolean',
+                    'description' => 'Optional: true = Deal als verloren markieren.',
+                ],
+                'lost_reason' => [
+                    'type' => 'string',
+                    'description' => 'Optional: Grund für den Verlust (nur bei mark_as_lost=true).',
+                ],
             ],
             'required' => ['deal_id'],
         ]);
@@ -72,8 +80,20 @@ class MoveDealTool implements ToolContract, ToolMetadataContract
             if (!empty($arguments['mark_as_won'])) {
                 $deal->is_done = true;
                 $deal->done_at = now();
+                $deal->lost_at = null;
+                $deal->lost_reason = null;
                 $deal->sales_board_slot_id = null;
                 $actions[] = 'als gewonnen markiert';
+            }
+
+            // Als verloren markieren
+            if (!empty($arguments['mark_as_lost'])) {
+                $deal->lost_at = now();
+                $deal->lost_reason = $arguments['lost_reason'] ?? null;
+                $deal->is_done = false;
+                $deal->done_at = null;
+                $deal->sales_board_slot_id = null;
+                $actions[] = 'als verloren markiert';
             }
 
             // Board wechseln
@@ -106,6 +126,8 @@ class MoveDealTool implements ToolContract, ToolMetadataContract
                 $deal->sales_board_slot_id = $targetSlot->id;
                 $deal->is_done = false;
                 $deal->done_at = null;
+                $deal->lost_at = null;
+                $deal->lost_reason = null;
                 $actions[] = "in Slot '{$targetSlot->name}' verschoben";
             }
 

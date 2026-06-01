@@ -13,6 +13,7 @@ class Board extends Component
 {
     public SalesBoard $salesBoard;
     public bool $showWonColumn = false;
+    public bool $showLostColumn = false;
 
     public function mount(SalesBoard $salesBoard)
     {
@@ -76,19 +77,34 @@ class Board extends Component
                 $isDone = false;
 
                 if ($slotId === 'won') {
-                    $isDone = true;
-                } else {
-                    $slot = $this->salesBoard->slots()->find($slotId);
-                    if ($slot) {
-                        $newSlotId = $slot->id;
-                    }
+                    $deal->sales_board_slot_id = null;
+                    $deal->slot_order = $item['order'];
+                    $deal->order = $item['order'];
+                    $deal->markAsWon();
+                    continue;
+                }
+
+                if ($slotId === 'lost') {
+                    $deal->sales_board_slot_id = null;
+                    $deal->slot_order = $item['order'];
+                    $deal->order = $item['order'];
+                    $deal->markAsLost();
+                    continue;
+                }
+
+                // Regular pipeline slot — reopen if coming from won/lost
+                $slot = $this->salesBoard->slots()->find($slotId);
+                if ($slot) {
+                    $newSlotId = $slot->id;
                 }
 
                 $deal->sales_board_slot_id = $newSlotId;
                 $deal->slot_order = $item['order'];
                 $deal->order = $item['order'];
-                $deal->is_done = $isDone;
-                $deal->done_at = $isDone ? now() : null;
+                $deal->is_done = false;
+                $deal->done_at = null;
+                $deal->lost_at = null;
+                $deal->lost_reason = null;
                 $deal->save();
             }
         }
@@ -108,12 +124,14 @@ class Board extends Component
         }
     }
 
-    /**
-     * Toggle für die Anzeige der Gewonnen-Spalte
-     */
     public function toggleShowWonColumn()
     {
         $this->showWonColumn = !$this->showWonColumn;
+    }
+
+    public function toggleShowLostColumn()
+    {
+        $this->showLostColumn = !$this->showLostColumn;
     }
 
     public function render()
@@ -121,7 +139,7 @@ class Board extends Component
         // === 1. PIPELINE-SPALTEN ===
         $slots = $this->salesBoard->slots()
             ->with(['deals' => function ($q) {
-                $q->where('is_done', false)
+                $q->open()
                   ->orderBy('slot_order')
                   ->orderBy('order');
             }])
@@ -132,13 +150,14 @@ class Board extends Component
                     'id' => $slot->id,
                     'label' => $slot->name,
                     'isWonGroup' => false,
+                    'isLostGroup' => false,
                     'deals' => $slot->deals,
                 ];
             });
 
         // === 2. GEWONNENE DEALS ===
         $wonDeals = $this->salesBoard->deals()
-            ->where('is_done', true)
+            ->won()
             ->orderByDesc('done_at')
             ->get();
 
@@ -146,11 +165,26 @@ class Board extends Component
             'id' => 'won',
             'label' => 'GEWONNEN',
             'isWonGroup' => true,
+            'isLostGroup' => false,
             'deals' => $wonDeals,
         ];
 
+        // === 3. VERLORENE DEALS ===
+        $lostDeals = $this->salesBoard->deals()
+            ->lost()
+            ->orderByDesc('lost_at')
+            ->get();
+
+        $lostGroup = (object) [
+            'id' => 'lost',
+            'label' => 'VERLOREN',
+            'isWonGroup' => false,
+            'isLostGroup' => true,
+            'deals' => $lostDeals,
+        ];
+
         // === GRUPPEN ZUSAMMENSTELLEN ===
-        $groups = $slots->push($wonGroup);
+        $groups = $slots->push($wonGroup)->push($lostGroup);
 
         return view('sales::livewire.board', [
             'groups' => $groups,

@@ -55,6 +55,8 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
         'sales_priority_id',
         'sales_deal_source_id',
         'sales_deal_type_id',
+        'lost_at',
+        'lost_reason',
     ];
 
     protected $casts = [
@@ -70,6 +72,7 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
         'is_done' => 'boolean',
         'is_hot' => 'boolean',
         'is_starred' => 'boolean',
+        'lost_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -90,6 +93,81 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
                 $model->team_id = Auth::user()->currentTeam->id;
             }
         });
+    }
+
+    // --- Status Helpers ---
+
+    public function isWon(): bool
+    {
+        return (bool) $this->is_done;
+    }
+
+    public function isLost(): bool
+    {
+        return $this->lost_at !== null;
+    }
+
+    public function isOpen(): bool
+    {
+        return !$this->isWon() && !$this->isLost();
+    }
+
+    // --- Status Actions ---
+
+    public function markAsWon(): self
+    {
+        $this->is_done = true;
+        $this->done_at = now();
+        $this->lost_at = null;
+        $this->lost_reason = null;
+        $this->save();
+
+        return $this;
+    }
+
+    public function markAsLost(?string $reason = null): self
+    {
+        $this->lost_at = now();
+        $this->lost_reason = $reason;
+        $this->is_done = false;
+        $this->done_at = null;
+        $this->sales_board_slot_id = null;
+        $this->save();
+
+        return $this;
+    }
+
+    public function reopenDeal(): self
+    {
+        $this->is_done = false;
+        $this->done_at = null;
+        $this->lost_at = null;
+        $this->lost_reason = null;
+        $this->save();
+
+        return $this;
+    }
+
+    // --- Query Scopes ---
+
+    public function scopeOpen($query)
+    {
+        return $query->where('is_done', false)->whereNull('lost_at');
+    }
+
+    public function scopeWon($query)
+    {
+        return $query->where('is_done', true);
+    }
+
+    public function scopeLost($query)
+    {
+        return $query->whereNotNull('lost_at');
+    }
+
+    public function scopeForTeam($query, int $teamId)
+    {
+        return $query->where('team_id', $teamId);
     }
 
     public function setUserInChargeIdAttribute($value)

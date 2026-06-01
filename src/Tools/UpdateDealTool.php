@@ -200,6 +200,10 @@ class UpdateDealTool implements ToolContract, ToolMetadataContract
             if (array_key_exists('is_done', $arguments)) {
                 $deal->is_done = (bool) $arguments['is_done'];
                 $deal->done_at = $deal->is_done ? now() : null;
+                if ($deal->is_done) {
+                    $deal->lost_at = null;
+                    $deal->lost_reason = null;
+                }
                 $updated[] = 'is_done';
             }
 

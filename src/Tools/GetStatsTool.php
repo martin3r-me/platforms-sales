@@ -71,8 +71,9 @@ class GetStatsTool implements ToolContract, ToolMetadataContract
             }
 
             // Offene Deals
-            $openDeals = (clone $baseQuery)->where('is_done', false)->get();
-            $wonDeals = (clone $baseQuery)->where('is_done', true)->get();
+            $openDeals = (clone $baseQuery)->open()->get();
+            $wonDeals = (clone $baseQuery)->won()->get();
+            $lostDeals = (clone $baseQuery)->lost()->get();
 
             $openCount = $openDeals->count();
             $wonCount = $wonDeals->count();
@@ -106,15 +107,18 @@ class GetStatsTool implements ToolContract, ToolMetadataContract
             }
 
             $createdInPeriod = (clone $periodQuery)->where('created_at', '>=', $periodStart)->count();
-            $wonInPeriod = (clone $periodQuery)->where('is_done', true)->where('done_at', '>=', $periodStart)->count();
-            $wonValueInPeriod = (float) (clone $periodQuery)->where('is_done', true)->where('done_at', '>=', $periodStart)->sum('deal_value');
+            $wonInPeriod = (clone $periodQuery)->won()->where('done_at', '>=', $periodStart)->count();
+            $wonValueInPeriod = (float) (clone $periodQuery)->won()->where('done_at', '>=', $periodStart)->sum('deal_value');
+            $lostInPeriod = (clone $periodQuery)->lost()->where('lost_at', '>=', $periodStart)->count();
+            $lostValueInPeriod = (float) (clone $periodQuery)->lost()->where('lost_at', '>=', $periodStart)->sum('deal_value');
 
-            $winRate = $createdInPeriod > 0 ? round($wonInPeriod / $createdInPeriod * 100, 1) : null;
+            $decidedInPeriod = $wonInPeriod + $lostInPeriod;
+            $winRate = $decidedInPeriod > 0 ? round($wonInPeriod / $decidedInPeriod * 100, 1) : null;
 
             // Board-Übersicht
             $boards = SalesBoard::where('team_id', $teamId)->orderBy('name')->get()->map(function ($board) {
-                $openCount = $board->deals()->where('is_done', false)->count();
-                $openValue = (float) $board->deals()->where('is_done', false)->sum('deal_value');
+                $openCount = $board->deals()->open()->count();
+                $openValue = (float) $board->deals()->open()->sum('deal_value');
                 return [
                     'id' => $board->id,
                     'name' => $board->name,
@@ -123,6 +127,9 @@ class GetStatsTool implements ToolContract, ToolMetadataContract
                 ];
             });
 
+            $lostCount = $lostDeals->count();
+            $lostValue = (float) $lostDeals->sum('deal_value');
+
             return ToolResult::success([
                 'pipeline' => [
                     'open_deals' => $openCount,
@@ -130,6 +137,8 @@ class GetStatsTool implements ToolContract, ToolMetadataContract
                     'open_expected_value' => $openExpectedValue,
                     'won_deals' => $wonCount,
                     'won_value' => $wonValue,
+                    'lost_deals' => $lostCount,
+                    'lost_value' => $lostValue,
                     'overdue_deals' => $overdueCount,
                     'hot_deals' => $hotCount,
                 ],
@@ -139,6 +148,8 @@ class GetStatsTool implements ToolContract, ToolMetadataContract
                     'deals_created' => $createdInPeriod,
                     'deals_won' => $wonInPeriod,
                     'won_value' => $wonValueInPeriod,
+                    'deals_lost' => $lostInPeriod,
+                    'lost_value' => $lostValueInPeriod,
                     'win_rate_percent' => $winRate,
                 ],
                 'boards' => $boards->toArray(),
