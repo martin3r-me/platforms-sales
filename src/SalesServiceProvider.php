@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Platform\Core\PlatformCore;
 use Platform\Core\Routing\ModuleRouter;
 
@@ -36,6 +37,12 @@ class SalesServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Morph-Map-Aliase für Sales-Modelle
+        Relation::morphMap([
+            'sales_deal' => \Platform\Sales\Models\SalesDeal::class,
+            'sales_board' => \Platform\Sales\Models\SalesBoard::class,
+        ]);
+
         // Modul-Registrierung nur, wenn Config & Tabelle vorhanden
         if (
             Schema::hasTable('modules')
@@ -96,6 +103,14 @@ class SalesServiceProvider extends ServiceProvider
                 $registry->register(new SalesPipelineSignalProvider());
             });
         }
+
+        // Register EntityLinkProvider for Organization module (snapshots, entity links, metrics)
+        try {
+            resolve(\Platform\Organization\Services\EntityLinkRegistry::class)
+                ->register(new \Platform\Sales\Organization\SalesEntityLinkProvider());
+        } catch (\Throwable) {
+            // Organization module may not be loaded
+        }
     }
 
     /**
@@ -127,6 +142,8 @@ class SalesServiceProvider extends ServiceProvider
             // Billable-Tools
             $registry->register(new \Platform\Sales\Tools\ListDealBillablesTool());
             $registry->register(new \Platform\Sales\Tools\CreateDealBillableTool());
+            $registry->register(new \Platform\Sales\Tools\UpdateDealBillableTool());
+            $registry->register(new \Platform\Sales\Tools\DeleteDealBillableTool());
 
             // Stats & Lookups
             $registry->register(new \Platform\Sales\Tools\GetStatsTool());
