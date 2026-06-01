@@ -198,10 +198,14 @@ class SalesPipelineSignalProvider implements CashflowSignalProviderInterface
 
     protected function resolveCounterparty(SalesDeal $deal): ?string
     {
-        $companies = $deal->companies();
+        try {
+            $companies = $deal->companies();
 
-        if ($companies->isNotEmpty()) {
-            return $companies->first()->name ?? null;
+            if ($companies->isNotEmpty()) {
+                return $companies->first()->name ?? null;
+            }
+        } catch (\Throwable) {
+            // CLI context: no authenticated user for team-scoped company links
         }
 
         return $deal->title;
