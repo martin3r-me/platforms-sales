@@ -17,6 +17,7 @@ use Platform\Sales\Models\SalesBoardTemplate;
 use Platform\Sales\Policies\SalesDealPolicy;
 use Platform\Sales\Policies\SalesBoardPolicy;
 use Platform\Sales\Policies\SalesBoardTemplatePolicy;
+use Platform\Sales\Services\SalesPipelineSignalProvider;
 
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -86,6 +87,14 @@ class SalesServiceProvider extends ServiceProvider
 
         if (class_exists(SalesBoardTemplate::class) && class_exists(SalesBoardTemplatePolicy::class)) {
             Gate::policy(SalesBoardTemplate::class, SalesBoardTemplatePolicy::class);
+        }
+
+        // Register CashflowSignal provider for Drip liquidity planning
+        if (class_exists(\Platform\Drip\Services\CashflowSignalRegistry::class)) {
+            $this->app->booted(function () {
+                $registry = $this->app->make(\Platform\Drip\Services\CashflowSignalRegistry::class);
+                $registry->register(new SalesPipelineSignalProvider());
+            });
         }
     }
 
