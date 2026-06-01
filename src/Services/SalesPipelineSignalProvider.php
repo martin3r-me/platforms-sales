@@ -77,15 +77,18 @@ class SalesPipelineSignalProvider implements CashflowSignalProviderInterface
                     $billableConfidence = ($billable->probability_percent ?? $deal->probability_percent ?? 0) / 100;
                     $billableConfidenceLevel = $this->mapConfidenceLevel($billable->probability_percent ?? $deal->probability_percent ?? 0);
 
+                    // Billable start_date takes priority over deal close_date
+                    $billableDate = $billable->start_date ?? $baseDate;
+
                     if ($billable->isOneTime()) {
-                        if ($baseDate->between($from, $to)) {
+                        if ($billableDate->between($from, $to)) {
                             $signals->push(new CashflowSignalDto(
                                 providerKey: $this->key(),
                                 externalId: "deal:{$deal->uuid}:billable:{$billable->uuid}",
                                 label: $deal->title . ' – ' . $billable->name,
                                 direction: 'credit',
                                 amount: (float) $billable->amount,
-                                expectedDate: $baseDate->copy(),
+                                expectedDate: $billableDate->copy(),
                                 confidence: $billableConfidence,
                                 confidenceLevel: $billableConfidenceLevel,
                                 counterparty: $counterparty,
@@ -98,7 +101,7 @@ class SalesPipelineSignalProvider implements CashflowSignalProviderInterface
                         }
                     } elseif ($billable->isRecurring()) {
                         $this->generateRecurringSignals(
-                            $signals, $deal, $billable, $baseDate, $from, $to,
+                            $signals, $deal, $billable, $billableDate, $from, $to,
                             $billableConfidence, $billableConfidenceLevel, $counterparty, $url
                         );
                     }
@@ -144,14 +147,17 @@ class SalesPipelineSignalProvider implements CashflowSignalProviderInterface
             default => 1, // monthly
         };
 
-        // Start from close_date (or fallback), generate signals at each interval
         $cursor = $baseDate->copy();
         $periodIndex = 0;
         $maxPeriods = $billable->duration_months
             ? (int) ceil($billable->duration_months / $intervalMonths)
             : null;
 
-        while ($cursor->lte($to)) {
+        // end_date caps the recurring series
+        $endDate = $billable->end_date ? $billable->end_date->copy() : $to;
+        $effectiveEnd = $endDate->lt($to) ? $endDate : $to;
+
+        while ($cursor->lte($effectiveEnd)) {
             if ($maxPeriods !== null && $periodIndex >= $maxPeriods) {
                 break;
             }
