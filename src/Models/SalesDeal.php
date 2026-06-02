@@ -72,6 +72,7 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
         'is_done' => 'boolean',
         'is_hot' => 'boolean',
         'is_starred' => 'boolean',
+        'done_at' => 'datetime',
         'lost_at' => 'datetime',
     ];
 
