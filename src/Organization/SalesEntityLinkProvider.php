@@ -361,6 +361,8 @@ class SalesEntityLinkProvider implements EntityLinkProvider, HasMetricDefinition
                 'dimension' => 'potential',
                 'type' => 'stock',
                 'aggregation_mode' => 'rolled_up',
+                'basis' => 'stichtag',
+                'is_dimension_primary' => true,
             ],
             'sales_won_value' => [
                 'label' => 'Gewonnener Umsatz',
