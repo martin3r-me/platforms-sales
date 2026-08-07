@@ -1,21 +1,19 @@
-<x-ui-modal size="md" model="modalShow">
+<x-nx-modal size="md" model="modalShow">
     <x-slot name="header">
         <div class="flex items-center gap-3">
-            <div class="flex-shrink-0">
-                <div class="w-8 h-8 bg-[var(--ui-success-5)] rounded-lg flex items-center justify-center">
-                    @svg('heroicon-o-bars-4', 'w-4 h-4 text-[var(--ui-success)]')
-                </div>
+            <div class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--nx-accent)]/10 flex-shrink-0">
+                @svg('heroicon-o-bars-4', 'w-5 h-5 text-[var(--nx-accent)]')
             </div>
-            <div>
-                <h3 class="text-lg font-semibold text-[var(--ui-secondary)]">Spalten-Einstellungen</h3>
-                <p class="text-sm text-[var(--ui-muted)]">Spalte bearbeiten und verwalten</p>
+            <div class="min-w-0">
+                <h3 class="text-base font-semibold text-[var(--nx-text)] m-0 leading-tight">Spalten-Einstellungen</h3>
+                <p class="text-[12px] text-[var(--nx-muted)] m-0 mt-0.5">Spalte bearbeiten und verwalten</p>
             </div>
         </div>
     </x-slot>
 
-    <div class="space-y-6">
+    <div class="space-y-4">
         <!-- Slot-Name -->
-        <x-ui-input-text
+        <x-nx-input-text
             name="slot.name"
             label="Name"
             wire:model="slot.name"
@@ -24,7 +22,7 @@
         />
 
         <!-- Slot-Beschreibung -->
-        <x-ui-input-textarea
+        <x-nx-input-textarea
             name="slot.description"
             label="Beschreibung"
             wire:model="slot.description"
@@ -34,7 +32,7 @@
         />
 
         <!-- Slot-Farbe -->
-        <x-ui-input-select
+        <x-nx-input-select
             name="slot.color"
             label="Farbe"
             :options="collect([
@@ -55,18 +53,18 @@
     </div>
 
     <x-slot name="footer">
-        <div class="flex justify-between items-center">
-            <x-ui-button variant="danger" wire:click="delete">
+        <div class="flex justify-between items-center w-full">
+            <x-nx-button variant="danger" wire:click="delete">
                 Löschen
-            </x-ui-button>
-            <div class="flex gap-3">
-                <x-ui-button variant="secondary" wire:click="closeModal">
+            </x-nx-button>
+            <div class="flex gap-2">
+                <x-nx-button variant="secondary" wire:click="closeModal">
                     Abbrechen
-                </x-ui-button>
-                <x-ui-button variant="primary" wire:click="save">
+                </x-nx-button>
+                <x-nx-button variant="primary" wire:click="save">
                     Speichern
-                </x-ui-button>
+                </x-nx-button>
             </div>
         </div>
     </x-slot>
-</x-ui-modal>
+</x-nx-modal>

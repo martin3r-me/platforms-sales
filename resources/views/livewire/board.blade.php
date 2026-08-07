@@ -22,7 +22,7 @@ $statsOpen = [
         'title' => 'Deal Wert',
         'count' => number_format($openDeals->sum(fn($d) => (float) ($d->deal_value ?? 0)), 0, ',', '.') . ' €',
         'icon' => 'currency-euro',
-        'variant' => 'primary'
+        'variant' => 'info'
     ],
     [
         'title' => 'Überfällig',
@@ -67,6 +67,11 @@ $statsLost = [
         'variant' => 'danger'
     ],
 ];
+
+// Tone-Mapping für Pipeline-Spalten (mittlere Spalten)
+$tonePalette = ['indigo', 'amber', 'teal', 'violet', 'sky', 'pink', 'rose', 'emerald'];
+$pipelineColumns = $groups->filter(fn ($g) => !($g->isWonGroup ?? false) && !($g->isLostGroup ?? false))->values();
+$columnTones = $pipelineColumns->mapWithKeys(fn ($col, $i) => [$col->id => $tonePalette[$i % count($tonePalette)]]);
 @endphp
 
 <x-ui-page>
@@ -81,57 +86,55 @@ $statsLost = [
             ['label' => $salesBoard->name],
         ]">
             @can('update', $salesBoard)
-                <x-ui-button variant="primary" size="sm" wire:click="createDeal()">
+                <x-nx-button variant="primary" wire:click="createDeal()">
                     <span class="flex items-center gap-2">
                         @svg('heroicon-o-plus', 'w-4 h-4')
                         <span>Deal</span>
                     </span>
-                </x-ui-button>
-                <x-ui-button variant="secondary" size="sm" wire:click="createBoardSlot">
-                    <span class="flex items-center gap-2">
+                </x-nx-button>
+                <x-nx-dropdown label="Aktionen">
+                    <x-nx-dropdown-item wire:click="createBoardSlot">
                         @svg('heroicon-o-square-2-stack', 'w-4 h-4')
                         <span>Spalte</span>
-                    </span>
-                </x-ui-button>
-                <x-ui-button variant="secondary-outline" size="sm" x-data @click="$dispatch('open-modal-board-settings', { boardId: {{ $salesBoard->id }} })">
-                    <span class="flex items-center gap-2">
+                    </x-nx-dropdown-item>
+                    <x-nx-dropdown-item x-data @click="$dispatch('open-modal-board-settings', { boardId: {{ $salesBoard->id }} })">
                         @svg('heroicon-o-cog-6-tooth', 'w-4 h-4')
                         <span>Einstellungen</span>
-                    </span>
-                </x-ui-button>
+                    </x-nx-dropdown-item>
+                </x-nx-dropdown>
             @endcan
         </x-ui-page-actionbar>
     </x-slot>
 
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="Board-Übersicht" width="w-80" :defaultOpen="true">
-            <div class="p-4 space-y-6">
-                <!-- Board-Statistiken: Offen -->
-                <div>
-                    <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Offen</h3>
-                    <div class="space-y-2">
+            <div class="p-4 space-y-5 bg-[var(--nx-bg)]">
+                {{-- Board-Statistiken: Offen --}}
+                <section class="p-3 rounded-lg bg-[color:var(--nx-surface)] border border-[color:var(--nx-line)] shadow-[var(--nx-shadow-card)]">
+                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)] mb-2">Offen</h3>
+                    <div class="space-y-1.5">
                         @foreach($statsOpen as $stat)
-                            <div class="flex items-center justify-between py-2 px-3 bg-[var(--ui-muted-5)] border border-[var(--ui-border)]/40">
+                            <div class="flex items-center justify-between py-1.5 px-2 rounded bg-[var(--nx-bg)]">
                                 <div class="flex items-center gap-2">
-                                    @svg('heroicon-o-' . $stat['icon'], 'w-4 h-4 text-[var(--ui-' . $stat['variant'] . ')]')
-                                    <span class="text-sm text-[var(--ui-secondary)]">{{ $stat['title'] }}</span>
+                                    @svg('heroicon-o-' . $stat['icon'], 'w-4 h-4 text-[color:var(--nx-' . $stat['variant'] . ')]')
+                                    <span class="text-[13px] text-[var(--nx-text)]">{{ $stat['title'] }}</span>
                                 </div>
-                                <span class="text-sm font-semibold text-[var(--ui-{{ $stat['variant'] }})]">
+                                <span class="text-[13px] font-semibold tabular-nums text-[color:var(--nx-{{ $stat['variant'] }})]">
                                     {{ $stat['count'] }}
                                 </span>
                             </div>
                         @endforeach
                     </div>
-                </div>
+                </section>
 
-                <!-- Board-Statistiken: Gewonnen -->
-                <div>
-                    <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Gewonnen</h3>
+                {{-- Board-Statistiken: Gewonnen --}}
+                <section class="p-3 rounded-lg bg-[color:var(--nx-surface)] border border-[color:var(--nx-line)] shadow-[var(--nx-shadow-card)]">
+                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)] mb-2">Gewonnen</h3>
                     <button
                         wire:click="toggleShowWonColumn"
-                        class="w-full flex items-center justify-between py-2.5 px-4 mb-3 bg-[var(--ui-success-5)] hover:bg-[var(--ui-success-10)] border border-[var(--ui-success)]/30 transition-colors group"
+                        class="w-full flex items-center justify-between py-2 px-3 mb-2 rounded bg-[rgba(47,158,68,.09)] hover:bg-[rgba(47,158,68,.15)] border border-[rgba(47,158,68,.30)] transition-colors group"
                     >
-                        <span class="inline-flex items-center gap-2 text-sm font-medium text-[var(--ui-success)]">
+                        <span class="inline-flex items-center gap-2 text-[13px] font-medium text-[color:var(--nx-success)]">
                             @if($showWonColumn)
                                 @svg('heroicon-o-eye-slash', 'w-4 h-4')
                                 <span>Gewonnene ausblenden</span>
@@ -141,34 +144,34 @@ $statsLost = [
                             @endif
                         </span>
                         @if($wonDeals->count() > 0)
-                            <span class="text-xs font-semibold text-[var(--ui-success)] bg-[var(--ui-success)]/20 px-2 py-0.5 rounded">
+                            <span class="text-xs font-semibold tabular-nums text-[color:var(--nx-success)] bg-[rgba(47,158,68,.18)] px-2 py-0.5 rounded">
                                 {{ $wonDeals->count() }}
                             </span>
                         @endif
                     </button>
-                    <div class="space-y-2">
+                    <div class="space-y-1.5">
                         @foreach($statsWon as $stat)
-                            <div class="flex items-center justify-between py-2 px-3 bg-[var(--ui-muted-5)] border border-[var(--ui-border)]/40">
+                            <div class="flex items-center justify-between py-1.5 px-2 rounded bg-[var(--nx-bg)]">
                                 <div class="flex items-center gap-2">
-                                    @svg('heroicon-o-' . $stat['icon'], 'w-4 h-4 text-[var(--ui-' . $stat['variant'] . ')]')
-                                    <span class="text-sm text-[var(--ui-secondary)]">{{ $stat['title'] }}</span>
+                                    @svg('heroicon-o-' . $stat['icon'], 'w-4 h-4 text-[color:var(--nx-' . $stat['variant'] . ')]')
+                                    <span class="text-[13px] text-[var(--nx-text)]">{{ $stat['title'] }}</span>
                                 </div>
-                                <span class="text-sm font-semibold text-[var(--ui-{{ $stat['variant'] }})]">
+                                <span class="text-[13px] font-semibold tabular-nums text-[color:var(--nx-{{ $stat['variant'] }})]">
                                     {{ $stat['count'] }}
                                 </span>
                             </div>
                         @endforeach
                     </div>
-                </div>
+                </section>
 
-                <!-- Board-Statistiken: Verloren -->
-                <div>
-                    <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Verloren</h3>
+                {{-- Board-Statistiken: Verloren --}}
+                <section class="p-3 rounded-lg bg-[color:var(--nx-surface)] border border-[color:var(--nx-line)] shadow-[var(--nx-shadow-card)]">
+                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)] mb-2">Verloren</h3>
                     <button
                         wire:click="toggleShowLostColumn"
-                        class="w-full flex items-center justify-between py-2.5 px-4 mb-3 bg-[var(--ui-danger-5)] hover:bg-[var(--ui-danger-10)] border border-[var(--ui-danger)]/30 transition-colors group"
+                        class="w-full flex items-center justify-between py-2 px-3 mb-2 rounded bg-[rgba(224,49,49,.09)] hover:bg-[rgba(224,49,49,.15)] border border-[rgba(224,49,49,.30)] transition-colors group"
                     >
-                        <span class="inline-flex items-center gap-2 text-sm font-medium text-[var(--ui-danger)]">
+                        <span class="inline-flex items-center gap-2 text-[13px] font-medium text-[color:var(--nx-danger)]">
                             @if($showLostColumn)
                                 @svg('heroicon-o-eye-slash', 'w-4 h-4')
                                 <span>Verlorene ausblenden</span>
@@ -178,72 +181,72 @@ $statsLost = [
                             @endif
                         </span>
                         @if($lostDeals->count() > 0)
-                            <span class="text-xs font-semibold text-[var(--ui-danger)] bg-[var(--ui-danger)]/20 px-2 py-0.5 rounded">
+                            <span class="text-xs font-semibold tabular-nums text-[color:var(--nx-danger)] bg-[rgba(224,49,49,.18)] px-2 py-0.5 rounded">
                                 {{ $lostDeals->count() }}
                             </span>
                         @endif
                     </button>
-                    <div class="space-y-2">
+                    <div class="space-y-1.5">
                         @foreach($statsLost as $stat)
-                            <div class="flex items-center justify-between py-2 px-3 bg-[var(--ui-muted-5)] border border-[var(--ui-border)]/40">
+                            <div class="flex items-center justify-between py-1.5 px-2 rounded bg-[var(--nx-bg)]">
                                 <div class="flex items-center gap-2">
-                                    @svg('heroicon-o-' . $stat['icon'], 'w-4 h-4 text-[var(--ui-' . $stat['variant'] . ')]')
-                                    <span class="text-sm text-[var(--ui-secondary)]">{{ $stat['title'] }}</span>
+                                    @svg('heroicon-o-' . $stat['icon'], 'w-4 h-4 text-[color:var(--nx-' . $stat['variant'] . ')]')
+                                    <span class="text-[13px] text-[var(--nx-text)]">{{ $stat['title'] }}</span>
                                 </div>
-                                <span class="text-sm font-semibold text-[var(--ui-{{ $stat['variant'] }})]">
+                                <span class="text-[13px] font-semibold tabular-nums text-[color:var(--nx-{{ $stat['variant'] }})]">
                                     {{ $stat['count'] }}
                                 </span>
                             </div>
                         @endforeach
                     </div>
-                </div>
+                </section>
 
-                <!-- Board-Details -->
-                <div>
-                    <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Details</h3>
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center py-2 px-3 bg-[var(--ui-muted-5)] border border-[var(--ui-border)]/40">
-                            <span class="text-sm text-[var(--ui-muted)]">Erstellt</span>
-                            <span class="text-sm text-[var(--ui-secondary)] font-medium">
+                {{-- Board-Details --}}
+                <section class="p-3 rounded-lg bg-[color:var(--nx-surface)] border border-[color:var(--nx-line)] shadow-[var(--nx-shadow-card)]">
+                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)] mb-2">Details</h3>
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center py-1.5 px-2 rounded bg-[var(--nx-bg)]">
+                            <span class="text-[13px] text-[var(--nx-muted)]">Erstellt</span>
+                            <span class="text-[13px] text-[var(--nx-text)] font-medium tabular-nums">
                                 {{ $salesBoard->created_at->format('d.m.Y') }}
                             </span>
                         </div>
-                        <div class="flex justify-between items-center py-2 px-3 bg-[var(--ui-muted-5)] border border-[var(--ui-border)]/40">
-                            <span class="text-sm text-[var(--ui-muted)]">Gesamtwert</span>
-                            <span class="text-sm text-[var(--ui-secondary)] font-medium">
+                        <div class="flex justify-between items-center py-1.5 px-2 rounded bg-[var(--nx-bg)]">
+                            <span class="text-[13px] text-[var(--nx-muted)]">Gesamtwert</span>
+                            <span class="text-[13px] text-[var(--nx-text)] font-medium tabular-nums">
                                 {{ number_format($totalDealValue, 0, ',', '.') }} €
                             </span>
                         </div>
-                        <div class="flex justify-between items-center py-2 px-3 bg-[var(--ui-muted-5)] border border-[var(--ui-border)]/40">
-                            <span class="text-sm text-[var(--ui-muted)]">Erwarteter Wert</span>
-                            <span class="text-sm text-[var(--ui-secondary)] font-medium">
+                        <div class="flex justify-between items-center py-1.5 px-2 rounded bg-[var(--nx-bg)]">
+                            <span class="text-[13px] text-[var(--nx-muted)]">Erwarteter Wert</span>
+                            <span class="text-[13px] text-[var(--nx-text)] font-medium tabular-nums">
                                 {{ number_format($totalExpectedValue, 0, ',', '.') }} €
                             </span>
                         </div>
                     </div>
-                </div>
+                </section>
 
                 {{-- Gewonnene Deals --}}
                 @if($wonDeals->count() > 0)
-                    <div>
-                        <h3 class="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)] mb-3">Gewonnene Deals ({{ $wonDeals->count() }})</h3>
+                    <section class="p-3 rounded-lg bg-[color:var(--nx-surface)] border border-[color:var(--nx-line)] shadow-[var(--nx-shadow-card)]">
+                        <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)] mb-2">Gewonnene Deals ({{ $wonDeals->count() }})</h3>
                         <div class="space-y-1 max-h-60 overflow-y-auto">
                             @foreach($wonDeals->take(10) as $deal)
                                 <a href="{{ route('sales.deals.show', $deal) }}" wire:navigate
-                                   class="block p-2 bg-[var(--ui-success-5)] border border-[var(--ui-success)]/30 rounded text-sm hover:bg-[var(--ui-success-10)] transition">
-                                    <div class="font-medium text-[var(--ui-secondary)]">{{ $deal->title }}</div>
+                                   class="block p-2 rounded bg-[rgba(47,158,68,.09)] border border-[rgba(47,158,68,.30)] text-sm hover:bg-[rgba(47,158,68,.15)] transition">
+                                    <div class="font-medium text-[var(--nx-text)]">{{ $deal->title }}</div>
                                     @if($deal->deal_value)
-                                        <div class="text-[var(--ui-success)] font-semibold">{{ number_format((float) $deal->deal_value, 0, ',', '.') }} €</div>
+                                        <div class="text-[color:var(--nx-success)] font-semibold tabular-nums">{{ number_format((float) $deal->deal_value, 0, ',', '.') }} €</div>
                                     @endif
                                 </a>
                             @endforeach
                             @if($wonDeals->count() > 10)
-                                <div class="text-center text-sm text-[var(--ui-muted)] p-2">
+                                <div class="text-center text-sm text-[var(--nx-muted)] p-2">
                                     +{{ $wonDeals->count() - 10 }} weitere
                                 </div>
                             @endif
                         </div>
-                    </div>
+                    </section>
                 @endif
             </div>
         </x-ui-page-sidebar>
@@ -251,22 +254,17 @@ $statsLost = [
 
     <x-slot name="activity">
         <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="true" storeKey="salesActivityOpen" side="right">
-            <div class="p-4 space-y-4">
-                <div class="text-sm text-[var(--ui-muted)]">Letzte Aktivitäten</div>
-                <div class="text-center py-8">
-                    <div class="w-12 h-12 bg-[var(--ui-muted-5)] rounded-full flex items-center justify-center mx-auto mb-3">
-                        @svg('heroicon-o-clock', 'w-6 h-6 text-[var(--ui-muted)]')
-                    </div>
-                    <p class="text-sm text-[var(--ui-muted)]">Keine aktuellen Aktivitäten</p>
-                </div>
+            <div class="p-4 space-y-3">
+                <div class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)]">Letzte Aktivitäten</div>
+                <x-nx-empty icon="heroicon-o-clock">Keine aktuellen Aktivitäten</x-nx-empty>
             </div>
         </x-ui-page-sidebar>
     </x-slot>
 
     {{-- Kanban Board --}}
-    <x-ui-kanban-container sortable="updateDealGroupOrder" sortable-group="updateDealOrder">
+    <x-nx-kanban-container sortable="updateDealGroupOrder" sortable-group="updateDealOrder">
         {{-- Pipeline-Spalten (sortierbar) --}}
-        @foreach($groups->filter(fn ($g) => !($g->isWonGroup ?? false) && !($g->isLostGroup ?? false)) as $column)
+        @foreach($pipelineColumns as $column)
             @php
                 $colDeals = $column->deals;
                 $colTotal = $colDeals->sum(fn($d) => (float) ($d->deal_value ?? 0));
@@ -287,14 +285,15 @@ $statsLost = [
                         $colOneTime += (float) ($d->deal_value ?? 0);
                     }
                 }
+                $tone = $columnTones[$column->id] ?? 'indigo';
             @endphp
-            <x-ui-kanban-column :title="($column->label ?? $column->name ?? 'Spalte')" :sortable-id="$column->id" :scrollable="true">
+            <x-nx-kanban-column :title="($column->label ?? $column->name ?? 'Spalte')" :sortable-id="$column->id" :scrollable="true" :tone="$tone" :count="$colDeals->count()">
                 <x-slot name="headerActions">
-                    <span class="text-[10px] font-semibold text-[var(--ui-success)]">{{ number_format($colTotal, 0, ',', '.') }} €</span>
+                    <span class="text-[10px] font-semibold tabular-nums text-[color:var(--nx-success)]">{{ number_format($colTotal, 0, ',', '.') }} €</span>
                     @can('update', $salesBoard)
                         <button
                             wire:click="createDeal('{{ $column->id }}')"
-                            class="text-[var(--ui-muted)] hover:text-[var(--ui-secondary)] transition-colors"
+                            class="text-[var(--nx-muted)] hover:text-[var(--nx-accent)] transition-colors"
                             title="Neuer Deal"
                         >
                             @svg('heroicon-o-plus-circle', 'w-4 h-4')
@@ -302,7 +301,7 @@ $statsLost = [
                         <button
                             x-data
                             @click="$dispatch('open-modal-board-slot-settings', { boardSlotId: {{ $column->id }} })"
-                            class="text-[var(--ui-muted)] hover:text-[var(--ui-secondary)] transition-colors"
+                            class="text-[var(--nx-muted)] hover:text-[var(--nx-accent)] transition-colors"
                             title="Spalten-Einstellungen"
                         >
                             @svg('heroicon-o-cog-6-tooth', 'w-4 h-4')
@@ -312,16 +311,16 @@ $statsLost = [
 
                 <x-slot name="footer">
                     <div class="flex items-center justify-between text-[10px]">
-                        <span class="text-[var(--ui-muted)]">{{ $colDeals->count() }} Deal(s)</span>
+                        <span class="text-[var(--nx-muted)] tabular-nums">{{ $colDeals->count() }} Deal(s)</span>
                         <div class="flex items-center gap-3">
                             @if($colOneTime > 0)
-                                <span class="inline-flex items-center gap-1 text-[var(--ui-secondary)] font-medium" title="Einmalig">
+                                <span class="inline-flex items-center gap-1 text-[color:var(--nx-text)] font-medium tabular-nums" title="Einmalig">
                                     @svg('heroicon-o-banknotes', 'w-3 h-3')
                                     {{ number_format($colOneTime, 0, ',', '.') }} €
                                 </span>
                             @endif
                             @if($colArr > 0)
-                                <span class="inline-flex items-center gap-1 text-[var(--ui-primary)] font-medium" title="Wiederkehrend pro Jahr">
+                                <span class="inline-flex items-center gap-1 text-[color:var(--nx-info)] font-medium tabular-nums" title="Wiederkehrend pro Jahr">
                                     @svg('heroicon-o-arrow-path', 'w-3 h-3')
                                     {{ number_format($colArr, 0, ',', '.') }} €/J
                                 </span>
@@ -333,7 +332,7 @@ $statsLost = [
                 @foreach($column->deals as $deal)
                     @include('sales::livewire.deal-preview-card', ['deal' => $deal])
                 @endforeach
-            </x-ui-kanban-column>
+            </x-nx-kanban-column>
         @endforeach
 
         {{-- Gewonnen-Spalte (nicht sortierbar) --}}
@@ -362,26 +361,23 @@ $statsLost = [
                 }
             @endphp
             @if($wonGroup)
-                <x-ui-kanban-column title="GEWONNEN" :sortable-id="null" :scrollable="true" :muted="true">
+                <x-nx-kanban-column title="GEWONNEN" :sortable-id="null" :scrollable="true" :muted="true" tone="emerald" :count="$wonGroup->deals->count()">
                     <x-slot name="headerActions">
-                        <span class="text-[10px] font-semibold text-[var(--ui-success)]">{{ number_format($wonTotal, 0, ',', '.') }} €</span>
-                        <span class="text-xs text-[var(--ui-muted)] font-medium">
-                            {{ $wonGroup->deals->count() }}
-                        </span>
+                        <span class="text-[10px] font-semibold tabular-nums text-[color:var(--nx-success)]">{{ number_format($wonTotal, 0, ',', '.') }} €</span>
                     </x-slot>
 
                     <x-slot name="footer">
                         <div class="flex items-center justify-between text-[10px]">
-                            <span class="text-[var(--ui-muted)]">{{ $wonGroup->deals->count() }} Deal(s)</span>
+                            <span class="text-[var(--nx-muted)] tabular-nums">{{ $wonGroup->deals->count() }} Deal(s)</span>
                             <div class="flex items-center gap-3">
                                 @if($wonOneTime > 0)
-                                    <span class="inline-flex items-center gap-1 text-[var(--ui-success)] font-medium" title="Einmalig">
+                                    <span class="inline-flex items-center gap-1 text-[color:var(--nx-success)] font-medium tabular-nums" title="Einmalig">
                                         @svg('heroicon-o-banknotes', 'w-3 h-3')
                                         {{ number_format($wonOneTime, 0, ',', '.') }} €
                                     </span>
                                 @endif
                                 @if($wonArr > 0)
-                                    <span class="inline-flex items-center gap-1 text-[var(--ui-primary)] font-medium" title="Wiederkehrend pro Jahr">
+                                    <span class="inline-flex items-center gap-1 text-[color:var(--nx-info)] font-medium tabular-nums" title="Wiederkehrend pro Jahr">
                                         @svg('heroicon-o-arrow-path', 'w-3 h-3')
                                         {{ number_format($wonArr, 0, ',', '.') }} €/J
                                     </span>
@@ -393,7 +389,7 @@ $statsLost = [
                     @foreach($wonGroup->deals as $deal)
                         @include('sales::livewire.deal-preview-card', ['deal' => $deal])
                     @endforeach
-                </x-ui-kanban-column>
+                </x-nx-kanban-column>
             @endif
         @endif
         {{-- Verloren-Spalte (nicht sortierbar) --}}
@@ -403,27 +399,24 @@ $statsLost = [
                 $lostTotal = $lostGroup ? $lostGroup->deals->sum(fn($d) => (float) ($d->deal_value ?? 0)) : 0;
             @endphp
             @if($lostGroup)
-                <x-ui-kanban-column title="VERLOREN" :sortable-id="null" :scrollable="true" :muted="true">
+                <x-nx-kanban-column title="VERLOREN" :sortable-id="null" :scrollable="true" :muted="true" tone="rose" :count="$lostGroup->deals->count()">
                     <x-slot name="headerActions">
-                        <span class="text-[10px] font-semibold text-[var(--ui-danger)]">{{ number_format($lostTotal, 0, ',', '.') }} €</span>
-                        <span class="text-xs text-[var(--ui-muted)] font-medium">
-                            {{ $lostGroup->deals->count() }}
-                        </span>
+                        <span class="text-[10px] font-semibold tabular-nums text-[color:var(--nx-danger)]">{{ number_format($lostTotal, 0, ',', '.') }} €</span>
                     </x-slot>
 
                     <x-slot name="footer">
                         <div class="flex items-center justify-between text-[10px]">
-                            <span class="text-[var(--ui-muted)]">{{ $lostGroup->deals->count() }} Deal(s)</span>
+                            <span class="text-[var(--nx-muted)] tabular-nums">{{ $lostGroup->deals->count() }} Deal(s)</span>
                         </div>
                     </x-slot>
 
                     @foreach($lostGroup->deals as $deal)
                         @include('sales::livewire.deal-preview-card', ['deal' => $deal])
                     @endforeach
-                </x-ui-kanban-column>
+                </x-nx-kanban-column>
             @endif
         @endif
-    </x-ui-kanban-container>
+    </x-nx-kanban-container>
 
     {{-- Modals --}}
     <livewire:sales.board-settings-modal />

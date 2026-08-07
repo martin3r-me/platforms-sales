@@ -21,13 +21,13 @@
             'title' => 'Deal-Wert',
             'count' => number_format($openValue, 0, ',', '.') . ' €',
             'icon' => 'currency-euro',
-            'variant' => 'primary'
+            'variant' => 'info'
         ],
         [
             'title' => 'High Value',
             'count' => $highValueCount,
             'icon' => 'star',
-            'variant' => 'primary'
+            'variant' => 'info'
         ],
         [
             'title' => 'Überfällig',
@@ -51,6 +51,11 @@
             'variant' => 'success'
         ],
     ];
+
+    // Tone-Mapping für mittlere Spalten
+    $tonePalette = ['indigo', 'amber', 'teal', 'violet', 'sky', 'pink', 'rose', 'emerald'];
+    $middleColumns = $groups->filter(fn ($g) => !($g->isWonGroup ?? false))->values();
+    $columnTones = $middleColumns->mapWithKeys(fn ($col, $i) => [$col->id => $tonePalette[$i % count($tonePalette)]]);
 @endphp
 
 <x-ui-page>
@@ -63,81 +68,68 @@
             ['label' => 'Sales', 'href' => route('sales.dashboard'), 'icon' => 'currency-euro'],
             ['label' => 'Meine Deals'],
         ]">
-            <x-ui-button variant="primary" size="sm" wire:click="createDeal()">
+            <x-nx-button variant="primary" wire:click="createDeal()">
                 <span class="flex items-center gap-2">
                     @svg('heroicon-o-plus', 'w-4 h-4')
                     <span>Neuer Deal</span>
                 </span>
-            </x-ui-button>
+            </x-nx-button>
         </x-ui-page-actionbar>
     </x-slot>
 
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="Deal-Übersicht" width="w-80" :defaultOpen="true">
-            <div class="p-4 space-y-6">
-                {{-- Aktionen --}}
-                <div>
-                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Aktionen</h3>
-                    <div class="flex flex-col gap-2">
-                        <x-ui-button variant="secondary" size="sm" wire:click="createDeal()">
-                            <span class="inline-flex items-center gap-2">
-                                @svg('heroicon-o-plus','w-4 h-4')
-                                <span>Deal</span>
-                            </span>
-                        </x-ui-button>
-                    </div>
-                </div>
-
+            <div class="p-4 space-y-5 bg-[var(--nx-bg)]">
                 {{-- Deal-Statistiken: Offen --}}
-                <div>
-                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Offen</h3>
-                    <div class="space-y-2">
+                <section class="p-3 rounded-lg bg-[color:var(--nx-surface)] border border-[color:var(--nx-line)] shadow-[var(--nx-shadow-card)]">
+                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)] mb-2">Offen</h3>
+                    <div class="space-y-1.5">
                         @foreach($statsOpen as $stat)
-                            <div class="flex items-center justify-between py-2 px-3 bg-[var(--ui-muted-5)] border border-[var(--ui-border)]/40">
+                            <div class="flex items-center justify-between py-1.5 px-2 rounded bg-[var(--nx-bg)]">
                                 <div class="flex items-center gap-2">
-                                    @svg('heroicon-o-' . $stat['icon'], 'w-4 h-4 text-[var(--ui-' . $stat['variant'] . ')]')
-                                    <span class="text-sm text-[var(--ui-secondary)]">{{ $stat['title'] }}</span>
+                                    @svg('heroicon-o-' . $stat['icon'], 'w-4 h-4 text-[color:var(--nx-' . $stat['variant'] . ')]')
+                                    <span class="text-[13px] text-[var(--nx-text)]">{{ $stat['title'] }}</span>
                                 </div>
-                                <span class="text-sm font-semibold text-[var(--ui-' . $stat['variant'] . ')]">
+                                <span class="text-[13px] font-semibold tabular-nums text-[color:var(--nx-{{ $stat['variant'] }})]">
                                     {{ $stat['count'] }}
                                 </span>
                             </div>
                         @endforeach
                     </div>
-                </div>
+                </section>
 
                 {{-- Deal-Statistiken: Gewonnen --}}
-                <div>
-                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Gewonnen</h3>
-                    <div class="space-y-2">
+                <section class="p-3 rounded-lg bg-[color:var(--nx-surface)] border border-[color:var(--nx-line)] shadow-[var(--nx-shadow-card)]">
+                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)] mb-2">Gewonnen</h3>
+                    <div class="space-y-1.5">
                         @foreach($statsWon as $stat)
-                            <div class="flex items-center justify-between py-2 px-3 bg-[var(--ui-muted-5)] border border-[var(--ui-border)]/40">
+                            <div class="flex items-center justify-between py-1.5 px-2 rounded bg-[var(--nx-bg)]">
                                 <div class="flex items-center gap-2">
-                                    @svg('heroicon-o-' . $stat['icon'], 'w-4 h-4 text-[var(--ui-' . $stat['variant'] . ')]')
-                                    <span class="text-sm text-[var(--ui-secondary)]">{{ $stat['title'] }}</span>
+                                    @svg('heroicon-o-' . $stat['icon'], 'w-4 h-4 text-[color:var(--nx-' . $stat['variant'] . ')]')
+                                    <span class="text-[13px] text-[var(--nx-text)]">{{ $stat['title'] }}</span>
                                 </div>
-                                <span class="text-sm font-semibold text-[var(--ui-' . $stat['variant'] . ')]">
+                                <span class="text-[13px] font-semibold tabular-nums text-[color:var(--nx-{{ $stat['variant'] }})]">
                                     {{ $stat['count'] }}
                                 </span>
                             </div>
                         @endforeach
                     </div>
-                </div>
+                </section>
 
                 {{-- Performance-Score --}}
                 @if($monthlyPerformanceScore ?? null)
-                    <div>
-                        <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Performance</h3>
-                        <div class="p-3 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
-                            <div class="text-xs text-[var(--ui-muted)] mb-1">Monatliche Performance</div>
-                            <div class="text-lg font-semibold text-[var(--ui-secondary)]">
+                    <section class="p-3 rounded-lg bg-[color:var(--nx-surface)] border border-[color:var(--nx-line)] shadow-[var(--nx-shadow-card)]">
+                        <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)] mb-2">Performance</h3>
+                        <div class="p-3 rounded bg-[var(--nx-bg)]">
+                            <div class="text-xs text-[var(--nx-muted)] mb-1">Monatliche Performance</div>
+                            <div class="text-lg font-semibold tabular-nums text-[var(--nx-text)]">
                                 {{ number_format((float) (($monthlyPerformanceScore ?? 0) * 100), 1) }}%
                             </div>
-                            <div class="text-xs text-[var(--ui-muted)] mt-1">
+                            <div class="text-xs text-[var(--nx-muted)] mt-1">
                                 {{ number_format((float) ($wonValue ?? 0), 0, ',', '.') }} € gewonnen / {{ number_format((float) ($createdValue ?? 0), 0, ',', '.') }} € erstellt
                             </div>
                         </div>
-                    </div>
+                    </section>
                 @endif
             </div>
         </x-ui-page-sidebar>
@@ -145,20 +137,15 @@
 
     <x-slot name="activity">
         <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
-            <div class="p-4 space-y-4">
-                <div class="text-sm text-[var(--ui-muted)]">Letzte Aktivitäten</div>
-                <div class="text-center py-8">
-                    <div class="w-12 h-12 bg-[var(--ui-muted-5)] rounded-full flex items-center justify-center mx-auto mb-3">
-                        @svg('heroicon-o-clock', 'w-6 h-6 text-[var(--ui-muted)]')
-                    </div>
-                    <p class="text-sm text-[var(--ui-muted)]">Keine aktuellen Aktivitäten</p>
-                </div>
+            <div class="p-4 space-y-3">
+                <div class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)]">Letzte Aktivitäten</div>
+                <x-nx-empty icon="heroicon-o-clock">Keine aktuellen Aktivitäten</x-nx-empty>
             </div>
         </x-ui-page-sidebar>
     </x-slot>
 
     {{-- Kanban-Board --}}
-    <x-ui-kanban-container sortable="updateDealOrder" sortable-group="updateDealOrder">
+    <x-nx-kanban-container sortable="updateDealOrder" sortable-group="updateDealOrder">
         @foreach($groups as $group)
             @php
                 $grpDeals = $group->tasks;
@@ -180,18 +167,22 @@
                         $grpOneTime += (float) ($d->deal_value ?? 0);
                     }
                 }
+                $isWon = $group->isWonGroup ?? false;
+                $tone = $isWon ? 'emerald' : ($columnTones[$group->id] ?? 'indigo');
             @endphp
-            <x-ui-kanban-column
+            <x-nx-kanban-column
                 :title="$group->label"
                 :sortable-id="$group->id ?? null"
                 :scrollable="true"
-                :muted="$group->isWonGroup ?? false">
+                :muted="$isWon"
+                :tone="$tone"
+                :count="$grpDeals->count()">
                 <x-slot name="headerActions">
-                    <span class="text-[10px] font-semibold text-[var(--ui-success)]">{{ number_format($grpTotal, 0, ',', '.') }} €</span>
-                    @if(!($group->isWonGroup ?? false))
+                    <span class="text-[10px] font-semibold tabular-nums text-[color:var(--nx-success)]">{{ number_format($grpTotal, 0, ',', '.') }} €</span>
+                    @if(!$isWon)
                         <button
                             wire:click="createDeal('{{ $group->id ?? null }}')"
-                            class="text-[var(--ui-muted)] hover:text-[var(--ui-secondary)] transition-colors"
+                            class="text-[var(--nx-muted)] hover:text-[var(--nx-accent)] transition-colors"
                             title="Neuer Deal"
                         >
                             @svg('heroicon-o-plus-circle', 'w-4 h-4')
@@ -201,16 +192,16 @@
 
                 <x-slot name="footer">
                     <div class="flex items-center justify-between text-[10px]">
-                        <span class="text-[var(--ui-muted)]">{{ $grpDeals->count() }} Deal(s)</span>
+                        <span class="text-[var(--nx-muted)] tabular-nums">{{ $grpDeals->count() }} Deal(s)</span>
                         <div class="flex items-center gap-2">
                             @if($grpOneTime > 0)
-                                <span class="inline-flex items-center gap-1 text-[var(--ui-secondary)] font-medium" title="Einmalig">
+                                <span class="inline-flex items-center gap-1 text-[color:var(--nx-text)] font-medium tabular-nums" title="Einmalig">
                                     @svg('heroicon-o-banknotes', 'w-3 h-3')
                                     {{ number_format($grpOneTime, 0, ',', '.') }} €
                                 </span>
                             @endif
                             @if($grpArr > 0)
-                                <span class="inline-flex items-center gap-1 text-[var(--ui-primary)] font-medium" title="Wiederkehrend pro Jahr">
+                                <span class="inline-flex items-center gap-1 text-[color:var(--nx-info)] font-medium tabular-nums" title="Wiederkehrend pro Jahr">
                                     @svg('heroicon-o-arrow-path', 'w-3 h-3')
                                     {{ number_format($grpArr, 0, ',', '.') }} €/J
                                 </span>
@@ -222,7 +213,7 @@
                 @foreach($group->tasks as $deal)
                     @include('sales::livewire.deal-preview-card', ['deal' => $deal])
                 @endforeach
-            </x-ui-kanban-column>
+            </x-nx-kanban-column>
         @endforeach
-    </x-ui-kanban-container>
+    </x-nx-kanban-container>
 </x-ui-page>
