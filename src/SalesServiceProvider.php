@@ -50,7 +50,7 @@ class SalesServiceProvider extends ServiceProvider
             PlatformCore::registerModule([
                 'key'        => 'sales',
                 'title'      => 'Vertriebsboard',
-                'group'      => 'marketing',
+                'group'      => 'sales',
                 'routing'    => config('sales.routing'),
                 'guard'      => config('sales.guard'),
                 'navigation' => config('sales.navigation'),
