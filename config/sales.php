@@ -68,7 +68,7 @@ return [
             // PREISSTAFFELUNG: Ein Array mit mehreren Preisstufen!
             'pricing' => [
                 [
-                    'cost_per_day' => 0.0025,           // 2.5 Cent pro Ticket pro Tag
+                    'cost_per_day' => 0.0025,           // 2.5 Cent pro Deal pro Tag
                     'start_date' => '2025-01-01',
                     'end_date' => null,
                 ]
