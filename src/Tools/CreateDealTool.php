@@ -11,6 +11,10 @@ use Platform\Sales\Tools\Concerns\ResolvesSalesTeam;
 use Platform\Sales\Models\SalesDeal;
 use Platform\Sales\Models\SalesBoard;
 use Platform\Sales\Models\SalesBoardSlot;
+use Platform\Crm\Models\CrmCompany;
+use Platform\Crm\Models\CrmContact;
+use Platform\Crm\Models\CrmCompanyLink;
+use Platform\Crm\Models\CrmContactLink;
 
 class CreateDealTool implements ToolContract, ToolMetadataContract
 {
@@ -118,6 +122,14 @@ class CreateDealTool implements ToolContract, ToolMetadataContract
                     'type' => 'boolean',
                     'description' => 'Optional: Als Favorit markieren.',
                 ],
+                'company_id' => [
+                    'type' => 'integer',
+                    'description' => 'Optional: CRM-Company (Abnehmer), die mit dem Deal verknüpft wird. Nutze "crm.companies.GET" um Companies zu finden.',
+                ],
+                'contact_id' => [
+                    'type' => 'integer',
+                    'description' => 'Optional: CRM-Contact (Ansprechpartner), der mit dem Deal verknüpft wird. Nutze "crm.contacts.GET" um Contacts zu finden.',
+                ],
             ],
             'required' => ['title'],
         ]);
@@ -198,6 +210,44 @@ class CreateDealTool implements ToolContract, ToolMetadataContract
                 'slot_order' => 0,
             ]);
 
+            // Optional: CRM-Company (Abnehmer) verknüpfen
+            $linkedCompany = null;
+            if (!empty($arguments['company_id'])) {
+                $company = CrmCompany::where('id', (int) $arguments['company_id'])
+                    ->where('team_id', $teamId)
+                    ->first();
+                if (!$company) {
+                    return ToolResult::error('NOT_FOUND', 'Company nicht gefunden oder gehört nicht zum Team. Nutze "crm.companies.GET".');
+                }
+                CrmCompanyLink::create([
+                    'company_id' => $company->id,
+                    'linkable_id' => $deal->id,
+                    'linkable_type' => $deal->getMorphClass(),
+                    'team_id' => $teamId,
+                    'created_by_user_id' => $context->user->id,
+                ]);
+                $linkedCompany = $company->name;
+            }
+
+            // Optional: CRM-Contact (Ansprechpartner) verknüpfen
+            $linkedContact = null;
+            if (!empty($arguments['contact_id'])) {
+                $contact = CrmContact::where('id', (int) $arguments['contact_id'])
+                    ->where('team_id', $teamId)
+                    ->first();
+                if (!$contact) {
+                    return ToolResult::error('NOT_FOUND', 'Contact nicht gefunden oder gehört nicht zum Team. Nutze "crm.contacts.GET".');
+                }
+                CrmContactLink::create([
+                    'contact_id' => $contact->id,
+                    'linkable_id' => $deal->id,
+                    'linkable_type' => $deal->getMorphClass(),
+                    'team_id' => $teamId,
+                    'created_by_user_id' => $context->user->id,
+                ]);
+                $linkedContact = $contact->name;
+            }
+
             return ToolResult::success([
                 'id' => $deal->id,
                 'title' => $deal->title,
@@ -205,6 +255,8 @@ class CreateDealTool implements ToolContract, ToolMetadataContract
                 'probability_percent' => $deal->probability_percent,
                 'board_id' => $deal->sales_board_id,
                 'slot_id' => $deal->sales_board_slot_id,
+                'company' => $linkedCompany,
+                'contact' => $linkedContact,
                 'message' => "Deal '{$deal->title}' erfolgreich erstellt.",
             ]);
         } catch (\Throwable $e) {

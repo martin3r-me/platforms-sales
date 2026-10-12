@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Symfony\Component\Uid\UuidV7;
 use Illuminate\Support\Facades\Log;
 use Platform\ActivityLog\Traits\LogsActivity;
+use Platform\Crm\Traits\HasCompanyLinksTrait;
+use Platform\Crm\Models\CrmCompany;
 
 class SalesBoard extends Model
 {
-    use LogsActivity;
+    use LogsActivity, HasCompanyLinksTrait;
 
     protected $fillable = [
         'uuid',
@@ -65,5 +67,28 @@ class SalesBoard extends Model
     public function team(): BelongsTo
     {
         return $this->belongsTo(\Platform\Core\Models\Team::class);
+    }
+
+    /**
+     * Partner-Company dieses Boards (EFP-Modell: ein Vertriebsboard pro Partner).
+     *
+     * Umgesetzt über das polymorphe CRM-Link-Pattern (crm_company_links) statt
+     * eines harten FKs – damit bleibt das Sales-Schema unabhängig vom CRM-Schema.
+     * Ein Board hat genau einen Partner: die (einzige) verknüpfte Company.
+     */
+    public function partner(): ?CrmCompany
+    {
+        return $this->companies()->first();
+    }
+
+    /**
+     * Setzt die Partner-Company (ersetzt eine ggf. vorhandene Verknüpfung).
+     */
+    public function setPartner(?CrmCompany $company): void
+    {
+        $this->detachAllCompanies();
+        if ($company) {
+            $this->attachCompany($company);
+        }
     }
 }

@@ -39,6 +39,7 @@ class MyDeals extends Component
             ->whereNull('sales_board_id')
             ->open()
             ->where('user_in_charge_id', $userId)
+            ->with('companyLinks.company')
             ->orderBy('order')
             ->get();
 
@@ -60,7 +61,7 @@ class MyDeals extends Component
             ->whereNotNull('sales_board_id')
             ->open()
             ->where('user_in_charge_id', $userId)
-            ->with(['salesBoard', 'salesBoardSlot'])
+            ->with(['salesBoard', 'salesBoardSlot', 'companyLinks.company'])
             ->orderBy('order')
             ->get()
             ->groupBy('sales_board_id');
@@ -86,6 +87,7 @@ class MyDeals extends Component
         $wonDeals = SalesDeal::query()
             ->won()
             ->where('user_in_charge_id', $userId)
+            ->with('companyLinks.company')
             ->orderByDesc('done_at')
             ->get();
 
@@ -150,6 +152,9 @@ class MyDeals extends Component
             'team_id' => Auth::user()->currentTeam->id,
             'order' => $order,
         ]);
+
+        // Abnehmer-Zuordnung direkt nach Anlage anbieten
+        $this->dispatch('open-modal-customer-deal', dealId: $newDeal->id);
     }
 
     public function toggleDone($dealId)

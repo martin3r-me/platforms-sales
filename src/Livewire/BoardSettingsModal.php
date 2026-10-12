@@ -7,6 +7,8 @@ use Platform\Sales\Models\SalesBoard;
 use Platform\Sales\Models\SalesBoardTemplate;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
+use Platform\Core\Contracts\CrmCompanyResolverInterface;
+use Platform\Core\Contracts\CrmCompanyOptionsProviderInterface;
 
 class BoardSettingsModal extends Component
 {
@@ -14,6 +16,12 @@ class BoardSettingsModal extends Component
     public $board;
     public $teamUsers = [];
     public $availableTemplates;
+
+    // Partner-Company (EFP-Modell: ein Board pro Partner)
+    public $partnerCompanyId = null;
+    public $partnerCompanyDisplay = null;
+    public $partnerCompanyOptions = [];
+    public $partnerCompanySearch = '';
 
     public function rules(): array
     {
@@ -39,20 +47,64 @@ class BoardSettingsModal extends Component
             ->orWhere('is_system', true)
             ->orderBy('name')
             ->get();
-        
+
+        // Aktuellen Partner laden
+        $currentPartner = $this->board->partner();
+        $this->partnerCompanyId = $currentPartner?->id;
+        $this->resolvePartnerCompanyDisplay();
+        $this->loadPartnerCompanyOptions('');
+
         $this->modalShow = true;
     }
 
     public function closeModal()
     {
         $this->modalShow = false;
-        $this->reset(['board', 'teamUsers', 'availableTemplates']);
+        $this->reset([
+            'board', 'teamUsers', 'availableTemplates',
+            'partnerCompanyId', 'partnerCompanyDisplay', 'partnerCompanyOptions', 'partnerCompanySearch',
+        ]);
+    }
+
+    public function updatedPartnerCompanyId($value)
+    {
+        $this->resolvePartnerCompanyDisplay();
+    }
+
+    public function updatedPartnerCompanySearch($value)
+    {
+        $this->loadPartnerCompanyOptions($this->partnerCompanySearch);
+    }
+
+    private function resolvePartnerCompanyDisplay()
+    {
+        if ($this->partnerCompanyId) {
+            /** @var CrmCompanyResolverInterface $resolver */
+            $resolver = app(CrmCompanyResolverInterface::class);
+            $this->partnerCompanyDisplay = $resolver->displayName($this->partnerCompanyId);
+        } else {
+            $this->partnerCompanyDisplay = null;
+        }
+    }
+
+    private function loadPartnerCompanyOptions($search = '')
+    {
+        /** @var CrmCompanyOptionsProviderInterface $optionsProvider */
+        $optionsProvider = app(CrmCompanyOptionsProviderInterface::class);
+        $this->partnerCompanyOptions = $optionsProvider->options($search);
     }
 
     public function save()
     {
         $this->validate();
         $this->board->save();
+
+        // Partner-Company setzen/aktualisieren
+        $company = $this->partnerCompanyId
+            ? \Platform\Crm\Models\CrmCompany::find($this->partnerCompanyId)
+            : null;
+        $this->board->setPartner($company);
+
         $this->closeModal();
         $this->dispatch('board-updated');
     }

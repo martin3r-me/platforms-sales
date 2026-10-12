@@ -47,6 +47,8 @@ class Board extends Component
         $deal->save();
 
         $this->dispatch('deal-created', dealId: $deal->id);
+        // Abnehmer-Zuordnung direkt nach Anlage anbieten
+        $this->dispatch('open-modal-customer-deal', dealId: $deal->id);
     }
 
     public function createBoardSlot()
@@ -140,6 +142,7 @@ class Board extends Component
         $slots = $this->salesBoard->slots()
             ->with(['deals' => function ($q) {
                 $q->open()
+                  ->with('companyLinks.company')
                   ->orderBy('slot_order')
                   ->orderBy('order');
             }])
@@ -158,6 +161,7 @@ class Board extends Component
         // === 2. GEWONNENE DEALS ===
         $wonDeals = $this->salesBoard->deals()
             ->won()
+            ->with('companyLinks.company')
             ->orderByDesc('done_at')
             ->get();
 
@@ -172,6 +176,7 @@ class Board extends Component
         // === 3. VERLORENE DEALS ===
         $lostDeals = $this->salesBoard->deals()
             ->lost()
+            ->with('companyLinks.company')
             ->orderByDesc('lost_at')
             ->get();
 

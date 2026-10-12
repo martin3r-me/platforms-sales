@@ -9,6 +9,7 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Tools\Concerns\HasStandardGetOperations;
 use Platform\Sales\Tools\Concerns\ResolvesSalesTeam;
 use Platform\Sales\Models\SalesBoard;
+use Platform\Crm\Models\CrmCompanyLink;
 
 class ListBoardsTool implements ToolContract, ToolMetadataContract
 {
@@ -62,11 +63,23 @@ class ListBoardsTool implements ToolContract, ToolMetadataContract
 
             $result = $this->applyStandardPaginationResult($query, $arguments);
 
-            $boards = $result['data']->map(function (SalesBoard $board) use ($arguments) {
+            // Partner-Companies gebündelt laden (vermeidet N+1, unabhängig vom Auth-Kontext)
+            $boardMorph = (new SalesBoard)->getMorphClass();
+            $partnerLinks = CrmCompanyLink::whereIn('linkable_id', $result['data']->pluck('id'))
+                ->where('linkable_type', $boardMorph)
+                ->where('team_id', $teamId)
+                ->with('company')
+                ->get()
+                ->keyBy('linkable_id');
+
+            $boards = $result['data']->map(function (SalesBoard $board) use ($arguments, $partnerLinks) {
+                $partner = $partnerLinks->get($board->id)?->company;
                 $data = [
                     'id' => $board->id,
                     'name' => $board->name,
                     'description' => $board->description,
+                    'partner_company_id' => $partner?->id,
+                    'partner' => $partner?->name,
                     'created_at' => $board->created_at?->toIso8601String(),
                     'updated_at' => $board->updated_at?->toIso8601String(),
                 ];

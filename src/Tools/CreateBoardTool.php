@@ -11,6 +11,8 @@ use Platform\Sales\Tools\Concerns\ResolvesSalesTeam;
 use Platform\Sales\Models\SalesBoard;
 use Platform\Sales\Models\SalesBoardSlot;
 use Platform\Sales\Models\SalesBoardTemplate;
+use Platform\Crm\Models\CrmCompany;
+use Platform\Crm\Models\CrmCompanyLink;
 
 class CreateBoardTool implements ToolContract, ToolMetadataContract
 {
@@ -45,6 +47,10 @@ class CreateBoardTool implements ToolContract, ToolMetadataContract
                 'template_id' => [
                     'type' => 'integer',
                     'description' => 'Optional: ID eines Board-Templates. Wenn angegeben, werden die Spalten aus dem Template übernommen.',
+                ],
+                'partner_company_id' => [
+                    'type' => 'integer',
+                    'description' => 'Optional: CRM-Company, die als Partner dieses Boards verknüpft wird (ein Board pro Partner). Nutze "crm.companies.GET".',
                 ],
             ],
             'required' => ['name'],
@@ -109,10 +115,30 @@ class CreateBoardTool implements ToolContract, ToolMetadataContract
 
             $board->refresh();
 
+            // Optional: Partner-Company verknüpfen
+            $linkedPartner = null;
+            if (!empty($arguments['partner_company_id'])) {
+                $company = CrmCompany::where('id', (int) $arguments['partner_company_id'])
+                    ->where('team_id', $teamId)
+                    ->first();
+                if (!$company) {
+                    return ToolResult::error('NOT_FOUND', 'Partner-Company nicht gefunden oder gehört nicht zum Team. Nutze "crm.companies.GET".');
+                }
+                CrmCompanyLink::create([
+                    'company_id' => $company->id,
+                    'linkable_id' => $board->id,
+                    'linkable_type' => $board->getMorphClass(),
+                    'team_id' => $teamId,
+                    'created_by_user_id' => $context->user->id,
+                ]);
+                $linkedPartner = $company->name;
+            }
+
             return ToolResult::success([
                 'id' => $board->id,
                 'name' => $board->name,
                 'description' => $board->description,
+                'partner' => $linkedPartner,
                 'slots' => $board->slots()->orderBy('order')->get()->map(fn ($s) => [
                     'id' => $s->id,
                     'name' => $s->name,

@@ -9,6 +9,8 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Tools\Concerns\HasStandardizedWriteOperations;
 use Platform\Sales\Tools\Concerns\ResolvesSalesTeam;
 use Platform\Sales\Models\SalesBoard;
+use Platform\Crm\Models\CrmCompany;
+use Platform\Crm\Models\CrmCompanyLink;
 
 class UpdateBoardTool implements ToolContract, ToolMetadataContract
 {
@@ -39,6 +41,10 @@ class UpdateBoardTool implements ToolContract, ToolMetadataContract
                 'description' => [
                     'type' => 'string',
                     'description' => 'Optional: Neue Beschreibung.',
+                ],
+                'partner_company_id' => [
+                    'type' => 'integer',
+                    'description' => 'Optional: CRM-Company als Partner dieses Boards setzen. 0 oder null entfernt den Partner. Nutze "crm.companies.GET".',
                 ],
             ],
             'required' => ['board_id'],
@@ -77,8 +83,39 @@ class UpdateBoardTool implements ToolContract, ToolMetadataContract
                 $updated[] = 'description';
             }
 
+            // Partner-Company setzen/entfernen
+            $partnerName = null;
+            if (array_key_exists('partner_company_id', $arguments)) {
+                $partnerId = $arguments['partner_company_id'];
+                if ($partnerId === 0 || $partnerId === '0') { $partnerId = null; }
+
+                // Bestehende Partner-Verknüpfung(en) dieses Boards entfernen
+                CrmCompanyLink::where('linkable_type', $board->getMorphClass())
+                    ->where('linkable_id', $board->id)
+                    ->where('team_id', $board->team_id)
+                    ->delete();
+
+                if ($partnerId) {
+                    $company = CrmCompany::where('id', (int) $partnerId)
+                        ->where('team_id', $board->team_id)
+                        ->first();
+                    if (!$company) {
+                        return ToolResult::error('NOT_FOUND', 'Partner-Company nicht gefunden oder gehört nicht zum Team. Nutze "crm.companies.GET".');
+                    }
+                    CrmCompanyLink::create([
+                        'company_id' => $company->id,
+                        'linkable_id' => $board->id,
+                        'linkable_type' => $board->getMorphClass(),
+                        'team_id' => $board->team_id,
+                        'created_by_user_id' => $context->user->id,
+                    ]);
+                    $partnerName = $company->name;
+                }
+                $updated[] = 'partner';
+            }
+
             if (empty($updated)) {
-                return ToolResult::error('VALIDATION_ERROR', 'Keine Änderungen angegeben. Verfügbare Felder: name, description.');
+                return ToolResult::error('VALIDATION_ERROR', 'Keine Änderungen angegeben. Verfügbare Felder: name, description, partner_company_id.');
             }
 
             $board->save();
@@ -87,6 +124,7 @@ class UpdateBoardTool implements ToolContract, ToolMetadataContract
                 'id' => $board->id,
                 'name' => $board->name,
                 'description' => $board->description,
+                'partner' => $partnerName,
                 'updated_fields' => $updated,
                 'message' => "Board '{$board->name}' aktualisiert.",
             ]);

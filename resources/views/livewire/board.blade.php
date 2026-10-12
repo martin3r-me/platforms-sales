@@ -68,6 +68,9 @@ $statsLost = [
     ],
 ];
 
+// Partner-Company dieses Boards (EFP-Modell: ein Board pro Partner)
+$boardPartner = $salesBoard->partner();
+
 // Tone-Mapping für Pipeline-Spalten (mittlere Spalten)
 $tonePalette = ['indigo', 'amber', 'teal', 'violet', 'sky', 'pink', 'rose', 'emerald'];
 $pipelineColumns = $groups->filter(fn ($g) => !($g->isWonGroup ?? false) && !($g->isLostGroup ?? false))->values();
@@ -80,11 +83,12 @@ $columnTones = $pipelineColumns->mapWithKeys(fn ($col, $i) => [$col->id => $tone
     </x-slot>
 
     <x-slot name="actionbar">
-        <x-ui-page-actionbar :breadcrumbs="[
+        <x-ui-page-actionbar :breadcrumbs="array_values(array_filter([
             ['label' => 'Sales', 'href' => route('sales.dashboard'), 'icon' => 'currency-euro'],
             ['label' => 'Boards'],
             ['label' => $salesBoard->name],
-        ]">
+            $boardPartner ? ['label' => 'Partner: ' . $boardPartner->name] : null,
+        ]))">
             @can('update', $salesBoard)
                 <x-nx-button variant="primary" wire:click="createDeal()">
                     <span class="flex items-center gap-2">
@@ -421,4 +425,5 @@ $columnTones = $pipelineColumns->mapWithKeys(fn ($col, $i) => [$col->id => $tone
     {{-- Modals --}}
     <livewire:sales.board-settings-modal />
     <livewire:sales.board-slot-settings-modal />
+    <livewire:sales.customer-deal-settings-modal />
 </x-ui-page>

@@ -29,6 +29,9 @@
     // Verantwortlicher
     $userInCharge = $deal->userInCharge ?? null;
     $initials = $userInCharge ? mb_strtoupper(mb_substr($userInCharge->name ?? $userInCharge->email ?? 'U', 0, 1)) : null;
+
+    // Abnehmer (verknüpfte CRM-Company) – eager geladen über companyLinks.company
+    $abnehmerCompany = optional($deal->companyLinks->first())->company;
 @endphp
 <x-nx-kanban-card
     :title="''"
@@ -55,6 +58,14 @@
                 @svg('heroicon-s-star', 'w-3.5 h-3.5 mt-0.5 text-[color:var(--nx-warning)] shrink-0')
             @endif
         </div>
+
+        {{-- Abnehmer (verknüpfte Company) --}}
+        @if($abnehmerCompany)
+            <div class="mt-1 inline-flex items-center gap-1 text-xs text-[color:var(--nx-muted)] min-w-0">
+                @svg('heroicon-o-building-office-2', 'w-3 h-3 shrink-0')
+                <span class="truncate">{{ $abnehmerCompany->name }}</span>
+            </div>
+        @endif
 
         {{-- Wert + Wahrscheinlichkeit --}}
         @if($primaryValue > 0 || $deal->probability_percent)

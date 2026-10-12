@@ -216,4 +216,7 @@
             </x-nx-kanban-column>
         @endforeach
     </x-nx-kanban-container>
+
+    {{-- Modals --}}
+    <livewire:sales.customer-deal-settings-modal />
 </x-ui-page>

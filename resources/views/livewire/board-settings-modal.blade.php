@@ -58,6 +58,45 @@
                 </div>
             </div>
 
+            {{-- Partner (CRM-Company) --}}
+            <div class="space-y-4">
+                <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)] m-0 flex items-center gap-2">
+                    @svg('heroicon-o-building-office-2', 'w-3.5 h-3.5')
+                    Partner
+                </h3>
+                <p class="text-[12px] text-[var(--nx-muted)] m-0">
+                    Die Partner-Company, deren Markt dieses Board abbildet. Die Deals im Board sind die Abnehmer dieses Partners.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <x-nx-input-text
+                            name="partnerCompanySearch"
+                            label="Partner suchen"
+                            wire:model.live.debounce.300ms="partnerCompanySearch"
+                            placeholder="Firma suchen..."
+                        />
+                    </div>
+                    <div>
+                        <x-nx-input-select
+                            name="partnerCompanyId"
+                            label="Partner auswählen"
+                            :options="collect($partnerCompanyOptions)->map(fn($o) => (object) $o)"
+                            optionValue="value"
+                            optionLabel="label"
+                            :nullable="true"
+                            nullLabel="– Kein Partner –"
+                            wire:model.live="partnerCompanyId"
+                        />
+                    </div>
+                </div>
+
+                <div class="p-3 bg-[color:var(--nx-bg)] rounded-lg border border-[color:var(--nx-line)]">
+                    <div class="text-sm font-medium text-[var(--nx-text)] mb-1">Aktueller Partner:</div>
+                    <div class="text-sm text-[var(--nx-muted)]">{{ $partnerCompanyDisplay ?? 'Kein Partner ausgewählt' }}</div>
+                </div>
+            </div>
+
             {{-- Board Statistiken --}}
             <div class="space-y-4">
                 <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)] m-0">Statistiken</h3>
