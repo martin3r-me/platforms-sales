@@ -9,7 +9,6 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Tools\Concerns\HasStandardGetOperations;
 use Platform\Sales\Tools\Concerns\ResolvesSalesTeam;
 use Platform\Sales\Models\SalesBoard;
-use Platform\Crm\Models\CrmCompanyLink;
 
 class ListBoardsTool implements ToolContract, ToolMetadataContract
 {
@@ -63,22 +62,22 @@ class ListBoardsTool implements ToolContract, ToolMetadataContract
 
             $result = $this->applyStandardPaginationResult($query, $arguments);
 
-            // Partner-Companies gebündelt laden (vermeidet N+1, unabhängig vom Auth-Kontext)
-            $boardMorph = (new SalesBoard)->getMorphClass();
-            $partnerLinks = CrmCompanyLink::whereIn('linkable_id', $result['data']->pluck('id'))
-                ->where('linkable_type', $boardMorph)
-                ->where('team_id', $teamId)
-                ->with('company')
-                ->get()
-                ->keyBy('linkable_id');
+            // Partner-Entities gebündelt laden (vermeidet N+1). Organization-Modul ist optional.
+            $partnerByBoard = collect();
+            if (class_exists(\Platform\Organization\Services\EntityDimensionBridge::class)) {
+                $partnerByBoard = \Platform\Organization\Services\EntityDimensionBridge::linksForLinkables(
+                    ['sales_board'],
+                    $result['data']->pluck('id')->all()
+                )->keyBy('linkable_id');
+            }
 
-            $boards = $result['data']->map(function (SalesBoard $board) use ($arguments, $partnerLinks) {
-                $partner = $partnerLinks->get($board->id)?->company;
+            $boards = $result['data']->map(function (SalesBoard $board) use ($arguments, $partnerByBoard) {
+                $partner = $partnerByBoard->get($board->id)?->entity;
                 $data = [
                     'id' => $board->id,
                     'name' => $board->name,
                     'description' => $board->description,
-                    'partner_company_id' => $partner?->id,
+                    'partner_entity_id' => $partner?->id,
                     'partner' => $partner?->name,
                     'created_at' => $board->created_at?->toIso8601String(),
                     'updated_at' => $board->updated_at?->toIso8601String(),

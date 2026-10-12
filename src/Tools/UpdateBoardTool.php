@@ -9,8 +9,6 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Tools\Concerns\HasStandardizedWriteOperations;
 use Platform\Sales\Tools\Concerns\ResolvesSalesTeam;
 use Platform\Sales\Models\SalesBoard;
-use Platform\Crm\Models\CrmCompany;
-use Platform\Crm\Models\CrmCompanyLink;
 
 class UpdateBoardTool implements ToolContract, ToolMetadataContract
 {
@@ -42,9 +40,9 @@ class UpdateBoardTool implements ToolContract, ToolMetadataContract
                     'type' => 'string',
                     'description' => 'Optional: Neue Beschreibung.',
                 ],
-                'partner_company_id' => [
+                'entity_id' => [
                     'type' => 'integer',
-                    'description' => 'Optional: CRM-Company als Partner dieses Boards setzen. 0 oder null entfernt den Partner. Nutze "crm.companies.GET".',
+                    'description' => 'Optional: Organisation-Entity (Partner) dieses Boards setzen. 0 oder null entfernt den Partner. Nutze "organization.entities.GET".',
                 ],
             ],
             'required' => ['board_id'],
@@ -83,39 +81,45 @@ class UpdateBoardTool implements ToolContract, ToolMetadataContract
                 $updated[] = 'description';
             }
 
-            // Partner-Company setzen/entfernen
+            // Partner-Entity setzen/entfernen (DimensionLink dimension=entity, wie Planner-Projekte)
             $partnerName = null;
-            if (array_key_exists('partner_company_id', $arguments)) {
-                $partnerId = $arguments['partner_company_id'];
-                if ($partnerId === 0 || $partnerId === '0') { $partnerId = null; }
+            if (array_key_exists('entity_id', $arguments)) {
+                $entityId = $arguments['entity_id'];
+                if ($entityId === 0 || $entityId === '0') { $entityId = null; }
 
-                // Bestehende Partner-Verknüpfung(en) dieses Boards entfernen
-                CrmCompanyLink::where('linkable_type', $board->getMorphClass())
-                    ->where('linkable_id', $board->id)
-                    ->where('team_id', $board->team_id)
-                    ->delete();
+                if (! class_exists(\Platform\Organization\Services\EntityDimensionBridge::class)) {
+                    return ToolResult::error('UNAVAILABLE', 'Organization-Modul ist nicht verfügbar; Entity-Verknüpfung nicht möglich.');
+                }
 
-                if ($partnerId) {
-                    $company = CrmCompany::where('id', (int) $partnerId)
-                        ->where('team_id', $board->team_id)
-                        ->first();
-                    if (!$company) {
-                        return ToolResult::error('NOT_FOUND', 'Partner-Company nicht gefunden oder gehört nicht zum Team. Nutze "crm.companies.GET".');
+                if ($entityId) {
+                    $entity = class_exists(\Platform\Organization\Models\OrganizationEntity::class)
+                        ? \Platform\Organization\Models\OrganizationEntity::where('id', (int) $entityId)
+                            ->where('team_id', $board->team_id)
+                            ->first()
+                        : null;
+                    if (!$entity) {
+                        return ToolResult::error('NOT_FOUND', 'Partner-Entity nicht gefunden oder gehört nicht zum Team. Nutze "organization.entities.GET".');
                     }
-                    CrmCompanyLink::create([
-                        'company_id' => $company->id,
-                        'linkable_id' => $board->id,
-                        'linkable_type' => $board->getMorphClass(),
-                        'team_id' => $board->team_id,
-                        'created_by_user_id' => $context->user->id,
-                    ]);
-                    $partnerName = $company->name;
+                    \Platform\Organization\Services\EntityDimensionBridge::replaceLinks(
+                        'sales_board',
+                        $board->id,
+                        $entity->id,
+                        ['team_id' => $board->team_id, 'created_by_user_id' => $context->user->id]
+                    );
+                    $partnerName = $entity->name;
+                } else {
+                    // Entfernen: bestehende Entity-Links abhängen
+                    foreach (\Platform\Organization\Services\EntityDimensionBridge::linksForLinkables(['sales_board'], [$board->id]) as $link) {
+                        if ($link->entity_id) {
+                            \Platform\Organization\Services\EntityDimensionBridge::deleteLink($link->entity_id, 'sales_board', $board->id);
+                        }
+                    }
                 }
                 $updated[] = 'partner';
             }
 
             if (empty($updated)) {
-                return ToolResult::error('VALIDATION_ERROR', 'Keine Änderungen angegeben. Verfügbare Felder: name, description, partner_company_id.');
+                return ToolResult::error('VALIDATION_ERROR', 'Keine Änderungen angegeben. Verfügbare Felder: name, description, entity_id.');
             }
 
             $board->save();

@@ -8,12 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Symfony\Component\Uid\UuidV7;
 use Illuminate\Support\Facades\Log;
 use Platform\ActivityLog\Traits\LogsActivity;
-use Platform\Crm\Traits\HasCompanyLinksTrait;
-use Platform\Crm\Models\CrmCompany;
 
 class SalesBoard extends Model
 {
-    use LogsActivity, HasCompanyLinksTrait;
+    use LogsActivity;
 
     protected $fillable = [
         'uuid',
@@ -70,25 +68,48 @@ class SalesBoard extends Model
     }
 
     /**
-     * Partner-Company dieses Boards (EFP-Modell: ein Vertriebsboard pro Partner).
+     * Partner dieses Boards als Organisation-Entity (EFP-Modell: ein Board pro Partner).
      *
-     * Umgesetzt über das polymorphe CRM-Link-Pattern (crm_company_links) statt
-     * eines harten FKs – damit bleibt das Sales-Schema unabhängig vom CRM-Schema.
-     * Ein Board hat genau einen Partner: die (einzige) verknüpfte Company.
+     * Umgesetzt wie Planner-Projekte: das Board hängt über einen DimensionLink
+     * (dimension=entity) an der Org-Entity. Kein harter FK, kein CRM-Schema-Bezug –
+     * das Organization-Modul ist optionale Abhängigkeit (class_exists-Guard).
      */
-    public function partner(): ?CrmCompany
+    public function partnerEntity()
     {
-        return $this->companies()->first();
+        if (! class_exists(\Platform\Organization\Services\EntityDimensionBridge::class)) {
+            return null;
+        }
+
+        return \Platform\Organization\Services\EntityDimensionBridge::linksForLinkables(
+            ['sales_board'],
+            [$this->id]
+        )->first()?->entity;
     }
 
     /**
-     * Setzt die Partner-Company (ersetzt eine ggf. vorhandene Verknüpfung).
+     * Setzt/ersetzt die Partner-Entity dieses Boards (null entfernt die Verknüpfung).
      */
-    public function setPartner(?CrmCompany $company): void
+    public function setPartnerEntity(?int $entityId): void
     {
-        $this->detachAllCompanies();
-        if ($company) {
-            $this->attachCompany($company);
+        if (! class_exists(\Platform\Organization\Services\EntityDimensionBridge::class)) {
+            return;
+        }
+
+        $bridge = \Platform\Organization\Services\EntityDimensionBridge::class;
+
+        if ($entityId) {
+            $bridge::replaceLinks('sales_board', $this->id, $entityId, [
+                'team_id' => $this->team_id,
+                'created_by_user_id' => auth()->id(),
+            ]);
+            return;
+        }
+
+        // Entfernen: bestehende Entity-Links dieses Boards abhängen
+        foreach ($bridge::linksForLinkables(['sales_board'], [$this->id]) as $link) {
+            if ($link->entity_id) {
+                $bridge::deleteLink($link->entity_id, 'sales_board', $this->id);
+            }
         }
     }
 }

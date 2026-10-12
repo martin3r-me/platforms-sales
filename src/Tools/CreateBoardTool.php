@@ -11,8 +11,6 @@ use Platform\Sales\Tools\Concerns\ResolvesSalesTeam;
 use Platform\Sales\Models\SalesBoard;
 use Platform\Sales\Models\SalesBoardSlot;
 use Platform\Sales\Models\SalesBoardTemplate;
-use Platform\Crm\Models\CrmCompany;
-use Platform\Crm\Models\CrmCompanyLink;
 
 class CreateBoardTool implements ToolContract, ToolMetadataContract
 {
@@ -48,9 +46,9 @@ class CreateBoardTool implements ToolContract, ToolMetadataContract
                     'type' => 'integer',
                     'description' => 'Optional: ID eines Board-Templates. Wenn angegeben, werden die Spalten aus dem Template übernommen.',
                 ],
-                'partner_company_id' => [
+                'entity_id' => [
                     'type' => 'integer',
-                    'description' => 'Optional: CRM-Company, die als Partner dieses Boards verknüpft wird (ein Board pro Partner). Nutze "crm.companies.GET".',
+                    'description' => 'Optional: ID der Organisation-Entity (Partner), mit der das Board verknüpft wird (ein Board pro Partner). Nutze "organization.entities.GET" um Entity-IDs zu finden.',
                 ],
             ],
             'required' => ['name'],
@@ -115,23 +113,24 @@ class CreateBoardTool implements ToolContract, ToolMetadataContract
 
             $board->refresh();
 
-            // Optional: Partner-Company verknüpfen
+            // Optional: Partner-Entity verknüpfen (DimensionLink dimension=entity, wie Planner-Projekte)
             $linkedPartner = null;
-            if (!empty($arguments['partner_company_id'])) {
-                $company = CrmCompany::where('id', (int) $arguments['partner_company_id'])
+            if (!empty($arguments['entity_id'])
+                && class_exists(\Platform\Organization\Services\EntityDimensionBridge::class)
+                && class_exists(\Platform\Organization\Models\OrganizationEntity::class)) {
+                $entity = \Platform\Organization\Models\OrganizationEntity::where('id', (int) $arguments['entity_id'])
                     ->where('team_id', $teamId)
                     ->first();
-                if (!$company) {
-                    return ToolResult::error('NOT_FOUND', 'Partner-Company nicht gefunden oder gehört nicht zum Team. Nutze "crm.companies.GET".');
+                if (!$entity) {
+                    return ToolResult::error('NOT_FOUND', 'Partner-Entity nicht gefunden oder gehört nicht zum Team. Nutze "organization.entities.GET".');
                 }
-                CrmCompanyLink::create([
-                    'company_id' => $company->id,
-                    'linkable_id' => $board->id,
-                    'linkable_type' => $board->getMorphClass(),
-                    'team_id' => $teamId,
-                    'created_by_user_id' => $context->user->id,
-                ]);
-                $linkedPartner = $company->name;
+                \Platform\Organization\Services\EntityDimensionBridge::createLink(
+                    $entity->id,
+                    'sales_board',
+                    $board->id,
+                    ['team_id' => $teamId, 'created_by_user_id' => $context->user->id]
+                );
+                $linkedPartner = $entity->name;
             }
 
             return ToolResult::success([

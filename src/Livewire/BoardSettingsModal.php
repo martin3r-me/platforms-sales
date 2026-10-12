@@ -7,8 +7,6 @@ use Platform\Sales\Models\SalesBoard;
 use Platform\Sales\Models\SalesBoardTemplate;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
-use Platform\Core\Contracts\CrmCompanyResolverInterface;
-use Platform\Core\Contracts\CrmCompanyOptionsProviderInterface;
 
 class BoardSettingsModal extends Component
 {
@@ -17,11 +15,12 @@ class BoardSettingsModal extends Component
     public $teamUsers = [];
     public $availableTemplates;
 
-    // Partner-Company (EFP-Modell: ein Board pro Partner)
-    public $partnerCompanyId = null;
-    public $partnerCompanyDisplay = null;
-    public $partnerCompanyOptions = [];
-    public $partnerCompanySearch = '';
+    // Partner als Organisation-Entity (ein Board pro Partner; wie Planner-Projekte
+    // hängt das Board via DimensionLink an der Org-Entity).
+    public $entityId = null;
+    public $entityDisplay = null;
+    public $entityOptions = [];
+    public $entitySearch = '';
 
     public function rules(): array
     {
@@ -36,23 +35,22 @@ class BoardSettingsModal extends Component
     {
         $this->board = SalesBoard::findOrFail($boardId);
         $this->authorize('update', $this->board);
-        
+
         $this->teamUsers = Auth::user()
             ->currentTeam
             ->users()
             ->orderBy('name')
             ->get();
-            
+
         $this->availableTemplates = SalesBoardTemplate::where('team_id', Auth::user()->currentTeam->id)
             ->orWhere('is_system', true)
             ->orderBy('name')
             ->get();
 
-        // Aktuellen Partner laden
-        $currentPartner = $this->board->partner();
-        $this->partnerCompanyId = $currentPartner?->id;
-        $this->resolvePartnerCompanyDisplay();
-        $this->loadPartnerCompanyOptions('');
+        // Aktuelle Partner-Entity laden
+        $this->entityId = $this->board->partnerEntity()?->id;
+        $this->resolveEntityDisplay();
+        $this->loadEntityOptions('');
 
         $this->modalShow = true;
     }
@@ -62,36 +60,54 @@ class BoardSettingsModal extends Component
         $this->modalShow = false;
         $this->reset([
             'board', 'teamUsers', 'availableTemplates',
-            'partnerCompanyId', 'partnerCompanyDisplay', 'partnerCompanyOptions', 'partnerCompanySearch',
+            'entityId', 'entityDisplay', 'entityOptions', 'entitySearch',
         ]);
     }
 
-    public function updatedPartnerCompanyId($value)
+    public function updatedEntityId($value)
     {
-        $this->resolvePartnerCompanyDisplay();
+        $this->resolveEntityDisplay();
     }
 
-    public function updatedPartnerCompanySearch($value)
+    public function updatedEntitySearch($value)
     {
-        $this->loadPartnerCompanyOptions($this->partnerCompanySearch);
+        $this->loadEntityOptions($this->entitySearch);
     }
 
-    private function resolvePartnerCompanyDisplay()
+    private function rootTeamId(): ?int
     {
-        if ($this->partnerCompanyId) {
-            /** @var CrmCompanyResolverInterface $resolver */
-            $resolver = app(CrmCompanyResolverInterface::class);
-            $this->partnerCompanyDisplay = $resolver->displayName($this->partnerCompanyId);
-        } else {
-            $this->partnerCompanyDisplay = null;
+        $user = Auth::user();
+        $baseTeam = $user->currentTeamRelation;
+
+        return $baseTeam ? $baseTeam->getRootTeam()->id : $user->current_team_id;
+    }
+
+    private function resolveEntityDisplay(): void
+    {
+        $this->entityDisplay = null;
+
+        if ($this->entityId && class_exists(\Platform\Organization\Models\OrganizationEntity::class)) {
+            $this->entityDisplay = \Platform\Organization\Models\OrganizationEntity::find($this->entityId)?->name;
         }
     }
 
-    private function loadPartnerCompanyOptions($search = '')
+    private function loadEntityOptions($search = ''): void
     {
-        /** @var CrmCompanyOptionsProviderInterface $optionsProvider */
-        $optionsProvider = app(CrmCompanyOptionsProviderInterface::class);
-        $this->partnerCompanyOptions = $optionsProvider->options($search);
+        $this->entityOptions = [];
+
+        if (! class_exists(\Platform\Organization\Models\OrganizationEntity::class)) {
+            return;
+        }
+
+        $this->entityOptions = \Platform\Organization\Models\OrganizationEntity::query()
+            ->where('team_id', $this->rootTeamId())
+            ->where('is_active', true)
+            ->when(trim((string) $search) !== '', fn ($q) => $q->where('name', 'like', '%' . trim($search) . '%'))
+            ->orderBy('name')
+            ->limit(20)
+            ->get(['id', 'name'])
+            ->map(fn ($e) => ['value' => $e->id, 'label' => $e->name])
+            ->toArray();
     }
 
     public function save()
@@ -99,11 +115,8 @@ class BoardSettingsModal extends Component
         $this->validate();
         $this->board->save();
 
-        // Partner-Company setzen/aktualisieren
-        $company = $this->partnerCompanyId
-            ? \Platform\Crm\Models\CrmCompany::find($this->partnerCompanyId)
-            : null;
-        $this->board->setPartner($company);
+        // Partner-Entity setzen/aktualisieren (DimensionLink dimension=entity)
+        $this->board->setPartnerEntity($this->entityId ? (int) $this->entityId : null);
 
         $this->closeModal();
         $this->dispatch('board-updated');

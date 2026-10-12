@@ -68,8 +68,8 @@ $statsLost = [
     ],
 ];
 
-// Partner-Company dieses Boards (EFP-Modell: ein Board pro Partner)
-$boardPartner = $salesBoard->partner();
+// Partner-Entity dieses Boards (EFP-Modell: ein Board pro Partner)
+$boardPartner = $salesBoard->partnerEntity();
 
 // Tone-Mapping für Pipeline-Spalten (mittlere Spalten)
 $tonePalette = ['indigo', 'amber', 'teal', 'violet', 'sky', 'pink', 'rose', 'emerald'];
