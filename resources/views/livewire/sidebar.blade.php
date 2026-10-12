@@ -42,21 +42,38 @@
         </button>
     </div>
 
-    {{-- Abschnitt: Sales Boards --}}
+    {{-- Abschnitt: Sales Boards (nach Partner-Entity gruppiert, wie Planner) --}}
     <div>
         <div class="mt-2" x-show="!collapsed">
-            @if($salesBoards->isNotEmpty())
-                <x-ui-sidebar-list label="Sales Boards">
-                    @foreach($salesBoards as $board)
-                        <x-ui-sidebar-item :href="route('sales.boards.show', ['salesBoard' => $board])">
-                            @svg('heroicon-o-folder', 'w-5 h-5 flex-shrink-0 text-[var(--nx-text)]')
-                            <div class="flex-1 min-w-0 ml-2">
-                                <div class="truncate text-sm font-medium">{{ $board->name }}</div>
-                            </div>
-                        </x-ui-sidebar-item>
+            {{-- 1. Nach EntityType → Entity-Baum → Boards --}}
+            @foreach($entityTypeGroups as $typeGroup)
+                <x-ui-sidebar-list wire:key="sales-type-group-{{ $typeGroup['type_id'] }}" :label="$typeGroup['type_name']">
+                    @foreach($typeGroup['entities'] as $entityNode)
+                        @include('sales::livewire.partials.sidebar-entity-node', [
+                            'node' => $entityNode,
+                            'typeIcon' => $typeGroup['type_icon'] ?? null,
+                        ])
                     @endforeach
                 </x-ui-sidebar-list>
-            @else
+            @endforeach
+
+            {{-- 2. Boards ohne Partner-Entity --}}
+            @if($unlinkedBoards->isNotEmpty())
+                <x-ui-sidebar-list label="Ohne Partner">
+                    @foreach($unlinkedBoards as $board)
+                        <a wire:key="sales-unlinked-board-{{ $board->id }}"
+                           href="{{ route('sales.boards.show', ['salesBoard' => $board]) }}"
+                           wire:navigate
+                           title="{{ $board->name }}"
+                           class="flex items-center gap-1.5 py-0.5 pl-3 pr-2 text-[var(--nx-text)] hover:text-[var(--nx-accent)] transition truncate">
+                            <span class="w-1 h-1 rounded-full flex-shrink-0 bg-[var(--nx-muted)] opacity-40"></span>
+                            <span class="truncate text-[11px]">{{ $board->name }}</span>
+                        </a>
+                    @endforeach
+                </x-ui-sidebar-list>
+            @endif
+
+            @if($entityTypeGroups->isEmpty() && $unlinkedBoards->isEmpty())
                 <div class="px-3 py-1 text-xs text-[var(--nx-muted)]">
                     Keine Sales Boards
                 </div>
