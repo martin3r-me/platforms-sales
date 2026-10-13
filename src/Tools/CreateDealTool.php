@@ -130,6 +130,10 @@ class CreateDealTool implements ToolContract, ToolMetadataContract
                     'type' => 'integer',
                     'description' => 'Optional: CRM-Contact (Ansprechpartner), der mit dem Deal verknüpft wird. Nutze "crm.contacts.GET" um Contacts zu finden.',
                 ],
+                'entity_id' => [
+                    'type' => 'integer',
+                    'description' => 'Optional: Org-Entity des Abnehmers (z.B. Großhändler) für VSM/Org-Rollups – zusätzlich zur Company. Nutze "organization.entities.GET".',
+                ],
             ],
             'required' => ['title'],
         ]);
@@ -248,6 +252,26 @@ class CreateDealTool implements ToolContract, ToolMetadataContract
                 $linkedContact = $contact->name;
             }
 
+            // Optional: Abnehmer-Entity verknüpfen (DimensionLink dimension=entity)
+            $linkedEntity = null;
+            if (!empty($arguments['entity_id'])
+                && class_exists(\Platform\Organization\Services\EntityDimensionBridge::class)
+                && class_exists(\Platform\Organization\Models\OrganizationEntity::class)) {
+                $entity = \Platform\Organization\Models\OrganizationEntity::where('id', (int) $arguments['entity_id'])
+                    ->where('team_id', $teamId)
+                    ->first();
+                if (!$entity) {
+                    return ToolResult::error('NOT_FOUND', 'Abnehmer-Entity nicht gefunden oder gehört nicht zum Team. Nutze "organization.entities.GET".');
+                }
+                \Platform\Organization\Services\EntityDimensionBridge::createLink(
+                    $entity->id,
+                    'sales_deal',
+                    $deal->id,
+                    ['team_id' => $teamId, 'created_by_user_id' => $context->user->id]
+                );
+                $linkedEntity = $entity->name;
+            }
+
             return ToolResult::success([
                 'id' => $deal->id,
                 'title' => $deal->title,
@@ -257,6 +281,7 @@ class CreateDealTool implements ToolContract, ToolMetadataContract
                 'slot_id' => $deal->sales_board_slot_id,
                 'company' => $linkedCompany,
                 'contact' => $linkedContact,
+                'entity' => $linkedEntity,
                 'message' => "Deal '{$deal->title}' erfolgreich erstellt.",
             ]);
         } catch (\Throwable $e) {

@@ -122,6 +122,10 @@ class UpdateDealTool implements ToolContract, ToolMetadataContract
                     'type' => 'integer',
                     'description' => 'Optional: Deal-Typ-ID. Nutze 0 um den Typ zu entfernen.',
                 ],
+                'entity_id' => [
+                    'type' => 'integer',
+                    'description' => 'Optional: Org-Entity des Abnehmers setzen. 0/null entfernt sie. Nutze "organization.entities.GET".',
+                ],
             ],
             'required' => ['deal_id'],
         ]);
@@ -251,6 +255,40 @@ class UpdateDealTool implements ToolContract, ToolMetadataContract
                     $deal->sales_board_slot_id = $slot->id;
                 }
                 $updated[] = 'slot_id';
+            }
+
+            // Abnehmer-Entity setzen/entfernen (DimensionLink dimension=entity)
+            if (array_key_exists('entity_id', $arguments)) {
+                $entityId = $arguments['entity_id'];
+                if ($entityId === 0 || $entityId === '0') { $entityId = null; }
+
+                if (! class_exists(\Platform\Organization\Services\EntityDimensionBridge::class)) {
+                    return ToolResult::error('UNAVAILABLE', 'Organization-Modul ist nicht verfügbar; Entity-Verknüpfung nicht möglich.');
+                }
+
+                if ($entityId) {
+                    $entity = class_exists(\Platform\Organization\Models\OrganizationEntity::class)
+                        ? \Platform\Organization\Models\OrganizationEntity::where('id', (int) $entityId)
+                            ->where('team_id', $deal->team_id)
+                            ->first()
+                        : null;
+                    if (!$entity) {
+                        return ToolResult::error('NOT_FOUND', 'Abnehmer-Entity nicht gefunden oder gehört nicht zum Team. Nutze "organization.entities.GET".');
+                    }
+                    \Platform\Organization\Services\EntityDimensionBridge::replaceLinks(
+                        'sales_deal',
+                        $deal->id,
+                        $entity->id,
+                        ['team_id' => $deal->team_id, 'created_by_user_id' => $context->user->id]
+                    );
+                } else {
+                    foreach (\Platform\Organization\Services\EntityDimensionBridge::linksForLinkables(['sales_deal'], [$deal->id]) as $link) {
+                        if ($link->entity_id) {
+                            \Platform\Organization\Services\EntityDimensionBridge::deleteLink($link->entity_id, 'sales_deal', $deal->id);
+                        }
+                    }
+                }
+                $updated[] = 'entity';
             }
 
             if (empty($updated)) {

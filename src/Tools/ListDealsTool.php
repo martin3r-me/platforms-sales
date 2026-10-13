@@ -123,7 +123,17 @@ class ListDealsTool implements ToolContract, ToolMetadataContract
                 $result['data']->load('activeBillables');
             }
 
-            $deals = $result['data']->map(function (SalesDeal $deal) use ($includeRelations, $includeBillables) {
+            // Abnehmer-Entities gebündelt laden (vermeidet N+1). Organization ist optional.
+            $entityByDeal = collect();
+            if (class_exists(\Platform\Organization\Services\EntityDimensionBridge::class)) {
+                $entityByDeal = \Platform\Organization\Services\EntityDimensionBridge::linksForLinkables(
+                    ['sales_deal'],
+                    $result['data']->pluck('id')->all()
+                )->keyBy('linkable_id');
+            }
+
+            $deals = $result['data']->map(function (SalesDeal $deal) use ($includeRelations, $includeBillables, $entityByDeal) {
+                $abnehmerEntity = $entityByDeal->get($deal->id)?->entity;
                 $data = [
                     'id' => $deal->id,
                     'title' => $deal->title,
@@ -144,6 +154,8 @@ class ListDealsTool implements ToolContract, ToolMetadataContract
                     'sales_board_id' => $deal->sales_board_id,
                     'sales_board_slot_id' => $deal->sales_board_slot_id,
                     'user_in_charge_id' => $deal->user_in_charge_id,
+                    'abnehmer_entity_id' => $abnehmerEntity?->id,
+                    'abnehmer_entity' => $abnehmerEntity?->name,
                     'created_at' => $deal->created_at?->toIso8601String(),
                 ];
 

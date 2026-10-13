@@ -105,6 +105,45 @@
                 </div>
             </div>
 
+            {{-- Abnehmer-Entity (Organisation) --}}
+            <div class="space-y-4">
+                <h4 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)] m-0 flex items-center gap-2">
+                    @svg('heroicon-o-building-office-2', 'w-3.5 h-3.5')
+                    Abnehmer (Organisation) – optional
+                </h4>
+                <p class="text-[11px] text-[var(--nx-muted)] m-0">
+                    Für strategisch getrackte Abnehmer (Großhändler / Key-Accounts): verknüpft den Deal zusätzlich mit der Org-Entity, damit er im VSM/Org-Modell auftaucht.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <x-nx-input-text
+                            name="entitySearch"
+                            label="Organisation suchen"
+                            wire:model.live.debounce.300ms="entitySearch"
+                            placeholder="Entity suchen..."
+                        />
+                    </div>
+                    <div>
+                        <x-nx-input-select
+                            name="entityId"
+                            label="Organisation auswählen"
+                            :options="collect($entityOptions)->map(fn($o) => (object) $o)"
+                            optionValue="value"
+                            optionLabel="label"
+                            :nullable="true"
+                            nullLabel="– Keine Organisation –"
+                            wire:model.live="entityId"
+                        />
+                    </div>
+                </div>
+
+                <div class="p-3 bg-[color:var(--nx-bg)] rounded-lg border border-[color:var(--nx-line)]">
+                    <div class="text-sm font-medium text-[var(--nx-text)] mb-1">Aktuelle Auswahl:</div>
+                    <div class="text-sm text-[var(--nx-muted)]">{{ $entityDisplay ?? 'Keine Organisation ausgewählt' }}</div>
+                </div>
+            </div>
+
             {{-- Current Links Summary --}}
             @if($deal->companies()->count() > 0 || $deal->contacts()->count() > 0)
                 <x-nx-callout variant="success" title="Aktuelle Verknüpfungen">

@@ -302,6 +302,52 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
      * - $deal->detachContact($contact) - Unlink a contact
      */
 
+    /**
+     * Abnehmer als Organisation-Entity (optional, zusätzlich zur CRM-Company).
+     *
+     * Der Deal ist die Beziehung Partner (Board-Entity) ↔ Abnehmer. Strategisch
+     * getrackte Abnehmer (Großhändler/Key-Accounts) hängen zusätzlich als Org-Entity
+     * am Deal (DimensionLink dimension=entity), damit sie im VSM/Org-Modell auftauchen.
+     * Organization ist optionale Abhängigkeit (class_exists-Guard).
+     */
+    public function abnehmerEntity()
+    {
+        if (! class_exists(\Platform\Organization\Services\EntityDimensionBridge::class)) {
+            return null;
+        }
+
+        return \Platform\Organization\Services\EntityDimensionBridge::linksForLinkables(
+            ['sales_deal'],
+            [$this->id]
+        )->first()?->entity;
+    }
+
+    /**
+     * Setzt/ersetzt die Abnehmer-Entity dieses Deals (null entfernt die Verknüpfung).
+     */
+    public function setAbnehmerEntity(?int $entityId): void
+    {
+        if (! class_exists(\Platform\Organization\Services\EntityDimensionBridge::class)) {
+            return;
+        }
+
+        $bridge = \Platform\Organization\Services\EntityDimensionBridge::class;
+
+        if ($entityId) {
+            $bridge::replaceLinks('sales_deal', $this->id, $entityId, [
+                'team_id' => $this->team_id,
+                'created_by_user_id' => auth()->id(),
+            ]);
+            return;
+        }
+
+        foreach ($bridge::linksForLinkables(['sales_deal'], [$this->id]) as $link) {
+            if ($link->entity_id) {
+                $bridge::deleteLink($link->entity_id, 'sales_deal', $this->id);
+            }
+        }
+    }
+
     // Vertriebsspezifische Methoden
     public function getCalculatedExpectedValueAttribute(): float
     {
