@@ -101,7 +101,7 @@
                 @if($userInCharge)
                     <span class="inline-flex items-center gap-1.5 min-w-0 text-xs text-[color:var(--nx-muted)]">
                         @if($userInCharge->avatar)
-                            <img src="{{ $userInCharge->avatar }}" alt="" class="w-4 h-4 rounded-full object-cover shrink-0">
+                            <img src="{{ method_exists($userInCharge, 'avatarUrl') ? $userInCharge->avatarUrl() : $userInCharge->avatar }}" loading="lazy" alt="" class="w-4 h-4 rounded-full object-cover shrink-0">
                         @else
                             <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[color:var(--nx-bg)] border border-[color:var(--nx-line)] text-[10px] shrink-0">{{ $initials }}</span>
                         @endif
