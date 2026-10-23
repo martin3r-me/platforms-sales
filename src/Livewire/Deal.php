@@ -3,6 +3,8 @@
 namespace Platform\Sales\Livewire;
 
 use Livewire\Component;
+use Illuminate\Database\Eloquent\Model;
+use Platform\Core\Livewire\Concerns\HasPageContext;
 use Illuminate\Support\Facades\Auth;
 use Platform\Sales\Models\SalesDeal;
 use Platform\Sales\Models\SalesDealSource;
@@ -12,6 +14,8 @@ use Platform\Sales\Models\SalesDealBillable;
 
 class Deal extends Component
 {
+    use HasPageContext;
+
     public $deal;
     public $dealSources;
     public $dealTypes;
@@ -53,16 +57,17 @@ class Deal extends Component
         $this->loadBillables();
     }
 
-    public function rendered()
+    protected function pageContext(): ?Model
     {
-        $this->dispatch('comms', [
-            'model' => get_class($this->deal),                                // z. B. 'Platform\Sales\Models\SalesDeal'
-            'modelId' => $this->deal->id,
-            'subject' => $this->deal->title,
-            'description' => $this->deal->description ?? '',
-            'url' => route('sales.deals.show', $this->deal),            // absolute URL zum Deal
-            'source' => 'sales.deal.view',                                // eindeutiger Quell-Identifier (frei wählbar)
-            'recipients' => [$this->deal->user_in_charge_id],                // falls vorhanden, sonst leer
+        return $this->deal;
+    }
+
+    protected function pageContextOptions(): array
+    {
+        return [
+            'url' => route('sales.deals.show', $this->deal),
+            'source' => 'sales.deal.view',
+            'recipients' => array_filter([$this->deal->user_in_charge_id]),
             'meta' => [
                 'deal_value' => $this->deal->deal_value,
                 'probability_percent' => $this->deal->probability_percent,
@@ -70,7 +75,7 @@ class Deal extends Component
                 'deal_source' => $this->deal->deal_source,
                 'deal_type' => $this->deal->deal_type,
             ],
-        ]);
+        ];
     }
 
     public function updatedDeal($property, $value)
