@@ -121,17 +121,6 @@
         </x-ui-page-sidebar>
     </x-slot>
 
-    <x-slot name="activity">
-        <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="true" storeKey="activityOpen" side="right">
-            <div class="p-4 h-full overflow-y-auto bg-[var(--nx-bg)]">
-                <livewire:activity-log.index
-                    :model="$deal"
-                    :key="get_class($deal) . '_' . $deal->id"
-                />
-            </div>
-        </x-ui-page-sidebar>
-    </x-slot>
-
     <x-ui-page-container spacing="space-y-6">
         {{-- Header Card --}}
         <x-nx-card>

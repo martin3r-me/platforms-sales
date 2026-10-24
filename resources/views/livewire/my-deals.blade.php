@@ -135,15 +135,6 @@
         </x-ui-page-sidebar>
     </x-slot>
 
-    <x-slot name="activity">
-        <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
-            <div class="p-4 space-y-3">
-                <div class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)]">Letzte Aktivitäten</div>
-                <x-nx-empty icon="heroicon-o-clock">Keine aktuellen Aktivitäten</x-nx-empty>
-            </div>
-        </x-ui-page-sidebar>
-    </x-slot>
-
     {{-- Kanban-Board --}}
     <x-nx-kanban-container sortable="updateDealOrder" sortable-group="updateDealOrder">
         @foreach($groups as $group)
