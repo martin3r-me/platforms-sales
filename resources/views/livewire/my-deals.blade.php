@@ -138,6 +138,11 @@
     {{-- Kanban-Board --}}
     <x-nx-kanban-container sortable="updateDealOrder" sortable-group="updateDealOrder">
         @foreach($groups as $group)
+            @if(($group->isWonGroup ?? false) && ! $showWonColumn)
+                {{-- Gewonnen eingeklappt: schmaler Streifen rechts --}}
+                <x-nx-kanban-collapsed title="Gewonnen" tone="emerald" :count="$group->tasks->count()" wire:click="toggleShowWonColumn" />
+                @continue
+            @endif
             @php
                 $grpDeals = $group->tasks;
                 $grpTotal = $grpDeals->sum(fn($d) => (float) ($d->deal_value ?? 0));
@@ -170,7 +175,11 @@
                 :count="$grpDeals->count()">
                 <x-slot name="headerActions">
                     <span class="text-[10px] font-semibold tabular-nums text-[color:var(--nx-success)]">{{ number_format($grpTotal, 0, ',', '.') }} €</span>
-                    @if(!$isWon)
+                    @if($isWon)
+                        <button type="button" wire:click="toggleShowWonColumn" class="text-[color:var(--nx-faint)] transition-colors hover:text-[color:var(--nx-text)]" title="Einklappen">
+                            @svg('heroicon-o-chevron-double-right', 'w-4 h-4')
+                        </button>
+                    @else
                         <button
                             wire:click="createDeal('{{ $group->id ?? null }}')"
                             class="text-[var(--nx-muted)] hover:text-[var(--nx-accent)] transition-colors"

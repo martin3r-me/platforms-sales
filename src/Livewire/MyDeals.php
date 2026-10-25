@@ -10,6 +10,13 @@ use Livewire\Attributes\On;
 
 class MyDeals extends Component
 {
+    public bool $showWonColumn = false; // Gewonnen als Spalte statt Streifen
+
+    public function toggleShowWonColumn()
+    {
+        $this->showWonColumn = !$this->showWonColumn;
+    }
+
     #[On('updateDashboard')] 
     public function updateDashboard()
     {

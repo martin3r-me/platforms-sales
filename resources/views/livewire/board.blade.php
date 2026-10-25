@@ -330,10 +330,16 @@ $columnTones = $pipelineColumns->mapWithKeys(fn ($col, $i) => [$col->id => $tone
             </x-nx-kanban-column>
         @endforeach
 
-        {{-- Gewonnen-Spalte (nicht sortierbar) --}}
+        {{-- Gewonnen / Verloren: aufgeklappt als Spalte, sonst schmaler Streifen rechts (nicht sortierbar) --}}
+        @php
+            $wonGroup = $groups->firstWhere('isWonGroup', true);
+            $lostGroup = $groups->firstWhere('isLostGroup', true);
+        @endphp
+        @if($wonGroup && ! $showWonColumn)
+            <x-nx-kanban-collapsed title="Gewonnen" tone="emerald" :count="$wonGroup->deals->count()" :offset="($lostGroup && ! $showLostColumn) ? 1 : 0" wire:click="toggleShowWonColumn" />
+        @endif
         @if($showWonColumn)
             @php
-                $wonGroup = $groups->firstWhere('isWonGroup', true);
                 $wonTotal = $wonGroup ? $wonGroup->deals->sum(fn($d) => (float) ($d->deal_value ?? 0)) : 0;
                 $wonOneTime = 0;
                 $wonArr = 0;
@@ -359,6 +365,9 @@ $columnTones = $pipelineColumns->mapWithKeys(fn ($col, $i) => [$col->id => $tone
                 <x-nx-kanban-column title="GEWONNEN" :sortable-id="null" :scrollable="true" :muted="true" tone="emerald" :count="$wonGroup->deals->count()">
                     <x-slot name="headerActions">
                         <span class="text-[10px] font-semibold tabular-nums text-[color:var(--nx-success)]">{{ number_format($wonTotal, 0, ',', '.') }} €</span>
+                        <button type="button" wire:click="toggleShowWonColumn" class="text-[color:var(--nx-faint)] transition-colors hover:text-[color:var(--nx-text)]" title="Einklappen">
+                            @svg('heroicon-o-chevron-double-right', 'w-4 h-4')
+                        </button>
                     </x-slot>
 
                     <x-slot name="footer">
@@ -387,16 +396,20 @@ $columnTones = $pipelineColumns->mapWithKeys(fn ($col, $i) => [$col->id => $tone
                 </x-nx-kanban-column>
             @endif
         @endif
-        {{-- Verloren-Spalte (nicht sortierbar) --}}
+        @if($lostGroup && ! $showLostColumn)
+            <x-nx-kanban-collapsed title="Verloren" tone="rose" :count="$lostGroup->deals->count()" wire:click="toggleShowLostColumn" />
+        @endif
         @if($showLostColumn)
             @php
-                $lostGroup = $groups->firstWhere('isLostGroup', true);
                 $lostTotal = $lostGroup ? $lostGroup->deals->sum(fn($d) => (float) ($d->deal_value ?? 0)) : 0;
             @endphp
             @if($lostGroup)
                 <x-nx-kanban-column title="VERLOREN" :sortable-id="null" :scrollable="true" :muted="true" tone="rose" :count="$lostGroup->deals->count()">
                     <x-slot name="headerActions">
                         <span class="text-[10px] font-semibold tabular-nums text-[color:var(--nx-danger)]">{{ number_format($lostTotal, 0, ',', '.') }} €</span>
+                        <button type="button" wire:click="toggleShowLostColumn" class="text-[color:var(--nx-faint)] transition-colors hover:text-[color:var(--nx-text)]" title="Einklappen">
+                            @svg('heroicon-o-chevron-double-right', 'w-4 h-4')
+                        </button>
                     </x-slot>
 
                     <x-slot name="footer">
