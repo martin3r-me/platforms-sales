@@ -1,7 +1,8 @@
 @php
-$openDeals = $groups->filter(fn($g) => !($g->isWonGroup ?? false) && !($g->isLostGroup ?? false))->flatMap(fn($g) => $g->deals);
+$openDeals = $groups->filter(fn($g) => !($g->isWonGroup ?? false) && !($g->isLostGroup ?? false) && !($g->isOnHoldGroup ?? false))->flatMap(fn($g) => $g->deals);
 $wonDeals = $groups->filter(fn($g) => $g->isWonGroup ?? false)->flatMap(fn($g) => $g->deals);
 $lostDeals = $groups->filter(fn($g) => $g->isLostGroup ?? false)->flatMap(fn($g) => $g->deals);
+$onHoldDeals = $groups->filter(fn($g) => $g->isOnHoldGroup ?? false)->flatMap(fn($g) => $g->deals);
 $allDeals = $groups->flatMap(fn($g) => $g->deals);
 
 $totalDealValue = $allDeals->reduce(fn($carry, $d) => $carry + (float) ($d->deal_value ?? 0), 0);
@@ -68,12 +69,27 @@ $statsLost = [
     ],
 ];
 
+$statsOnHold = [
+    [
+        'title' => 'Pausiert',
+        'count' => $onHoldDeals->count(),
+        'icon' => 'pause-circle',
+        'variant' => 'warning'
+    ],
+    [
+        'title' => 'Deal Wert',
+        'count' => number_format($onHoldDeals->sum(fn($d) => (float) ($d->deal_value ?? 0)), 0, ',', '.') . ' €',
+        'icon' => 'currency-euro',
+        'variant' => 'warning'
+    ],
+];
+
 // Partner-Entity dieses Boards (EFP-Modell: ein Board pro Partner)
 $boardPartner = $salesBoard->partnerEntity();
 
 // Tone-Mapping für Pipeline-Spalten (mittlere Spalten)
 $tonePalette = ['indigo', 'amber', 'teal', 'violet', 'sky', 'pink', 'rose', 'emerald'];
-$pipelineColumns = $groups->filter(fn ($g) => !($g->isWonGroup ?? false) && !($g->isLostGroup ?? false))->values();
+$pipelineColumns = $groups->filter(fn ($g) => !($g->isWonGroup ?? false) && !($g->isLostGroup ?? false) && !($g->isOnHoldGroup ?? false))->values();
 $columnTones = $pipelineColumns->mapWithKeys(fn ($col, $i) => [$col->id => $tonePalette[$i % count($tonePalette)]]);
 @endphp
 
@@ -192,6 +208,43 @@ $columnTones = $pipelineColumns->mapWithKeys(fn ($col, $i) => [$col->id => $tone
                     </button>
                     <div class="space-y-1.5">
                         @foreach($statsLost as $stat)
+                            <div class="flex items-center justify-between py-1.5 px-2 rounded bg-[var(--nx-bg)]">
+                                <div class="flex items-center gap-2">
+                                    @svg('heroicon-o-' . $stat['icon'], 'w-4 h-4 text-[color:var(--nx-' . $stat['variant'] . ')]')
+                                    <span class="text-[13px] text-[var(--nx-text)]">{{ $stat['title'] }}</span>
+                                </div>
+                                <span class="text-[13px] font-semibold tabular-nums text-[color:var(--nx-{{ $stat['variant'] }})]">
+                                    {{ $stat['count'] }}
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                </section>
+
+                {{-- Board-Statistiken: Pausiert --}}
+                <section class="p-3 rounded-lg bg-[color:var(--nx-surface)] border border-[color:var(--nx-line)] shadow-[var(--nx-shadow-card)]">
+                    <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)] mb-2">Pausiert</h3>
+                    <button
+                        wire:click="toggleShowOnHoldColumn"
+                        class="w-full flex items-center justify-between py-2 px-3 mb-2 rounded bg-[rgba(245,159,0,.09)] hover:bg-[rgba(245,159,0,.15)] border border-[rgba(245,159,0,.30)] transition-colors group"
+                    >
+                        <span class="inline-flex items-center gap-2 text-[13px] font-medium text-[color:var(--nx-warning)]">
+                            @if($showOnHoldColumn)
+                                @svg('heroicon-o-eye-slash', 'w-4 h-4')
+                                <span>Pausierte ausblenden</span>
+                            @else
+                                @svg('heroicon-o-eye', 'w-4 h-4')
+                                <span>Pausierte anzeigen</span>
+                            @endif
+                        </span>
+                        @if($onHoldDeals->count() > 0)
+                            <span class="text-xs font-semibold tabular-nums text-[color:var(--nx-warning)] bg-[rgba(245,159,0,.18)] px-2 py-0.5 rounded">
+                                {{ $onHoldDeals->count() }}
+                            </span>
+                        @endif
+                    </button>
+                    <div class="space-y-1.5">
+                        @foreach($statsOnHold as $stat)
                             <div class="flex items-center justify-between py-1.5 px-2 rounded bg-[var(--nx-bg)]">
                                 <div class="flex items-center gap-2">
                                     @svg('heroicon-o-' . $stat['icon'], 'w-4 h-4 text-[color:var(--nx-' . $stat['variant'] . ')]')
@@ -330,11 +383,39 @@ $columnTones = $pipelineColumns->mapWithKeys(fn ($col, $i) => [$col->id => $tone
             </x-nx-kanban-column>
         @endforeach
 
-        {{-- Gewonnen / Verloren: aufgeklappt als Spalte, sonst schmaler Streifen rechts (nicht sortierbar) --}}
+        {{-- Pausiert / Gewonnen / Verloren: aufgeklappt als Spalte, sonst schmaler Streifen rechts (nicht sortierbar) --}}
         @php
             $wonGroup = $groups->firstWhere('isWonGroup', true);
             $lostGroup = $groups->firstWhere('isLostGroup', true);
+            $onHoldGroup = $groups->firstWhere('isOnHoldGroup', true);
+            $collapsedRight = (($wonGroup && ! $showWonColumn) ? 1 : 0) + (($lostGroup && ! $showLostColumn) ? 1 : 0);
         @endphp
+        @if($onHoldGroup && ! $showOnHoldColumn)
+            <x-nx-kanban-collapsed title="Pausiert" tone="amber" :count="$onHoldGroup->deals->count()" :offset="$collapsedRight" wire:click="toggleShowOnHoldColumn" />
+        @endif
+        @if($showOnHoldColumn && $onHoldGroup)
+            @php
+                $onHoldTotal = $onHoldGroup->deals->sum(fn($d) => (float) ($d->deal_value ?? 0));
+            @endphp
+            <x-nx-kanban-column title="PAUSIERT" :sortable-id="null" :item-group="'on_hold'" :scrollable="true" :muted="true" tone="amber" :count="$onHoldGroup->deals->count()">
+                <x-slot name="headerActions">
+                    <span class="text-[10px] font-semibold tabular-nums text-[color:var(--nx-warning)]">{{ number_format($onHoldTotal, 0, ',', '.') }} €</span>
+                    <button type="button" wire:click="toggleShowOnHoldColumn" class="text-[color:var(--nx-faint)] transition-colors hover:text-[color:var(--nx-text)]" title="Einklappen">
+                        @svg('heroicon-o-chevron-double-right', 'w-4 h-4')
+                    </button>
+                </x-slot>
+
+                <x-slot name="footer">
+                    <div class="flex items-center justify-between text-[10px]">
+                        <span class="text-[var(--nx-muted)] tabular-nums">{{ $onHoldGroup->deals->count() }} Deal(s)</span>
+                    </div>
+                </x-slot>
+
+                @foreach($onHoldGroup->deals as $deal)
+                    @include('sales::livewire.deal-preview-card', ['deal' => $deal])
+                @endforeach
+            </x-nx-kanban-column>
+        @endif
         @if($wonGroup && ! $showWonColumn)
             <x-nx-kanban-collapsed title="Gewonnen" tone="emerald" :count="$wonGroup->deals->count()" :offset="($lostGroup && ! $showLostColumn) ? 1 : 0" wire:click="toggleShowWonColumn" />
         @endif

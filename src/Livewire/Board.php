@@ -14,6 +14,7 @@ class Board extends Component
     public SalesBoard $salesBoard;
     public bool $showWonColumn = false;
     public bool $showLostColumn = false;
+    public bool $showOnHoldColumn = false;
 
     public function mount(SalesBoard $salesBoard)
     {
@@ -94,7 +95,15 @@ class Board extends Component
                     continue;
                 }
 
-                // Regular pipeline slot — reopen if coming from won/lost
+                if ($slotId === 'on_hold') {
+                    // Slot bleibt erhalten, damit der Deal beim Fortsetzen in seine Spalte zurückkehrt.
+                    $deal->slot_order = $item['order'];
+                    $deal->order = $item['order'];
+                    $deal->markAsOnHold();
+                    continue;
+                }
+
+                // Regular pipeline slot — reopen if coming from won/lost/on-hold
                 $slot = $this->salesBoard->slots()->find($slotId);
                 if ($slot) {
                     $newSlotId = $slot->id;
@@ -138,12 +147,17 @@ class Board extends Component
         $this->showLostColumn = !$this->showLostColumn;
     }
 
+    public function toggleShowOnHoldColumn()
+    {
+        $this->showOnHoldColumn = !$this->showOnHoldColumn;
+    }
+
     public function render()
     {
-        // === 1. PIPELINE-SPALTEN ===
+        // === 1. PIPELINE-SPALTEN (nur aktive Deals; pausierte liegen im PAUSIERT-Streifen) ===
         $slots = $this->salesBoard->slots()
             ->with(['deals' => function ($q) {
-                $q->open()
+                $q->ongoing()
                   ->with('companyLinks.company')
                   ->orderBy('slot_order')
                   ->orderBy('order');
@@ -156,6 +170,7 @@ class Board extends Component
                     'label' => $slot->name,
                     'isWonGroup' => false,
                     'isLostGroup' => false,
+                    'isOnHoldGroup' => false,
                     'deals' => $slot->deals,
                 ];
             });
@@ -172,6 +187,7 @@ class Board extends Component
             'label' => 'GEWONNEN',
             'isWonGroup' => true,
             'isLostGroup' => false,
+            'isOnHoldGroup' => false,
             'deals' => $wonDeals,
         ];
 
@@ -187,11 +203,28 @@ class Board extends Component
             'label' => 'VERLOREN',
             'isWonGroup' => false,
             'isLostGroup' => true,
+            'isOnHoldGroup' => false,
             'deals' => $lostDeals,
         ];
 
+        // === 4. PAUSIERTE DEALS (on hold) ===
+        $onHoldDeals = $this->salesBoard->deals()
+            ->onHold()
+            ->with('companyLinks.company')
+            ->orderByDesc('on_hold_at')
+            ->get();
+
+        $onHoldGroup = (object) [
+            'id' => 'on_hold',
+            'label' => 'PAUSIERT',
+            'isWonGroup' => false,
+            'isLostGroup' => false,
+            'isOnHoldGroup' => true,
+            'deals' => $onHoldDeals,
+        ];
+
         // === GRUPPEN ZUSAMMENSTELLEN ===
-        $groups = $slots->push($wonGroup)->push($lostGroup);
+        $groups = $slots->push($wonGroup)->push($lostGroup)->push($onHoldGroup);
 
         return view('sales::livewire.board', [
             'groups' => $groups,
