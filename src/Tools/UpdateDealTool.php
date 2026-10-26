@@ -96,8 +96,7 @@ class UpdateDealTool implements ToolContract, ToolMetadataContract
                 ],
                 'lost_reason_code' => [
                     'type' => 'string',
-                    'enum' => ['no_response', 'too_expensive', 'other'],
-                    'description' => 'Optional: strukturierter Verlustgrund (no_response = keine Antwort, too_expensive = zu teuer, other = anderer Grund).',
+                    'description' => 'Optional: strukturierter Verlustgrund-Code aus dem Lookup. Gültige Codes via "sales.lookups.GET" (type=lost_reasons). Unbekannte/inaktive Codes werden ignoriert.',
                 ],
                 'lost_reason' => [
                     'type' => 'string',
@@ -246,7 +245,7 @@ class UpdateDealTool implements ToolContract, ToolMetadataContract
 
             if (array_key_exists('lost_reason_code', $arguments)) {
                 $code = $arguments['lost_reason_code'];
-                $deal->lost_reason_code = array_key_exists((string) $code, SalesDeal::LOST_REASONS) ? $code : null;
+                $deal->lost_reason_code = SalesDeal::isValidLostReasonCode($code) ? $code : null;
                 $updated[] = 'lost_reason_code';
             }
 

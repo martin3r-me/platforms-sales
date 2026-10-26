@@ -149,6 +149,11 @@ class SalesServiceProvider extends ServiceProvider
             $registry->register(new \Platform\Sales\Tools\ListTemplatesTool());
             $registry->register(new \Platform\Sales\Tools\ListLookupsTool());
 
+            // Lookup-CRUD: Verlustgründe datengetrieben pflegen (kein Hardcode)
+            $registry->register(new \Platform\Sales\Tools\CreateLostReasonTool());
+            $registry->register(new \Platform\Sales\Tools\UpdateLostReasonTool());
+            $registry->register(new \Platform\Sales\Tools\DeleteLostReasonTool());
+
             // Lexware Quotation-Verknüpfung
             $registry->register(new \Platform\Sales\Tools\LinkQuotationTool());
             $registry->register(new \Platform\Sales\Tools\UnlinkQuotationTool());

@@ -9,6 +9,7 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\Sales\Models\SalesPriority;
 use Platform\Sales\Models\SalesDealSource;
 use Platform\Sales\Models\SalesDealType;
+use Platform\Sales\Models\SalesLostReason;
 
 class ListLookupsTool implements ToolContract, ToolMetadataContract
 {
@@ -19,7 +20,7 @@ class ListLookupsTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'GET /sales/lookups - Listet alle Lookup-Daten auf: Prioritäten, Deal-Quellen und Deal-Typen. Diese IDs werden beim Erstellen/Aktualisieren von Deals benötigt (sales_priority_id, sales_deal_source_id, sales_deal_type_id).';
+        return 'GET /sales/lookups - Listet alle Lookup-Daten auf: Prioritäten, Deal-Quellen, Deal-Typen und Verlustgründe. Die IDs werden beim Erstellen/Aktualisieren von Deals benötigt (sales_priority_id, sales_deal_source_id, sales_deal_type_id). Für Verlustgründe liefert "lost_reasons" die gültigen Codes (lost_reason_code).';
     }
 
     public function getSchema(): array
@@ -29,7 +30,7 @@ class ListLookupsTool implements ToolContract, ToolMetadataContract
             'properties' => [
                 'type' => [
                     'type' => 'string',
-                    'description' => 'Optional: Nur einen Typ laden. Erlaubte Werte: priorities, sources, types. Standard: alle.',
+                    'description' => 'Optional: Nur einen Typ laden. Erlaubte Werte: priorities, sources, types, lost_reasons. Standard: alle.',
                 ],
             ],
             'required' => [],
@@ -69,6 +70,15 @@ class ListLookupsTool implements ToolContract, ToolMetadataContract
                 ])->toArray();
             }
 
+            if (!$type || $type === 'lost_reasons') {
+                $result['lost_reasons'] = SalesLostReason::active()->ordered()->get()->map(fn ($r) => [
+                    'id' => $r->id,
+                    'code' => $r->code,
+                    'name' => $r->name,
+                    'is_active' => $r->is_active,
+                ])->toArray();
+            }
+
             return ToolResult::success($result);
         } catch (\Throwable $e) {
             return ToolResult::error('EXECUTION_ERROR', 'Fehler: ' . $e->getMessage());
@@ -79,7 +89,7 @@ class ListLookupsTool implements ToolContract, ToolMetadataContract
     {
         return [
             'category' => 'query',
-            'tags' => ['sales', 'lookups', 'priorities', 'sources', 'types'],
+            'tags' => ['sales', 'lookups', 'priorities', 'sources', 'types', 'lost_reasons'],
             'read_only' => true,
             'requires_auth' => true,
             'requires_team' => false,

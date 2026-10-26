@@ -62,14 +62,25 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
     ];
 
     /**
-     * Strukturierte Verlustgründe (generische Standardwerte).
-     * Key = gespeicherter Code, Wert = Anzeige-Label.
+     * Verfügbare Verlustgründe als [code => name] – datengetrieben aus dem
+     * Lookup sales_lost_reasons (kein Hardcode). Nur aktive Gründe.
      */
-    public const LOST_REASONS = [
-        'no_response'   => 'Keine Antwort',
-        'too_expensive' => 'Zu teuer',
-        'other'         => 'Anderer Grund',
-    ];
+    public static function lostReasonOptions(): array
+    {
+        return SalesLostReason::active()->ordered()->pluck('name', 'code')->toArray();
+    }
+
+    /**
+     * Prüft, ob ein Verlustgrund-Code existiert und aktiv ist.
+     */
+    public static function isValidLostReasonCode(?string $code): bool
+    {
+        if ($code === null || $code === '') {
+            return false;
+        }
+
+        return SalesLostReason::where('code', $code)->where('is_active', true)->exists();
+    }
 
     protected $casts = [
         'due_date' => 'date',
@@ -187,7 +198,7 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
     {
         $this->lost_at = now();
         $this->lost_reason = $reason;
-        $this->lost_reason_code = array_key_exists((string) $reasonCode, self::LOST_REASONS) ? $reasonCode : null;
+        $this->lost_reason_code = self::isValidLostReasonCode($reasonCode) ? $reasonCode : null;
         $this->is_done = false;
         $this->done_at = null;
         $this->on_hold_at = null;

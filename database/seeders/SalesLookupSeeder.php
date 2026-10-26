@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Platform\Sales\Models\SalesPriority;
 use Platform\Sales\Models\SalesDealSource;
 use Platform\Sales\Models\SalesDealType;
+use Platform\Sales\Models\SalesLostReason;
 
 class SalesLookupSeeder extends Seeder
 {
@@ -62,6 +63,14 @@ class SalesLookupSeeder extends Seeder
             SalesDealType::firstOrCreate(
                 ['name' => $type['name']],
                 $type
+            );
+        }
+
+        // Sales Lost Reasons (generisches Basis-Set, pro Instanz anpassbar)
+        foreach (SalesLostReason::getDefaultLostReasons() as $reason) {
+            SalesLostReason::firstOrCreate(
+                ['code' => $reason['code']],
+                $reason + ['is_active' => true]
             );
         }
     }

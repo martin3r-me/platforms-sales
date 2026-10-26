@@ -56,8 +56,7 @@ class MoveDealTool implements ToolContract, ToolMetadataContract
                 ],
                 'lost_reason_code' => [
                     'type' => 'string',
-                    'enum' => ['no_response', 'too_expensive', 'other'],
-                    'description' => 'Optional: strukturierter Verlustgrund (nur bei mark_as_lost=true): no_response, too_expensive oder other.',
+                    'description' => 'Optional: strukturierter Verlustgrund-Code aus dem Lookup (nur bei mark_as_lost=true). Gültige Codes via "sales.lookups.GET" (type=lost_reasons).',
                 ],
                 'mark_as_on_hold' => [
                     'type' => 'boolean',
@@ -102,7 +101,7 @@ class MoveDealTool implements ToolContract, ToolMetadataContract
                 $deal->lost_at = now();
                 $deal->lost_reason = $arguments['lost_reason'] ?? null;
                 $code = $arguments['lost_reason_code'] ?? null;
-                $deal->lost_reason_code = array_key_exists((string) $code, SalesDeal::LOST_REASONS) ? $code : null;
+                $deal->lost_reason_code = SalesDeal::isValidLostReasonCode($code) ? $code : null;
                 $deal->is_done = false;
                 $deal->done_at = null;
                 $deal->on_hold_at = null;
