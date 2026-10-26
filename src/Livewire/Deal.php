@@ -10,6 +10,7 @@ use Platform\Sales\Models\SalesDeal;
 use Platform\Sales\Models\SalesDealSource;
 use Platform\Sales\Models\SalesDealType;
 use Platform\Sales\Models\SalesPriority;
+use Platform\Sales\Models\SalesLostReason;
 use Platform\Sales\Models\SalesDealBillable;
 
 class Deal extends Component
@@ -20,6 +21,7 @@ class Deal extends Component
     public $dealSources;
     public $dealTypes;
     public $priorities;
+    public $lostReasons;
     public $billables = [];
     public $modalShow = false;
 
@@ -30,6 +32,8 @@ class Deal extends Component
         'deal.description' => 'nullable|string',
 
         'deal.is_done' => 'boolean',
+        'deal.lost_reason_code' => 'nullable|string',
+        'deal.lost_reason' => 'nullable|string',
         'deal.due_date' => 'nullable|date',
         'deal.user_in_charge_id' => 'nullable|integer',
         'deal.deal_value' => 'nullable|numeric|min:0',
@@ -52,6 +56,7 @@ class Deal extends Component
         $this->dealSources = SalesDealSource::active()->ordered()->get();
         $this->dealTypes = SalesDealType::active()->ordered()->get();
         $this->priorities = SalesPriority::active()->ordered()->get();
+        $this->lostReasons = SalesLostReason::active()->ordered()->get();
         
         // Billables laden
         $this->loadBillables();
@@ -95,6 +100,25 @@ class Deal extends Component
         }
         
         $this->deal->save();
+    }
+
+    /**
+     * Setzt den Lebenszyklus-Status des Deals über die UI:
+     * won | lost | on_hold | open (zurück in die Pipeline).
+     */
+    public function setStatus(string $status)
+    {
+        $this->authorize('update', $this->deal);
+
+        match ($status) {
+            'won'     => $this->deal->markAsWon(),
+            'lost'    => $this->deal->markAsLost($this->deal->lost_reason, $this->deal->lost_reason_code),
+            'on_hold' => $this->deal->markAsOnHold(),
+            default   => $this->deal->reopenDeal(),
+        };
+
+        $this->deal->refresh();
+        $this->dispatch('deal-updated', dealId: $this->deal->id);
     }
 
     public function recalculateDealValue()

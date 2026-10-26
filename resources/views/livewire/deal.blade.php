@@ -38,24 +38,70 @@
                 </div>
 
                 {{-- Deal Status --}}
+                @php
+                    $st = $deal->status();
+                    $lostLabel = $deal->lost_reason_code
+                        ? (optional($lostReasons->firstWhere('code', $deal->lost_reason_code))->name ?? $deal->lost_reason_code)
+                        : null;
+                @endphp
                 <section class="p-3 rounded-lg bg-[color:var(--nx-surface)] border border-[color:var(--nx-line)] shadow-[var(--nx-shadow-card)] space-y-2">
                     <h3 class="text-[10px] font-semibold uppercase tracking-wider text-[var(--nx-muted)] mb-1">Deal Status</h3>
                     @can('update', $deal)
-                        <x-nx-input-checkbox label="Deal gewonnen" wire:model="deal.is_done" />
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <x-nx-button :variant="$st === 'won' ? 'primary' : 'secondary'" wire:click="setStatus('won')" class="w-full">
+                                <span class="flex items-center gap-1.5">@svg('heroicon-o-trophy', 'w-3.5 h-3.5') Gewonnen</span>
+                            </x-nx-button>
+                            <x-nx-button :variant="$st === 'lost' ? 'danger' : 'secondary'" wire:click="setStatus('lost')" class="w-full">
+                                <span class="flex items-center gap-1.5">@svg('heroicon-o-x-circle', 'w-3.5 h-3.5') Verloren</span>
+                            </x-nx-button>
+                            <x-nx-button :variant="$st === 'on_hold' ? 'primary' : 'secondary'" wire:click="setStatus('on_hold')" class="w-full">
+                                <span class="flex items-center gap-1.5">@svg('heroicon-o-pause-circle', 'w-3.5 h-3.5') Pausiert</span>
+                            </x-nx-button>
+                            <x-nx-button :variant="$st === 'open' ? 'primary' : 'secondary'" wire:click="setStatus('open')" class="w-full">
+                                <span class="flex items-center gap-1.5">@svg('heroicon-o-arrow-path', 'w-3.5 h-3.5') Offen</span>
+                            </x-nx-button>
+                        </div>
+
+                        {{-- Verlustgrund nur bei Verloren --}}
+                        @if($st === 'lost')
+                            <div class="space-y-2 pt-1">
+                                <x-nx-input-select
+                                    name="deal.lost_reason_code"
+                                    label="Verlustgrund"
+                                    :options="$lostReasons"
+                                    optionValue="code"
+                                    optionLabel="name"
+                                    :nullable="true"
+                                    nullLabel="– Grund wählen –"
+                                    wire:model.live="deal.lost_reason_code"
+                                    :errorKey="'deal.lost_reason_code'"
+                                />
+                                <div>
+                                    <label class="block text-sm font-semibold text-[color:var(--nx-text)] mb-1">Detail (optional)</label>
+                                    <input type="text"
+                                        wire:model.live.debounce.500ms="deal.lost_reason"
+                                        placeholder="Freitext zum Verlustgrund"
+                                        class="w-full p-2 text-sm bg-[color:var(--nx-bg)] rounded-lg border border-[color:var(--nx-line)] focus:outline-none focus:ring-2 focus:ring-[color:var(--nx-line-strong)]" />
+                                </div>
+                            </div>
+                        @endif
                     @else
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
-                                @svg('heroicon-o-check-circle', 'w-4 h-4 text-[color:var(--nx-success)]')
-                                <span class="text-sm text-[color:var(--nx-text)]">Deal Status</span>
+                                @svg('heroicon-o-flag', 'w-4 h-4 text-[color:var(--nx-muted)]')
+                                <span class="text-sm text-[color:var(--nx-text)]">Status</span>
                             </div>
-                            <span class="text-sm font-semibold {{ $deal->is_done ? 'text-[color:var(--nx-success)]' : 'text-[color:var(--nx-text)]' }}">
-                                {{ $deal->is_done ? 'Gewonnen' : 'Offen' }}
-                            </span>
+                            <span class="text-sm font-semibold text-[color:var(--nx-text)]">{{ $deal->statusLabel() }}</span>
                         </div>
                     @endcan
 
-                    @if($deal->is_done)
-                        <x-nx-callout variant="success" title="Deal erfolgreich abgeschlossen" />
+                    {{-- Status-Callout --}}
+                    @if($st === 'won')
+                        <x-nx-callout variant="success" title="Deal gewonnen" />
+                    @elseif($st === 'lost')
+                        <x-nx-callout variant="danger" :title="$lostLabel ? 'Verloren · ' . $lostLabel : 'Verloren'" />
+                    @elseif($st === 'on_hold')
+                        <x-nx-callout variant="warning" title="Pausiert" />
                     @endif
                 </section>
 
@@ -233,8 +279,12 @@
 
                     {{-- Status Badges --}}
                     <div class="flex flex-col items-end gap-2 flex-shrink-0">
-                        @if($deal->is_done)
+                        @if($deal->status() === 'won')
                             <x-nx-badge variant="success">Gewonnen</x-nx-badge>
+                        @elseif($deal->status() === 'lost')
+                            <x-nx-badge variant="danger">Verloren</x-nx-badge>
+                        @elseif($deal->status() === 'on_hold')
+                            <x-nx-badge variant="warning">Pausiert</x-nx-badge>
                         @endif
                         @if($deal->isHot())
                             <x-nx-badge variant="danger">Hot</x-nx-badge>
