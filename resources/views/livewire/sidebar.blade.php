@@ -25,6 +25,14 @@
         </x-ui-sidebar-item>
     </x-ui-sidebar-list>
 
+    {{-- Abschnitt: Einstellungen / Stammdaten --}}
+    <x-ui-sidebar-list label="Einstellungen">
+        <x-ui-sidebar-item :href="route('sales.settings.lost-reasons.index')">
+            @svg('heroicon-o-x-circle', 'w-4 h-4 text-[var(--nx-text)]')
+            <span class="ml-2 text-sm">Verlustgründe</span>
+        </x-ui-sidebar-item>
+    </x-ui-sidebar-list>
+
     {{-- Collapsed: Icons-only für Allgemein --}}
     <div x-show="collapsed" class="px-2 py-2 border-b border-[var(--nx-line)]">
         <div class="flex flex-col gap-2">
@@ -40,6 +48,11 @@
         <button type="button" wire:click="createSalesBoard" class="flex items-center justify-center p-2 rounded-md text-[var(--nx-text)] hover:bg-[var(--nx-bg)]">
             @svg('heroicon-o-plus-circle', 'w-5 h-5')
         </button>
+    </div>
+    <div x-show="collapsed" class="px-2 py-2 border-b border-[var(--nx-line)]">
+        <a href="{{ route('sales.settings.lost-reasons.index') }}" wire:navigate title="Verlustgründe" class="flex items-center justify-center p-2 rounded-md text-[var(--nx-text)] hover:bg-[var(--nx-bg)]">
+            @svg('heroicon-o-x-circle', 'w-5 h-5')
+        </a>
     </div>
 
     {{-- Abschnitt: Sales Boards (nach Partner-Entity gruppiert, wie Planner) --}}
