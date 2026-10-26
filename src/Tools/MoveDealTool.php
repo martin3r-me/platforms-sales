@@ -52,7 +52,16 @@ class MoveDealTool implements ToolContract, ToolMetadataContract
                 ],
                 'lost_reason' => [
                     'type' => 'string',
-                    'description' => 'Optional: Grund für den Verlust (nur bei mark_as_lost=true).',
+                    'description' => 'Optional: Freitext-Grund für den Verlust (nur bei mark_as_lost=true).',
+                ],
+                'lost_reason_code' => [
+                    'type' => 'string',
+                    'enum' => ['no_response', 'too_expensive', 'other'],
+                    'description' => 'Optional: strukturierter Verlustgrund (nur bei mark_as_lost=true): no_response, too_expensive oder other.',
+                ],
+                'mark_as_on_hold' => [
+                    'type' => 'boolean',
+                    'description' => 'Optional: true = Deal pausieren (on hold), false = Pause aufheben.',
                 ],
             ],
             'required' => ['deal_id'],
@@ -82,6 +91,8 @@ class MoveDealTool implements ToolContract, ToolMetadataContract
                 $deal->done_at = now();
                 $deal->lost_at = null;
                 $deal->lost_reason = null;
+                $deal->lost_reason_code = null;
+                $deal->on_hold_at = null;
                 $deal->sales_board_slot_id = null;
                 $actions[] = 'als gewonnen markiert';
             }
@@ -90,10 +101,29 @@ class MoveDealTool implements ToolContract, ToolMetadataContract
             if (!empty($arguments['mark_as_lost'])) {
                 $deal->lost_at = now();
                 $deal->lost_reason = $arguments['lost_reason'] ?? null;
+                $code = $arguments['lost_reason_code'] ?? null;
+                $deal->lost_reason_code = array_key_exists((string) $code, SalesDeal::LOST_REASONS) ? $code : null;
                 $deal->is_done = false;
                 $deal->done_at = null;
+                $deal->on_hold_at = null;
                 $deal->sales_board_slot_id = null;
                 $actions[] = 'als verloren markiert';
+            }
+
+            // Pausieren / Pause aufheben
+            if (array_key_exists('mark_as_on_hold', $arguments)) {
+                if ((bool) $arguments['mark_as_on_hold']) {
+                    $deal->on_hold_at = $deal->on_hold_at ?? now();
+                    $deal->is_done = false;
+                    $deal->done_at = null;
+                    $deal->lost_at = null;
+                    $deal->lost_reason = null;
+                    $deal->lost_reason_code = null;
+                    $actions[] = 'pausiert (on hold)';
+                } else {
+                    $deal->on_hold_at = null;
+                    $actions[] = 'Pause aufgehoben';
+                }
             }
 
             // Board wechseln
@@ -128,6 +158,8 @@ class MoveDealTool implements ToolContract, ToolMetadataContract
                 $deal->done_at = null;
                 $deal->lost_at = null;
                 $deal->lost_reason = null;
+                $deal->lost_reason_code = null;
+                $deal->on_hold_at = null;
                 $actions[] = "in Slot '{$targetSlot->name}' verschoben";
             }
 
@@ -143,6 +175,7 @@ class MoveDealTool implements ToolContract, ToolMetadataContract
                 'board_id' => $deal->sales_board_id,
                 'slot_id' => $deal->sales_board_slot_id,
                 'is_done' => $deal->is_done,
+                'status' => $deal->status(),
                 'actions' => $actions,
                 'message' => "Deal '{$deal->title}': " . implode(', ', $actions) . '.',
             ]);

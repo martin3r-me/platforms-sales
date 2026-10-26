@@ -57,6 +57,18 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
         'sales_deal_type_id',
         'lost_at',
         'lost_reason',
+        'on_hold_at',
+        'lost_reason_code',
+    ];
+
+    /**
+     * Strukturierte Verlustgründe (generische Standardwerte).
+     * Key = gespeicherter Code, Wert = Anzeige-Label.
+     */
+    public const LOST_REASONS = [
+        'no_response'   => 'Keine Antwort',
+        'too_expensive' => 'Zu teuer',
+        'other'         => 'Anderer Grund',
     ];
 
     protected $casts = [
@@ -74,6 +86,7 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
         'is_starred' => 'boolean',
         'done_at' => 'datetime',
         'lost_at' => 'datetime',
+        'on_hold_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -113,6 +126,48 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
         return !$this->isWon() && !$this->isLost();
     }
 
+    public function isOnHold(): bool
+    {
+        return $this->on_hold_at !== null && $this->isOpen();
+    }
+
+    /**
+     * Aktiv in der Pipeline: offen und NICHT pausiert.
+     */
+    public function isOngoing(): bool
+    {
+        return $this->isOpen() && !$this->isOnHold();
+    }
+
+    /**
+     * Lebenszyklus-Status des Deals: open | on_hold | won | lost.
+     */
+    public function status(): string
+    {
+        if ($this->isWon()) {
+            return 'won';
+        }
+
+        if ($this->isLost()) {
+            return 'lost';
+        }
+
+        return $this->isOnHold() ? 'on_hold' : 'open';
+    }
+
+    /**
+     * Sprechendes Status-Label für die UI.
+     */
+    public function statusLabel(): string
+    {
+        return match ($this->status()) {
+            'won'     => 'Gewonnen',
+            'lost'    => 'Verloren',
+            'on_hold' => 'Pausiert',
+            default   => 'Offen',
+        };
+    }
+
     // --- Status Actions ---
 
     public function markAsWon(): self
@@ -121,18 +176,49 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
         $this->done_at = now();
         $this->lost_at = null;
         $this->lost_reason = null;
+        $this->lost_reason_code = null;
+        $this->on_hold_at = null;
         $this->save();
 
         return $this;
     }
 
-    public function markAsLost(?string $reason = null): self
+    public function markAsLost(?string $reason = null, ?string $reasonCode = null): self
     {
         $this->lost_at = now();
         $this->lost_reason = $reason;
+        $this->lost_reason_code = array_key_exists((string) $reasonCode, self::LOST_REASONS) ? $reasonCode : null;
         $this->is_done = false;
         $this->done_at = null;
+        $this->on_hold_at = null;
         $this->sales_board_slot_id = null;
+        $this->save();
+
+        return $this;
+    }
+
+    /**
+     * Deal pausieren (On hold). Bleibt offen, verschwindet aber aus der aktiven Tageslinse.
+     */
+    public function markAsOnHold(): self
+    {
+        $this->on_hold_at = now();
+        $this->is_done = false;
+        $this->done_at = null;
+        $this->lost_at = null;
+        $this->lost_reason = null;
+        $this->lost_reason_code = null;
+        $this->save();
+
+        return $this;
+    }
+
+    /**
+     * Pause aufheben – Deal wird wieder aktiv (Ongoing).
+     */
+    public function resumeFromHold(): self
+    {
+        $this->on_hold_at = null;
         $this->save();
 
         return $this;
@@ -144,6 +230,8 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
         $this->done_at = null;
         $this->lost_at = null;
         $this->lost_reason = null;
+        $this->lost_reason_code = null;
+        $this->on_hold_at = null;
         $this->save();
 
         return $this;
@@ -164,6 +252,26 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
     public function scopeLost($query)
     {
         return $query->whereNotNull('lost_at');
+    }
+
+    /**
+     * Pausierte Deals (offen + on_hold_at gesetzt).
+     */
+    public function scopeOnHold($query)
+    {
+        return $query->where('is_done', false)
+            ->whereNull('lost_at')
+            ->whereNotNull('on_hold_at');
+    }
+
+    /**
+     * Aktiv in der Pipeline: offen und NICHT pausiert.
+     */
+    public function scopeOngoing($query)
+    {
+        return $query->where('is_done', false)
+            ->whereNull('lost_at')
+            ->whereNull('on_hold_at');
     }
 
     public function scopeForTeam($query, int $teamId)

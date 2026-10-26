@@ -90,6 +90,23 @@ class UpdateDealTool implements ToolContract, ToolMetadataContract
                     'type' => 'boolean',
                     'description' => 'Optional: true = Deal als gewonnen markieren, false = Deal wieder öffnen.',
                 ],
+                'mark_as_lost' => [
+                    'type' => 'boolean',
+                    'description' => 'Optional: true = Deal als verloren markieren. Grund via lost_reason_code/lost_reason.',
+                ],
+                'lost_reason_code' => [
+                    'type' => 'string',
+                    'enum' => ['no_response', 'too_expensive', 'other'],
+                    'description' => 'Optional: strukturierter Verlustgrund (no_response = keine Antwort, too_expensive = zu teuer, other = anderer Grund).',
+                ],
+                'lost_reason' => [
+                    'type' => 'string',
+                    'description' => 'Optional: Freitext-Detail zum Verlustgrund.',
+                ],
+                'on_hold' => [
+                    'type' => 'boolean',
+                    'description' => 'Optional: true = Deal pausieren (on hold), false = Pause aufheben.',
+                ],
                 'is_hot' => [
                     'type' => 'boolean',
                     'description' => 'Optional: Als heißen Deal markieren.',
@@ -200,15 +217,52 @@ class UpdateDealTool implements ToolContract, ToolMetadataContract
                 }
             }
 
-            // is_done mit done_at
+            // Status: gewonnen / wieder öffnen
             if (array_key_exists('is_done', $arguments)) {
                 $deal->is_done = (bool) $arguments['is_done'];
                 $deal->done_at = $deal->is_done ? now() : null;
                 if ($deal->is_done) {
                     $deal->lost_at = null;
                     $deal->lost_reason = null;
+                    $deal->lost_reason_code = null;
+                    $deal->on_hold_at = null;
                 }
                 $updated[] = 'is_done';
+            }
+
+            // Status: verloren
+            if (!empty($arguments['mark_as_lost'])) {
+                $deal->lost_at = now();
+                $deal->is_done = false;
+                $deal->done_at = null;
+                $deal->on_hold_at = null;
+                $updated[] = 'mark_as_lost';
+            }
+
+            if (array_key_exists('lost_reason', $arguments)) {
+                $deal->lost_reason = $arguments['lost_reason'] ?: null;
+                $updated[] = 'lost_reason';
+            }
+
+            if (array_key_exists('lost_reason_code', $arguments)) {
+                $code = $arguments['lost_reason_code'];
+                $deal->lost_reason_code = array_key_exists((string) $code, SalesDeal::LOST_REASONS) ? $code : null;
+                $updated[] = 'lost_reason_code';
+            }
+
+            // Status: On hold / Pause aufheben
+            if (array_key_exists('on_hold', $arguments)) {
+                if ((bool) $arguments['on_hold']) {
+                    $deal->on_hold_at = $deal->on_hold_at ?? now();
+                    $deal->is_done = false;
+                    $deal->done_at = null;
+                    $deal->lost_at = null;
+                    $deal->lost_reason = null;
+                    $deal->lost_reason_code = null;
+                } else {
+                    $deal->on_hold_at = null;
+                }
+                $updated[] = 'on_hold';
             }
 
             // Nullable FK-Felder (0 = null)
@@ -303,6 +357,8 @@ class UpdateDealTool implements ToolContract, ToolMetadataContract
                 'deal_value' => (float) ($deal->deal_value ?? 0),
                 'probability_percent' => $deal->probability_percent,
                 'is_done' => $deal->is_done,
+                'status' => $deal->status(),
+                'status_label' => $deal->statusLabel(),
                 'updated_fields' => $updated,
                 'message' => "Deal '{$deal->title}' aktualisiert.",
             ]);

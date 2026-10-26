@@ -107,6 +107,8 @@ class Board extends Component
                 $deal->done_at = null;
                 $deal->lost_at = null;
                 $deal->lost_reason = null;
+                $deal->lost_reason_code = null;
+                $deal->on_hold_at = null;
                 $deal->save();
             }
         }
