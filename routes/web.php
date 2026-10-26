@@ -6,6 +6,7 @@ use Platform\Sales\Livewire\Board;
 use Platform\Sales\Livewire\Deal;
 use Platform\Sales\Livewire\TemplateIndex;
 use Platform\Sales\Livewire\TemplateShow;
+use Platform\Sales\Livewire\Settings\LostReason\Index as LostReasonIndex;
 
 Route::get('/', Dashboard::class)->name('sales.dashboard');
 Route::get('/my-deals', MyDeals::class)->name('sales.my-deals');
@@ -20,3 +21,6 @@ Route::get('/deals/{salesDeal}', Deal::class)
 // Template-Routes
 Route::get('/templates', TemplateIndex::class)->name('sales.templates.index');
 Route::get('/templates/{salesBoardTemplate}', TemplateShow::class)->name('sales.templates.show');
+
+// Einstellungen / Stammdaten (Lookups)
+Route::get('/settings/lost-reasons', LostReasonIndex::class)->name('sales.settings.lost-reasons.index');

@@ -40,6 +40,16 @@ return [
             ],
         ],
         [
+            'group' => 'Einstellungen',
+            'items' => [
+                [
+                    'label' => 'Verlustgründe',
+                    'route' => 'sales.settings.lost-reasons.index',
+                    'icon'  => 'heroicon-o-x-circle',
+                ],
+            ],
+        ],
+        [
             'group' => 'Vertriebsboards',
             'dynamic' => [
                 // Nur Model und Parameter, keine Closures
