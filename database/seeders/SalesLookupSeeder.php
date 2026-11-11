@@ -30,36 +30,16 @@ class SalesLookupSeeder extends Seeder
             );
         }
 
-        // Sales Deal Sources
-        $sources = [
-            ['name' => 'website', 'label' => 'Website', 'color' => 'blue', 'icon' => 'globe-alt', 'order' => 1],
-            ['name' => 'referral', 'label' => 'Empfehlung', 'color' => 'green', 'icon' => 'user-group', 'order' => 2],
-            ['name' => 'cold_call', 'label' => 'Kaltakquise', 'color' => 'yellow', 'icon' => 'phone', 'order' => 3],
-            ['name' => 'email', 'label' => 'E-Mail Marketing', 'color' => 'purple', 'icon' => 'envelope', 'order' => 4],
-            ['name' => 'social_media', 'label' => 'Social Media', 'color' => 'pink', 'icon' => 'share', 'order' => 5],
-            ['name' => 'trade_show', 'label' => 'Messe', 'color' => 'indigo', 'icon' => 'building-storefront', 'order' => 6],
-            ['name' => 'partner', 'label' => 'Partner', 'color' => 'orange', 'icon' => 'handshake', 'order' => 7],
-            ['name' => 'other', 'label' => 'Sonstige', 'color' => 'gray', 'icon' => 'ellipsis-horizontal', 'order' => 8],
-        ];
-
-        foreach ($sources as $source) {
+        // Sales Deal Sources (Basis-Set aus dem Model – eine Quelle der Wahrheit)
+        foreach (SalesDealSource::getDefaults() as $source) {
             SalesDealSource::firstOrCreate(
                 ['name' => $source['name']],
                 $source
             );
         }
 
-        // Sales Deal Types
-        $types = [
-            ['name' => 'new_customer', 'label' => 'Neukunde', 'color' => 'green', 'icon' => 'user-plus', 'order' => 1],
-            ['name' => 'upsell', 'label' => 'Upsell', 'color' => 'blue', 'icon' => 'arrow-trending-up', 'order' => 2],
-            ['name' => 'cross_sell', 'label' => 'Cross-Sell', 'color' => 'purple', 'icon' => 'arrows-right-left', 'order' => 3],
-            ['name' => 'renewal', 'label' => 'Verlängerung', 'color' => 'yellow', 'icon' => 'arrow-path', 'order' => 4],
-            ['name' => 'expansion', 'label' => 'Erweiterung', 'color' => 'orange', 'icon' => 'plus-circle', 'order' => 5],
-            ['name' => 'replacement', 'label' => 'Ersatz', 'color' => 'red', 'icon' => 'arrow-path', 'order' => 6],
-        ];
-
-        foreach ($types as $type) {
+        // Sales Deal Types (Basis-Set aus dem Model – eine Quelle der Wahrheit)
+        foreach (SalesDealType::getDefaults() as $type) {
             SalesDealType::firstOrCreate(
                 ['name' => $type['name']],
                 $type
