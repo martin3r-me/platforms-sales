@@ -2,6 +2,8 @@
 @php
     $gruppen = [
         'Stammdaten' => [
+            ['key' => 'deal-sources', 'label' => 'Deal-Quellen', 'icon' => 'heroicon-o-arrow-down-tray', 'route' => 'sales.settings.deal-sources.index'],
+            ['key' => 'deal-types', 'label' => 'Deal-Typen', 'icon' => 'heroicon-o-tag', 'route' => 'sales.settings.deal-types.index'],
             ['key' => 'lost-reasons', 'label' => 'Verlustgründe', 'icon' => 'heroicon-o-x-circle', 'route' => 'sales.settings.lost-reasons.index'],
         ],
     ];

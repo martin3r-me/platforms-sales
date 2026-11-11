@@ -43,6 +43,16 @@ return [
             'group' => 'Einstellungen',
             'items' => [
                 [
+                    'label' => 'Deal-Quellen',
+                    'route' => 'sales.settings.deal-sources.index',
+                    'icon'  => 'heroicon-o-arrow-down-tray',
+                ],
+                [
+                    'label' => 'Deal-Typen',
+                    'route' => 'sales.settings.deal-types.index',
+                    'icon'  => 'heroicon-o-tag',
+                ],
+                [
                     'label' => 'Verlustgründe',
                     'route' => 'sales.settings.lost-reasons.index',
                     'icon'  => 'heroicon-o-x-circle',

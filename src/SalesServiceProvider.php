@@ -154,6 +154,16 @@ class SalesServiceProvider extends ServiceProvider
             $registry->register(new \Platform\Sales\Tools\UpdateLostReasonTool());
             $registry->register(new \Platform\Sales\Tools\DeleteLostReasonTool());
 
+            // Lookup-CRUD: Deal-Quellen datengetrieben pflegen
+            $registry->register(new \Platform\Sales\Tools\CreateDealSourceTool());
+            $registry->register(new \Platform\Sales\Tools\UpdateDealSourceTool());
+            $registry->register(new \Platform\Sales\Tools\DeleteDealSourceTool());
+
+            // Lookup-CRUD: Deal-Typen datengetrieben pflegen
+            $registry->register(new \Platform\Sales\Tools\CreateDealTypeTool());
+            $registry->register(new \Platform\Sales\Tools\UpdateDealTypeTool());
+            $registry->register(new \Platform\Sales\Tools\DeleteDealTypeTool());
+
             // Lexware Quotation-Verknüpfung
             $registry->register(new \Platform\Sales\Tools\LinkQuotationTool());
             $registry->register(new \Platform\Sales\Tools\UnlinkQuotationTool());

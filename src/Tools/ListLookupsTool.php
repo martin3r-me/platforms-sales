@@ -58,6 +58,7 @@ class ListLookupsTool implements ToolContract, ToolMetadataContract
                     'name' => $s->name,
                     'label' => $s->label,
                     'color' => $s->color,
+                    'is_active' => $s->is_active,
                 ])->toArray();
             }
 
@@ -67,6 +68,7 @@ class ListLookupsTool implements ToolContract, ToolMetadataContract
                     'name' => $t->name,
                     'label' => $t->label,
                     'color' => $t->color,
+                    'is_active' => $t->is_active,
                 ])->toArray();
             }
 
