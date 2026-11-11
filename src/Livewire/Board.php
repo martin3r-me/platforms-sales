@@ -32,6 +32,13 @@ class Board extends Component
 
     public function createDeal($slotId = null)
     {
+        // Ohne explizite Spalte (z. B. Board-weiter "+ Deal"-Button) landet der Deal
+        // in der ersten Pipeline-Spalte. Sonst hätte er keine Spalte und würde im
+        // Board in keiner Kachel auftauchen (ongoing-Deals werden pro Slot gerendert).
+        if ($slotId === null) {
+            $slotId = $this->salesBoard->slots()->orderBy('order')->value('id');
+        }
+
         $deal = new SalesDeal();
         $deal->sales_board_id = $this->salesBoard->id;
         $deal->sales_board_slot_id = $slotId;
