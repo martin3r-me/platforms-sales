@@ -11,6 +11,7 @@ use Platform\Sales\Models\SalesDealSource;
 use Platform\Sales\Models\SalesDealType;
 use Platform\Sales\Models\SalesPriority;
 use Platform\Sales\Models\SalesLostReason;
+use Platform\Sales\Models\SalesRevenueCategory;
 use Platform\Sales\Models\SalesDealBillable;
 
 class Deal extends Component
@@ -22,6 +23,7 @@ class Deal extends Component
     public $dealTypes;
     public $priorities;
     public $lostReasons;
+    public $revenueCategories;
     public $billables = [];
     public $modalShow = false;
 
@@ -40,6 +42,7 @@ class Deal extends Component
         'deal.probability_percent' => 'nullable|integer|min:0|max:100',
         'deal.sales_deal_source_id' => 'nullable|integer|exists:sales_deal_sources,id',
         'deal.sales_deal_type_id' => 'nullable|integer|exists:sales_deal_types,id',
+        'deal.sales_revenue_category_id' => 'nullable|integer|exists:sales_revenue_categories,id',
         'deal.sales_priority_id' => 'nullable|integer|exists:sales_priorities,id',
         'deal.billing_interval' => 'nullable|in:one_time,monthly,quarterly,yearly',
         'deal.billing_duration_months' => 'nullable|integer|min:1',
@@ -57,6 +60,7 @@ class Deal extends Component
         $this->dealTypes = SalesDealType::active()->ordered()->get();
         $this->priorities = SalesPriority::active()->ordered()->get();
         $this->lostReasons = SalesLostReason::active()->ordered()->get();
+        $this->revenueCategories = SalesRevenueCategory::active()->ordered()->get();
         
         // Billables laden
         $this->loadBillables();

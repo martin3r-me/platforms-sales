@@ -380,6 +380,26 @@
                                 </div>
                             @endcan
                         </div>
+                        <div>
+                            @can('update', $deal)
+                                <x-nx-input-select
+                                    name="deal.sales_revenue_category_id"
+                                    label="Umsatzkategorie"
+                                    :options="$revenueCategories"
+                                    optionValue="id"
+                                    optionLabel="name"
+                                    :nullable="true"
+                                    nullLabel="– Kategorie auswählen –"
+                                    wire:model.live="deal.sales_revenue_category_id"
+                                    :errorKey="'deal.sales_revenue_category_id'"
+                                />
+                            @else
+                                <div>
+                                    <label class="block text-sm font-semibold text-[color:var(--nx-text)] mb-1">Umsatzkategorie</label>
+                                    <div class="p-2 bg-[color:var(--nx-bg)] rounded-lg border border-[color:var(--nx-line)]">{{ $deal->revenueCategory?->name ?: '–' }}</div>
+                                </div>
+                            @endcan
+                        </div>
                     </div>
                 </x-nx-section>
 

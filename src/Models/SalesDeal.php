@@ -55,6 +55,7 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
         'sales_priority_id',
         'sales_deal_source_id',
         'sales_deal_type_id',
+        'sales_revenue_category_id',
         'lost_at',
         'lost_reason',
         'on_hold_at',
@@ -399,6 +400,11 @@ class SalesDeal extends Model implements LexwareQuotationLinkableInterface
     public function dealType()
     {
         return $this->belongsTo(SalesDealType::class, 'sales_deal_type_id');
+    }
+
+    public function revenueCategory()
+    {
+        return $this->belongsTo(SalesRevenueCategory::class, 'sales_revenue_category_id');
     }
 
     public function billables(): HasMany
