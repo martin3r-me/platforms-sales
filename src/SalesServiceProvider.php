@@ -164,6 +164,11 @@ class SalesServiceProvider extends ServiceProvider
             $registry->register(new \Platform\Sales\Tools\UpdateDealTypeTool());
             $registry->register(new \Platform\Sales\Tools\DeleteDealTypeTool());
 
+            // Lookup-CRUD: Umsatzkategorien datengetrieben pflegen
+            $registry->register(new \Platform\Sales\Tools\CreateRevenueCategoryTool());
+            $registry->register(new \Platform\Sales\Tools\UpdateRevenueCategoryTool());
+            $registry->register(new \Platform\Sales\Tools\DeleteRevenueCategoryTool());
+
             // Lexware Quotation-Verknüpfung
             $registry->register(new \Platform\Sales\Tools\LinkQuotationTool());
             $registry->register(new \Platform\Sales\Tools\UnlinkQuotationTool());

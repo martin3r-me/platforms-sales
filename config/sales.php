@@ -53,6 +53,11 @@ return [
                     'icon'  => 'heroicon-o-tag',
                 ],
                 [
+                    'label' => 'Umsatzkategorien',
+                    'route' => 'sales.settings.revenue-categories.index',
+                    'icon'  => 'heroicon-o-banknotes',
+                ],
+                [
                     'label' => 'Verlustgründe',
                     'route' => 'sales.settings.lost-reasons.index',
                     'icon'  => 'heroicon-o-x-circle',

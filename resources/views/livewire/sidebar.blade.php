@@ -35,6 +35,10 @@
             @svg('heroicon-o-tag', 'w-4 h-4 text-[var(--nx-text)]')
             <span class="ml-2 text-sm">Deal-Typen</span>
         </x-ui-sidebar-item>
+        <x-ui-sidebar-item :href="route('sales.settings.revenue-categories.index')">
+            @svg('heroicon-o-banknotes', 'w-4 h-4 text-[var(--nx-text)]')
+            <span class="ml-2 text-sm">Umsatzkategorien</span>
+        </x-ui-sidebar-item>
         <x-ui-sidebar-item :href="route('sales.settings.lost-reasons.index')">
             @svg('heroicon-o-x-circle', 'w-4 h-4 text-[var(--nx-text)]')
             <span class="ml-2 text-sm">Verlustgründe</span>
@@ -64,6 +68,9 @@
             </a>
             <a href="{{ route('sales.settings.deal-types.index') }}" wire:navigate title="Deal-Typen" class="flex items-center justify-center p-2 rounded-md text-[var(--nx-text)] hover:bg-[var(--nx-bg)]">
                 @svg('heroicon-o-tag', 'w-5 h-5')
+            </a>
+            <a href="{{ route('sales.settings.revenue-categories.index') }}" wire:navigate title="Umsatzkategorien" class="flex items-center justify-center p-2 rounded-md text-[var(--nx-text)] hover:bg-[var(--nx-bg)]">
+                @svg('heroicon-o-banknotes', 'w-5 h-5')
             </a>
             <a href="{{ route('sales.settings.lost-reasons.index') }}" wire:navigate title="Verlustgründe" class="flex items-center justify-center p-2 rounded-md text-[var(--nx-text)] hover:bg-[var(--nx-bg)]">
                 @svg('heroicon-o-x-circle', 'w-5 h-5')

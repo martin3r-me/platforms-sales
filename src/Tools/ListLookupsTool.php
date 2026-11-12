@@ -10,6 +10,7 @@ use Platform\Sales\Models\SalesPriority;
 use Platform\Sales\Models\SalesDealSource;
 use Platform\Sales\Models\SalesDealType;
 use Platform\Sales\Models\SalesLostReason;
+use Platform\Sales\Models\SalesRevenueCategory;
 
 class ListLookupsTool implements ToolContract, ToolMetadataContract
 {
@@ -30,7 +31,7 @@ class ListLookupsTool implements ToolContract, ToolMetadataContract
             'properties' => [
                 'type' => [
                     'type' => 'string',
-                    'description' => 'Optional: Nur einen Typ laden. Erlaubte Werte: priorities, sources, types, lost_reasons. Standard: alle.',
+                    'description' => 'Optional: Nur einen Typ laden. Erlaubte Werte: priorities, sources, types, lost_reasons, revenue_categories. Standard: alle.',
                 ],
             ],
             'required' => [],
@@ -78,6 +79,15 @@ class ListLookupsTool implements ToolContract, ToolMetadataContract
                     'code' => $r->code,
                     'name' => $r->name,
                     'is_active' => $r->is_active,
+                ])->toArray();
+            }
+
+            if (!$type || $type === 'revenue_categories') {
+                $result['revenue_categories'] = SalesRevenueCategory::active()->ordered()->get()->map(fn ($c) => [
+                    'id' => $c->id,
+                    'code' => $c->code,
+                    'name' => $c->name,
+                    'is_active' => $c->is_active,
                 ])->toArray();
             }
 
