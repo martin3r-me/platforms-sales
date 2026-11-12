@@ -39,31 +39,10 @@ return [
                 ],  
             ],
         ],
-        [
-            'group' => 'Einstellungen',
-            'items' => [
-                [
-                    'label' => 'Deal-Quellen',
-                    'route' => 'sales.settings.deal-sources.index',
-                    'icon'  => 'heroicon-o-arrow-down-tray',
-                ],
-                [
-                    'label' => 'Deal-Typen',
-                    'route' => 'sales.settings.deal-types.index',
-                    'icon'  => 'heroicon-o-tag',
-                ],
-                [
-                    'label' => 'Umsatzkategorien',
-                    'route' => 'sales.settings.revenue-categories.index',
-                    'icon'  => 'heroicon-o-banknotes',
-                ],
-                [
-                    'label' => 'Verlustgründe',
-                    'route' => 'sales.settings.lost-reasons.index',
-                    'icon'  => 'heroicon-o-x-circle',
-                ],
-            ],
-        ],
+        // Hinweis: Die Einstellungen-Navigation (Deal-Quellen, Deal-Typen,
+        // Umsatzkategorien, Verlustgründe) rendert über resources/views/livewire/
+        // sidebar.blade.php, NICHT über diese Config. Daher hier bewusst kein
+        // Einstellungen-Eintrag.
         [
             'group' => 'Vertriebsboards',
             'dynamic' => [
